@@ -1,14 +1,16 @@
 #!/bin/bash
 # =============================================================
-# SPUNK.BET SITE AUDIT — Runs every 15 minutes
+# SPUNK.BET SITE AUDIT — Runs every 30 minutes
 # Checks: site uptime, speed, HTML, JS syntax, assets, games integrity,
 #         CSS rules, DOM, functions, prizes, analytics, sharing — auto-fixes all
+# Also pulls live Cloudflare Worker stats every cycle
 # =============================================================
 
 REPO="/Users/spunkart/spunk-bet"
 LOG="/Users/spunkart/spunk-bet/audit.log"
 INDEX="$REPO/index.html"
 SITE_URL="https://spunk.bet"
+WORKER_URL="https://spunk-analytics.spunkbet.workers.dev"
 FIXED=0
 ERRORS=0
 
@@ -203,7 +205,63 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
   fi
 fi
 
-# --- 12. Summary ---
+# --- 12. Pull Cloudflare Worker Stats ---
+log "--- CLOUDFLARE ANALYTICS ---"
+CF_STATS=$(curl -s --max-time 10 "$WORKER_URL/stats" 2>/dev/null)
+if [ -n "$CF_STATS" ] && echo "$CF_STATS" | python3 -m json.tool > /dev/null 2>&1; then
+  CF_SUMMARY=$(echo "$CF_STATS" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+t = d.get('today', {})
+w = d.get('week', {})
+a = d.get('all_time', {})
+print(f'Today: {t.get(\"unique_visitors\",0)} UV, {t.get(\"page_views\",0)} PV, {t.get(\"games_played\",0)} games, {t.get(\"wager_volume\",0):,} wagered, {t.get(\"faucet_claims\",0)} faucets')
+print(f'Week: {w.get(\"unique_visitors\",0)} UV')
+print(f'All Time: {a.get(\"total_page_views\",0)} PV, {a.get(\"total_games\",0)} games, {a.get(\"total_wagered\",0):,} wagered, {a.get(\"total_faucet_claims\",0)} faucets, {a.get(\"total_shares\",0)} shares, {a.get(\"total_wallet_connects\",0)} wallets')
+" 2>/dev/null)
+  while IFS= read -r line; do
+    log "CF $line"
+  done <<< "$CF_SUMMARY"
+else
+  log "CF Worker: unreachable or no data"
+fi
+
+# Pull admin breakdown (games, countries, devices)
+CF_ADMIN=$(curl -s --max-time 10 "$WORKER_URL/stats/admin" 2>/dev/null)
+if [ -n "$CF_ADMIN" ] && echo "$CF_ADMIN" | python3 -m json.tool > /dev/null 2>&1; then
+  CF_DETAIL=$(echo "$CF_ADMIN" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+games = d.get('games', {})
+active = {k:v for k,v in games.items() if v.get('total',0) > 0}
+if active:
+  parts = [f'{g}:{v[\"total\"]}' for g,v in sorted(active.items(), key=lambda x: x[1].get('total',0), reverse=True)]
+  print('Games: ' + ', '.join(parts))
+countries = d.get('countries', {})
+if countries:
+  parts = [f'{k}:{v}' for k,v in sorted(countries.items(), key=lambda x: x[1], reverse=True)[:10]]
+  print('Countries: ' + ', '.join(parts))
+devices = d.get('devices', {})
+if devices.get('mobile',0) or devices.get('desktop',0):
+  print(f'Devices: mobile={devices.get(\"mobile\",0)} desktop={devices.get(\"desktop\",0)}')
+daily = d.get('daily', [])
+if daily and len(daily) > 0:
+  top = daily[0]
+  print(f'Latest day ({top[\"date\"]}): {top[\"unique_visitors\"]} UV, {top[\"page_views\"]} PV, {top[\"games_played\"]} games')
+" 2>/dev/null)
+  while IFS= read -r line; do
+    [ -n "$line" ] && log "CF $line"
+  done <<< "$CF_DETAIL"
+fi
+
+# --- 13. Check CF Worker is wired in index.html ---
+if ! grep -q "const ANALYTICS_WORKER = 'https://spunk-analytics.spunkbet.workers.dev'" "$INDEX"; then
+  log_err "CF Worker URL missing from index.html — fixing..."
+  sed -i '' "s|const ANALYTICS_WORKER = .*|const ANALYTICS_WORKER = 'https://spunk-analytics.spunkbet.workers.dev';|" "$INDEX"
+  log_fix "CF Worker URL restored in index.html"
+fi
+
+# --- 14. Summary ---
 log "AUDIT COMPLETE: $ERRORS error(s), $FIXED fix(es)"
 log "========== AUDIT END ============"
 log ""
