@@ -1,8 +1,8 @@
 #!/bin/bash
 # =============================================================
-# SPUNK.BET SITE AUDIT — Runs every 30 minutes
-# Checks: site uptime, HTML, JS syntax, assets, games integrity,
-#         CSS rules, DOM elements, functions, and auto-fixes
+# SPUNK.BET SITE AUDIT — Runs every 15 minutes
+# Checks: site uptime, speed, HTML, JS syntax, assets, games integrity,
+#         CSS rules, DOM, functions, prizes, analytics, sharing — auto-fixes all
 # =============================================================
 
 REPO="/Users/spunkart/spunk-bet"
@@ -28,10 +28,18 @@ fi
 
 log "========== AUDIT START =========="
 
-# --- 1. Check site is live ---
-HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$SITE_URL" 2>/dev/null || echo "000")
+# --- 1. Check site is live + response time ---
+CURL_OUT=$(curl -s -o /dev/null -w '%{http_code} %{time_total} %{size_download}' --max-time 15 "$SITE_URL" 2>/dev/null || echo "000 0 0")
+HTTP_CODE=$(echo "$CURL_OUT" | awk '{print $1}')
+RESP_TIME=$(echo "$CURL_OUT" | awk '{print $2}')
+DL_SIZE=$(echo "$CURL_OUT" | awk '{print $3}')
 if [ "$HTTP_CODE" = "200" ]; then
-  log "Site UP (HTTP $HTTP_CODE)"
+  log "Site UP (HTTP $HTTP_CODE) — ${RESP_TIME}s response, ${DL_SIZE} bytes downloaded"
+  # Warn if response is slow (over 3 seconds)
+  SLOW=$(echo "$RESP_TIME" | awk '{print ($1 > 3.0) ? "1" : "0"}')
+  if [ "$SLOW" = "1" ]; then
+    log_err "Site slow: ${RESP_TIME}s response time (should be under 3s)"
+  fi
 else
   log_err "Site returned HTTP $HTTP_CODE"
 fi
