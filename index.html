@@ -147,24 +147,61 @@
     .faucet-btn:hover { opacity: 0.9; }
     .faucet-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+    /* ORIGINALS SECTION */
+    .originals-header {
+      max-width: 1100px; margin: 0 auto; padding: 0 2rem 1rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .originals-header h2 {
+      font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em;
+    }
+    .originals-header .tag {
+      background: var(--accent-glow); color: var(--accent); font-size: 0.7rem;
+      font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 20px;
+      letter-spacing: 0.03em;
+    }
+
     /* GAME CARDS */
     .game-grid {
-      max-width: 900px; margin: 0 auto; padding: 0 2rem 4rem;
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;
+      max-width: 1100px; margin: 0 auto; padding: 0 2rem 4rem;
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem;
     }
     .game-card {
       background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-      padding: 1.5rem; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;
+      padding: 1.25rem; cursor: pointer; transition: all 0.25s; position: relative; overflow: hidden;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      min-height: 160px; justify-content: center;
     }
-    .game-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-    .game-card-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
-    .game-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.3rem; }
-    .game-card p { color: var(--muted); font-size: 0.8rem; line-height: 1.5; }
+    .game-card::before {
+      content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity 0.25s;
+      border-radius: 14px;
+    }
+    .game-card:hover { border-color: var(--accent); transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .game-card:hover::before { opacity: 1; }
+    .game-card-icon { font-size: 2.8rem; margin-bottom: 0.6rem; position: relative; z-index: 1;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+    }
+    .game-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.2rem; position: relative; z-index: 1; }
+    .game-card p { color: var(--muted); font-size: 0.72rem; line-height: 1.4; position: relative; z-index: 1; display: none; }
     .game-card-edge {
-      position: absolute; top: 0.75rem; right: 0.75rem;
-      font-size: 0.7rem; color: var(--accent); background: var(--accent-glow);
-      padding: 0.2rem 0.5rem; border-radius: 6px; font-weight: 600;
+      position: absolute; top: 0.6rem; right: 0.6rem;
+      font-size: 0.65rem; color: var(--accent); background: rgba(0,0,0,0.5);
+      padding: 0.15rem 0.45rem; border-radius: 6px; font-weight: 600; z-index: 1;
+      backdrop-filter: blur(4px);
     }
+    /* Card color themes */
+    .game-card.card-orange::before { background: linear-gradient(135deg, rgba(255,95,31,0.12), rgba(255,95,31,0.03)); }
+    .game-card.card-blue::before { background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(59,130,246,0.03)); }
+    .game-card.card-green::before { background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(34,197,94,0.03)); }
+    .game-card.card-purple::before { background: linear-gradient(135deg, rgba(168,85,247,0.12), rgba(168,85,247,0.03)); }
+    .game-card.card-yellow::before { background: linear-gradient(135deg, rgba(234,179,8,0.12), rgba(234,179,8,0.03)); }
+    .game-card.card-red::before { background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(239,68,68,0.03)); }
+    .game-card.card-cyan::before { background: linear-gradient(135deg, rgba(6,182,212,0.12), rgba(6,182,212,0.03)); }
+    .game-card.card-pink::before { background: linear-gradient(135deg, rgba(236,72,153,0.12), rgba(236,72,153,0.03)); }
+    .game-card.card-gold::before { background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(245,158,11,0.03)); }
+    .game-card.card-teal::before { background: linear-gradient(135deg, rgba(20,184,166,0.12), rgba(20,184,166,0.03)); }
 
     /* GAME CONTAINER */
     .game-container {
@@ -314,6 +351,142 @@
     .crash-multi.crashed { color: var(--red); }
     .crash-multi.cashed { color: var(--accent); }
     .crash-status { font-size: 0.85rem; color: var(--muted); margin-top: 0.25rem; }
+
+    /* LIMBO */
+    .limbo-display {
+      font-size: 4rem; font-weight: 800; letter-spacing: -0.03em;
+      margin: 1rem 0; transition: color 0.3s;
+    }
+    .limbo-display.win { color: var(--green); }
+    .limbo-display.lose { color: var(--red); }
+    .limbo-display.idle { color: var(--muted); }
+    .limbo-target-display {
+      font-size: 0.9rem; color: var(--muted); margin-bottom: 0.5rem;
+    }
+    .limbo-target-display span { color: var(--accent); font-weight: 700; }
+    @keyframes limboSpin {
+      0% { transform: scale(0.8); opacity: 0.5; }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .limbo-display.spinning { animation: limboSpin 0.4s ease-out; }
+
+    /* KENO */
+    .keno-grid {
+      display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px;
+      width: 100%; max-width: 360px; margin: 0.5rem auto;
+    }
+    .keno-cell {
+      aspect-ratio: 1; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 6px; display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.15s;
+      user-select: none;
+    }
+    .keno-cell:hover:not(.drawn) { border-color: var(--accent); }
+    .keno-cell.selected { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+    .keno-cell.drawn.hit { background: rgba(34,197,94,0.2); border-color: var(--green); color: var(--green); }
+    .keno-cell.drawn.miss { background: rgba(113,113,122,0.1); border-color: var(--border); color: var(--muted); opacity: 0.5; }
+    .keno-cell.drawn.selected.hit { background: rgba(34,197,94,0.3); border-color: var(--green); color: var(--green); }
+    .keno-cell.drawn.selected.miss { background: rgba(239,68,68,0.15); border-color: var(--red); color: var(--red); }
+    .keno-info { font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0; }
+    .keno-info span { color: var(--accent); font-weight: 600; }
+    .keno-picks { display: flex; gap: 0.25rem; flex-wrap: wrap; margin: 0.5rem 0; }
+    .keno-pick-btn {
+      padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--surface2); color: var(--muted); font-size: 0.7rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .keno-pick-btn:hover, .keno-pick-btn.active { border-color: var(--accent); color: var(--accent); }
+
+    /* WHEEL */
+    .wheel-container { position: relative; width: 280px; height: 280px; margin: 0.5rem auto; }
+    .wheel-canvas { width: 100%; height: 100%; }
+    .wheel-pointer {
+      position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+      width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent;
+      border-top: 20px solid var(--accent); z-index: 2; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    }
+    .wheel-center {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 50px; height: 50px; border-radius: 50%; background: var(--surface);
+      border: 3px solid var(--accent); display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.8rem; z-index: 2;
+    }
+    .wheel-result-text { font-size: 1.5rem; font-weight: 800; margin-top: 0.5rem; }
+
+    /* PLINKO */
+    .plinko-container { position: relative; width: 100%; max-width: 400px; margin: 0 auto; }
+    .plinko-canvas { width: 100%; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); }
+    .plinko-risk-row { display: flex; gap: 0.25rem; margin: 0.5rem 0; }
+    .plinko-risk-btn {
+      padding: 0.3rem 0.6rem; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--surface2); color: var(--muted); font-size: 0.75rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .plinko-risk-btn:hover, .plinko-risk-btn.active { border-color: var(--accent); color: var(--accent); }
+    .plinko-rows-row { display: flex; align-items: center; gap: 0.5rem; margin: 0.3rem 0; }
+    .plinko-result-text { font-size: 1.3rem; font-weight: 800; margin-top: 0.3rem; }
+
+    /* HILO */
+    .hilo-cards { display: flex; gap: 1rem; align-items: center; justify-content: center; margin: 1rem 0; }
+    .hilo-card {
+      width: 90px; height: 130px; background: var(--surface2); border: 2px solid var(--border);
+      border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-weight: 800; transition: all 0.3s; position: relative;
+    }
+    .hilo-card .card-rank { font-size: 1.8rem; }
+    .hilo-card .card-suit { font-size: 1.2rem; margin-top: 0.1rem; }
+    .hilo-card.red .card-rank, .hilo-card.red .card-suit { color: var(--red); }
+    .hilo-card.black .card-rank, .hilo-card.black .card-suit { color: var(--text); }
+    .hilo-card.next { border-style: dashed; border-color: var(--muted); }
+    .hilo-card.next .card-rank { color: var(--muted); }
+    .hilo-card.win { border-color: var(--green); }
+    .hilo-card.lose { border-color: var(--red); }
+    .hilo-choices { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+    .hilo-choice {
+      padding: 0.5rem 1.5rem; border-radius: 8px; border: 2px solid var(--border);
+      background: transparent; color: var(--text); font-weight: 600; font-size: 0.9rem;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .hilo-choice:hover { border-color: var(--accent); }
+    .hilo-choice:disabled { opacity: 0.4; cursor: not-allowed; }
+    .hilo-streak { font-size: 0.85rem; color: var(--muted); margin-top: 0.3rem; }
+    .hilo-streak span { color: var(--green); font-weight: 700; }
+    .hilo-multi { font-size: 1.5rem; font-weight: 800; color: var(--accent); margin: 0.25rem 0; }
+
+    /* RUNE TOWER */
+    .tower-grid {
+      display: flex; flex-direction: column-reverse; gap: 4px; width: 100%; max-width: 320px; margin: 0.5rem auto;
+    }
+    .tower-floor { display: grid; gap: 4px; }
+    .tower-floor.cols-2 { grid-template-columns: 1fr 1fr; }
+    .tower-floor.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .tower-floor.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+    .tower-cell {
+      height: 44px; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 6px; display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
+      user-select: none;
+    }
+    .tower-cell:hover:not(.revealed) { border-color: var(--accent); background: var(--accent-glow2); }
+    .tower-cell.revealed.safe { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); color: var(--green); }
+    .tower-cell.revealed.trap { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); color: var(--red); }
+    .tower-cell.revealed.shown { background: rgba(113,113,122,0.1); border-color: var(--border); color: var(--muted); }
+    .tower-cell.locked { opacity: 0.3; cursor: not-allowed; }
+    .tower-cell.current { border-color: var(--accent); }
+    .tower-floor-label {
+      font-size: 0.65rem; color: var(--muted); text-align: right; padding-right: 0.25rem;
+      min-width: 30px;
+    }
+    .tower-info { display: flex; gap: 1.5rem; margin: 0.5rem 0; font-size: 0.85rem; }
+    .tower-info span { color: var(--accent); font-weight: 600; }
+    .tower-diff-row { display: flex; gap: 0.25rem; margin: 0.5rem 0; }
+    .tower-diff-btn {
+      padding: 0.3rem 0.6rem; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--surface2); color: var(--muted); font-size: 0.75rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .tower-diff-btn:hover, .tower-diff-btn.active { border-color: var(--accent); color: var(--accent); }
 
     /* HISTORY */
     .history-list { display: flex; flex-direction: column; gap: 0.35rem; }
@@ -574,12 +747,17 @@
     .tier-card .tier-reward { color: var(--green); font-weight: 600; margin-top: 0.15rem; }
     .tier-card.active { border-color: var(--accent); background: var(--accent-glow2); }
 
+    @media (max-width: 900px) {
+      .game-grid { grid-template-columns: repeat(3, 1fr); }
+    }
     @media (max-width: 640px) {
       nav { padding: 0.75rem 1rem; }
       .nav-center { display: none; }
       .hamburger { display: flex; }
       .game-container { padding: 1.5rem 1rem; }
-      .game-grid { padding: 0 1rem 3rem; }
+      .game-grid { padding: 0 1rem 3rem; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+      .game-card { min-height: 130px; padding: 1rem; }
+      .game-card-icon { font-size: 2.2rem; }
       .hero { padding: 3rem 1.5rem 2rem; }
       .mine-cell { width: 44px; height: 44px; font-size: 1rem; }
       .mines-grid { width: 240px; gap: 4px; }
@@ -589,6 +767,10 @@
       .nav-right { gap: 0.5rem; }
       .share-btn { display: none !important; }
       .balance-display { font-size: 0.75rem; padding: 0.3rem 0.5rem; }
+      .keno-grid { grid-template-columns: repeat(5, 1fr); }
+      .hilo-card { width: 75px; height: 110px; }
+      .wheel-container { width: 240px; height: 240px; }
+      .originals-header { padding: 0 1rem 0.75rem; }
     }
   </style>
 </head>
@@ -740,30 +922,61 @@
     </div>
   </div>
 
+  <div class="originals-header">
+    <h2>Originals</h2>
+    <span class="tag">10 GAMES</span>
+  </div>
+
   <div class="game-grid">
-    <div class="game-card" onclick="openGame('coinflip')">
+    <div class="game-card card-orange" onclick="openGame('coinflip')">
       <div class="game-card-edge">1.98x</div>
       <div class="game-card-icon">&#x1FA99;</div>
       <h3>Coin Flip</h3>
-      <p>Heads or tails. Classic 50/50 with 1.98x payout. Fast and simple.</p>
     </div>
-    <div class="game-card" onclick="openGame('dice')">
+    <div class="game-card card-blue" onclick="openGame('dice')">
       <div class="game-card-edge">1.01-99x</div>
       <div class="game-card-icon">&#127922;</div>
       <h3>Dice</h3>
-      <p>Set your target. Roll under to win. Adjust risk and reward with the slider.</p>
     </div>
-    <div class="game-card" onclick="openGame('mines')">
-      <div class="game-card-edge">Up to 24x</div>
+    <div class="game-card card-red" onclick="openGame('mines')">
+      <div class="game-card-edge">24x</div>
       <div class="game-card-icon">&#128163;</div>
       <h3>Mines</h3>
-      <p>Navigate a 5x5 grid. Reveal safe tiles to multiply your bet. Hit a mine and lose it all.</p>
     </div>
-    <div class="game-card" onclick="openGame('crash')">
+    <div class="game-card card-green" onclick="openGame('crash')">
       <div class="game-card-edge">&#8734;x</div>
       <div class="game-card-icon">&#128200;</div>
       <h3>Crash</h3>
-      <p>Watch the multiplier rise. Cash out before it crashes. How far will you push it?</p>
+    </div>
+    <div class="game-card card-purple" onclick="openGame('limbo')">
+      <div class="game-card-edge">&#8734;x</div>
+      <div class="game-card-icon">&#127756;</div>
+      <h3>Limbo</h3>
+    </div>
+    <div class="game-card card-cyan" onclick="openGame('keno')">
+      <div class="game-card-edge">100x</div>
+      <div class="game-card-icon">&#127183;</div>
+      <h3>Keno</h3>
+    </div>
+    <div class="game-card card-yellow" onclick="openGame('wheel')">
+      <div class="game-card-edge">50x</div>
+      <div class="game-card-icon">&#127905;</div>
+      <h3>Wheel</h3>
+    </div>
+    <div class="game-card card-pink" onclick="openGame('plinko')">
+      <div class="game-card-edge">1000x</div>
+      <div class="game-card-icon">&#9899;</div>
+      <h3>Plinko</h3>
+    </div>
+    <div class="game-card card-teal" onclick="openGame('hilo')">
+      <div class="game-card-edge">&#8734;x</div>
+      <div class="game-card-icon">&#127136;</div>
+      <h3>HiLo</h3>
+    </div>
+    <div class="game-card card-gold" onclick="openGame('tower')">
+      <div class="game-card-edge">500x</div>
+      <div class="game-card-icon">&#127960;</div>
+      <h3>Rune Tower</h3>
     </div>
   </div>
 </div>
@@ -901,6 +1114,250 @@
     <div style="display:flex;gap:0.5rem;">
       <button class="btn" style="flex:1; padding:0.75rem;" id="crash-start-btn" onclick="startCrash()">Launch</button>
       <button class="btn btn-green" style="flex:1; padding:0.75rem; display:none;" id="crash-cashout-btn" onclick="cashoutCrash()">Cash Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIMBO -->
+<div id="limbo" class="page">
+  <div class="game-container">
+    <button class="game-back" onclick="showPage('home')">&larr; Back to games</button>
+    <div class="game-title">&#127756; Limbo</div>
+    <div class="bet-controls">
+      <div class="bet-row">
+        <span class="bet-label">Bet (SPUNK•BET)</span>
+        <input type="number" class="bet-input" id="limbo-bet" value="100" min="100">
+        <div class="bet-quick">
+          <button onclick="setBet('limbo-bet','half')">&#189;</button>
+          <button onclick="setBet('limbo-bet','double')">2x</button>
+          <button onclick="setBet('limbo-bet','max')">Max</button>
+        </div>
+      </div>
+      <div class="bet-row">
+        <span class="bet-label">Target</span>
+        <input type="number" class="bet-input" id="limbo-target" value="2" min="1.01" max="1000000" step="0.01">
+        <div class="bet-quick">
+          <button onclick="setLimboTarget(1.5)">1.5x</button>
+          <button onclick="setLimboTarget(2)">2x</button>
+          <button onclick="setLimboTarget(10)">10x</button>
+          <button onclick="setLimboTarget(100)">100x</button>
+        </div>
+      </div>
+    </div>
+    <div id="limbo-result" class="result"></div>
+    <div class="game-area">
+      <div class="limbo-target-display">Target: <span id="limbo-target-display">2.00x</span></div>
+      <div class="limbo-display idle" id="limbo-display">1.00x</div>
+      <div style="font-size:0.8rem; color:var(--muted)">Win chance: <span id="limbo-chance">49.0%</span></div>
+      <div class="seed-display" id="limbo-seed" onclick="copySeed('limbo-seed')" title="Click to copy seed hash"></div>
+    </div>
+    <button class="btn" style="width:100%; padding:0.75rem;" onclick="playLimbo()">Play</button>
+  </div>
+</div>
+
+<!-- KENO -->
+<div id="keno" class="page">
+  <div class="game-container">
+    <button class="game-back" onclick="showPage('home')">&larr; Back to games</button>
+    <div class="game-title">&#127183; Keno</div>
+    <div class="bet-controls">
+      <div class="bet-row">
+        <span class="bet-label">Bet (SPUNK•BET)</span>
+        <input type="number" class="bet-input" id="keno-bet" value="100" min="100">
+        <div class="bet-quick">
+          <button onclick="setBet('keno-bet','half')">&#189;</button>
+          <button onclick="setBet('keno-bet','double')">2x</button>
+          <button onclick="setBet('keno-bet','max')">Max</button>
+        </div>
+      </div>
+      <div class="bet-row">
+        <span class="bet-label">Picks</span>
+        <div class="keno-picks">
+          <button class="keno-pick-btn" onclick="kenoAutoSelect(1)">1</button>
+          <button class="keno-pick-btn" onclick="kenoAutoSelect(3)">3</button>
+          <button class="keno-pick-btn active" onclick="kenoAutoSelect(5)">5</button>
+          <button class="keno-pick-btn" onclick="kenoAutoSelect(7)">7</button>
+          <button class="keno-pick-btn" onclick="kenoAutoSelect(10)">10</button>
+        </div>
+      </div>
+    </div>
+    <div id="keno-result" class="result"></div>
+    <div class="game-area" style="padding:1rem;">
+      <div class="keno-info">Selected: <span id="keno-selected-count">0</span>/10 &middot; Hits needed for payout: <span id="keno-hits-needed">1</span></div>
+      <div class="keno-grid" id="keno-grid"></div>
+      <div class="seed-display" id="keno-seed" onclick="copySeed('keno-seed')" title="Click to copy seed hash" style="width:100%;"></div>
+    </div>
+    <div style="display:flex;gap:0.5rem;">
+      <button class="btn btn-outline" style="flex:1; padding:0.75rem;" onclick="initKenoGrid()">Clear</button>
+      <button class="btn" style="flex:1; padding:0.75rem;" onclick="playKeno()">Play Keno</button>
+    </div>
+  </div>
+</div>
+
+<!-- WHEEL -->
+<div id="wheel" class="page">
+  <div class="game-container">
+    <button class="game-back" onclick="showPage('home')">&larr; Back to games</button>
+    <div class="game-title">&#127905; Wheel</div>
+    <div class="bet-controls">
+      <div class="bet-row">
+        <span class="bet-label">Bet (SPUNK•BET)</span>
+        <input type="number" class="bet-input" id="wheel-bet" value="100" min="100">
+        <div class="bet-quick">
+          <button onclick="setBet('wheel-bet','half')">&#189;</button>
+          <button onclick="setBet('wheel-bet','double')">2x</button>
+          <button onclick="setBet('wheel-bet','max')">Max</button>
+        </div>
+      </div>
+      <div class="bet-row">
+        <span class="bet-label">Risk</span>
+        <div class="keno-picks">
+          <button class="plinko-risk-btn active" id="wheel-risk-low" onclick="setWheelRisk('low')">Low</button>
+          <button class="plinko-risk-btn" id="wheel-risk-med" onclick="setWheelRisk('medium')">Medium</button>
+          <button class="plinko-risk-btn" id="wheel-risk-high" onclick="setWheelRisk('high')">High</button>
+        </div>
+      </div>
+    </div>
+    <div id="wheel-result" class="result"></div>
+    <div class="game-area" style="padding:1.25rem;">
+      <div class="wheel-container">
+        <div class="wheel-pointer"></div>
+        <canvas class="wheel-canvas" id="wheel-canvas" width="560" height="560"></canvas>
+        <div class="wheel-center" id="wheel-center">SPIN</div>
+      </div>
+      <div class="wheel-result-text" id="wheel-result-text"></div>
+      <div class="seed-display" id="wheel-seed" onclick="copySeed('wheel-seed')" title="Click to copy seed hash" style="width:100%;"></div>
+    </div>
+    <button class="btn" style="width:100%; padding:0.75rem;" id="wheel-spin-btn" onclick="spinWheel()">Spin</button>
+  </div>
+</div>
+
+<!-- PLINKO -->
+<div id="plinko" class="page">
+  <div class="game-container">
+    <button class="game-back" onclick="showPage('home')">&larr; Back to games</button>
+    <div class="game-title">&#9899; Plinko</div>
+    <div class="bet-controls">
+      <div class="bet-row">
+        <span class="bet-label">Bet (SPUNK•BET)</span>
+        <input type="number" class="bet-input" id="plinko-bet" value="100" min="100">
+        <div class="bet-quick">
+          <button onclick="setBet('plinko-bet','half')">&#189;</button>
+          <button onclick="setBet('plinko-bet','double')">2x</button>
+          <button onclick="setBet('plinko-bet','max')">Max</button>
+        </div>
+      </div>
+      <div class="bet-row">
+        <span class="bet-label">Risk</span>
+        <div class="plinko-risk-row">
+          <button class="plinko-risk-btn active" id="plinko-risk-low" onclick="setPlinkoRisk('low')">Low</button>
+          <button class="plinko-risk-btn" id="plinko-risk-med" onclick="setPlinkoRisk('medium')">Medium</button>
+          <button class="plinko-risk-btn" id="plinko-risk-high" onclick="setPlinkoRisk('high')">High</button>
+        </div>
+      </div>
+      <div class="bet-row">
+        <span class="bet-label">Rows</span>
+        <div class="plinko-rows-row">
+          <button class="mines-count-btn" onclick="changePlinkoRows(-2)">-</button>
+          <span id="plinko-rows" style="font-weight:700;min-width:24px;text-align:center">12</span>
+          <button class="mines-count-btn" onclick="changePlinkoRows(2)">+</button>
+        </div>
+      </div>
+    </div>
+    <div id="plinko-result" class="result"></div>
+    <div class="game-area" style="padding:1rem;">
+      <div class="plinko-container">
+        <canvas class="plinko-canvas" id="plinko-canvas" width="800" height="700"></canvas>
+      </div>
+      <div class="plinko-result-text" id="plinko-result-text"></div>
+      <div class="seed-display" id="plinko-seed" onclick="copySeed('plinko-seed')" title="Click to copy seed hash" style="width:100%;"></div>
+    </div>
+    <button class="btn" style="width:100%; padding:0.75rem;" id="plinko-drop-btn" onclick="dropPlinko()">Drop Ball</button>
+  </div>
+</div>
+
+<!-- HILO -->
+<div id="hilo" class="page">
+  <div class="game-container">
+    <button class="game-back" onclick="showPage('home')">&larr; Back to games</button>
+    <div class="game-title">&#127136; HiLo</div>
+    <div class="bet-controls">
+      <div class="bet-row">
+        <span class="bet-label">Bet (SPUNK•BET)</span>
+        <input type="number" class="bet-input" id="hilo-bet" value="100" min="100">
+        <div class="bet-quick">
+          <button onclick="setBet('hilo-bet','half')">&#189;</button>
+          <button onclick="setBet('hilo-bet','double')">2x</button>
+          <button onclick="setBet('hilo-bet','max')">Max</button>
+        </div>
+      </div>
+    </div>
+    <div id="hilo-result" class="result"></div>
+    <div class="game-area">
+      <div class="hilo-cards">
+        <div class="hilo-card" id="hilo-current">
+          <div class="card-rank">?</div>
+          <div class="card-suit"></div>
+        </div>
+        <div style="font-size:1.5rem;color:var(--muted)">&#8594;</div>
+        <div class="hilo-card next" id="hilo-next">
+          <div class="card-rank">?</div>
+          <div class="card-suit"></div>
+        </div>
+      </div>
+      <div class="hilo-multi" id="hilo-multi">1.00x</div>
+      <div class="hilo-streak">Streak: <span id="hilo-streak">0</span></div>
+      <div class="hilo-choices" id="hilo-choices">
+        <button class="hilo-choice" id="hilo-hi-btn" onclick="guessHiLo('hi')">&#9650; Higher</button>
+        <button class="hilo-choice" id="hilo-lo-btn" onclick="guessHiLo('lo')">&#9660; Lower</button>
+      </div>
+      <div class="seed-display" id="hilo-seed" onclick="copySeed('hilo-seed')" title="Click to copy seed hash" style="width:100%;"></div>
+    </div>
+    <div style="display:flex;gap:0.5rem;">
+      <button class="btn" style="flex:1; padding:0.75rem;" id="hilo-start-btn" onclick="startHiLo()">Deal</button>
+      <button class="btn btn-green" style="flex:1; padding:0.75rem; display:none;" id="hilo-cashout-btn" onclick="cashoutHiLo()">Cash Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- RUNE TOWER -->
+<div id="tower" class="page">
+  <div class="game-container">
+    <button class="game-back" onclick="showPage('home')">&larr; Back to games</button>
+    <div class="game-title">&#127960; Rune Tower</div>
+    <div class="bet-controls">
+      <div class="bet-row">
+        <span class="bet-label">Bet (SPUNK•BET)</span>
+        <input type="number" class="bet-input" id="tower-bet" value="100" min="100">
+        <div class="bet-quick">
+          <button onclick="setBet('tower-bet','half')">&#189;</button>
+          <button onclick="setBet('tower-bet','double')">2x</button>
+          <button onclick="setBet('tower-bet','max')">Max</button>
+        </div>
+      </div>
+      <div class="bet-row">
+        <span class="bet-label">Difficulty</span>
+        <div class="tower-diff-row">
+          <button class="tower-diff-btn active" id="tower-easy" onclick="setTowerDiff('easy')">Easy</button>
+          <button class="tower-diff-btn" id="tower-medium" onclick="setTowerDiff('medium')">Medium</button>
+          <button class="tower-diff-btn" id="tower-hard" onclick="setTowerDiff('hard')">Hard</button>
+          <button class="tower-diff-btn" id="tower-expert" onclick="setTowerDiff('expert')">Expert</button>
+        </div>
+      </div>
+    </div>
+    <div id="tower-result" class="result"></div>
+    <div class="game-area" style="padding:1rem;">
+      <div class="tower-info">
+        <div>Floor: <span id="tower-floor">0</span></div>
+        <div>Multiplier: <span id="tower-multi">1.00x</span></div>
+        <div>Profit: <span id="tower-profit">+0</span></div>
+      </div>
+      <div class="tower-grid" id="tower-grid"></div>
+      <div class="seed-display" id="tower-seed" onclick="copySeed('tower-seed')" title="Click to copy seed hash" style="width:100%;"></div>
+    </div>
+    <div style="display:flex;gap:0.5rem;">
+      <button class="btn" style="flex:1; padding:0.75rem;" id="tower-start-btn" onclick="startTower()">Start Climb</button>
+      <button class="btn btn-green" style="flex:1; padding:0.75rem; display:none;" id="tower-cashout-btn" onclick="cashoutTower()">Cash Out</button>
     </div>
   </div>
 </div>
@@ -1410,6 +1867,11 @@ function openGame(id) {
   showPage(id);
   if (id === 'dice') updateDiceSlider();
   if (id === 'mines') initMinesGrid();
+  if (id === 'limbo') updateLimboDisplay();
+  if (id === 'keno') initKenoGrid();
+  if (id === 'wheel') { drawWheel(); }
+  if (id === 'plinko') { drawPlinkoBoard(plinkoRows, [], undefined); }
+  if (id === 'tower') initTowerGrid();
 }
 
 // ===== BALANCE =====
@@ -1774,6 +2236,657 @@ function cashoutCrash() {
   showResult('crash-result', true, 'Cashed at ' + crashState.multi.toFixed(2) + 'x! Won +' + profit.toLocaleString() + ' SPUNK•BET');
   addHistory('Crash', crashState.bet, 'win', profit, crashState.seedData);
   saveState();
+}
+
+// ===== LIMBO =====
+function setLimboTarget(v) {
+  document.getElementById('limbo-target').value = v;
+  updateLimboDisplay();
+}
+function updateLimboDisplay() {
+  const target = parseFloat(document.getElementById('limbo-target').value) || 2;
+  document.getElementById('limbo-target-display').textContent = target.toFixed(2) + 'x';
+  const chance = Math.min(98, (98 / target));
+  document.getElementById('limbo-chance').textContent = chance.toFixed(1) + '%';
+}
+async function playLimbo() {
+  const bet = getBet('limbo-bet');
+  if (bet <= 0 || bet > balance) return;
+  const target = parseFloat(document.getElementById('limbo-target').value) || 2;
+  if (target < 1.01) { showToast('Target must be at least 1.01x'); return; }
+  balance -= bet;
+  updateBalance();
+
+  const seedBefore = { serverSeedHash: pfState.serverSeedHash, clientSeed: pfState.clientSeed, nonce: pfState.nonce };
+  const rand = await fairRandom();
+  const seedAfter = { ...seedBefore, serverSeed: pfState.serverSeed };
+  await rotateServerSeed(); savePFState();
+
+  const result = Math.max(1, (0.98 / (1 - rand)));
+  const display = document.getElementById('limbo-display');
+  display.className = 'limbo-display spinning';
+  display.textContent = '...';
+
+  setTimeout(() => {
+    const win = result >= target;
+    display.className = 'limbo-display ' + (win ? 'win' : 'lose');
+    display.textContent = result.toFixed(2) + 'x';
+    showGameSeed('limbo-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
+    if (win) {
+      const payout = Math.floor(bet * target);
+      balance += payout;
+      showResult('limbo-result', true, 'Result: ' + result.toFixed(2) + 'x (target ' + target.toFixed(2) + 'x). Won +' + (payout - bet).toLocaleString() + ' SPUNK\u2022BET');
+      addHistory('Limbo', bet, 'win', payout - bet, seedAfter);
+    } else {
+      showResult('limbo-result', false, 'Result: ' + result.toFixed(2) + 'x (needed ' + target.toFixed(2) + 'x). Lost ' + bet.toLocaleString() + ' SPUNK\u2022BET');
+      addHistory('Limbo', bet, 'lose', -bet, seedAfter);
+    }
+    updateBalance(); saveState();
+  }, 400);
+}
+
+// ===== KENO =====
+let kenoSelected = new Set();
+function initKenoGrid() {
+  kenoSelected.clear();
+  const grid = document.getElementById('keno-grid');
+  grid.innerHTML = '';
+  for (let i = 1; i <= 40; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'keno-cell';
+    cell.textContent = i;
+    cell.onclick = () => toggleKenoCell(i, cell);
+    grid.appendChild(cell);
+  }
+  document.getElementById('keno-selected-count').textContent = '0';
+  document.getElementById('keno-result').className = 'result';
+}
+function toggleKenoCell(num, cell) {
+  if (cell.classList.contains('drawn')) return;
+  if (kenoSelected.has(num)) {
+    kenoSelected.delete(num);
+    cell.classList.remove('selected');
+  } else {
+    if (kenoSelected.size >= 10) { showToast('Maximum 10 picks'); return; }
+    kenoSelected.add(num);
+    cell.classList.add('selected');
+  }
+  document.getElementById('keno-selected-count').textContent = kenoSelected.size;
+  document.getElementById('keno-hits-needed').textContent = Math.max(1, Math.ceil(kenoSelected.size * 0.3));
+}
+function kenoAutoSelect(count) {
+  initKenoGrid();
+  const nums = [];
+  while (nums.length < count) {
+    const n = Math.floor(Math.random() * 40) + 1;
+    if (!nums.includes(n)) nums.push(n);
+  }
+  const cells = document.querySelectorAll('.keno-cell');
+  nums.forEach(n => {
+    kenoSelected.add(n);
+    cells[n - 1].classList.add('selected');
+  });
+  document.getElementById('keno-selected-count').textContent = kenoSelected.size;
+  document.getElementById('keno-hits-needed').textContent = Math.max(1, Math.ceil(count * 0.3));
+  document.querySelectorAll('.keno-pick-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function getKenoMultiplier(picks, hits) {
+  const table = {
+    1: [0, 3.6], 2: [0, 1.5, 5.1], 3: [0, 0, 2.2, 20],
+    4: [0, 0, 1.5, 5, 50], 5: [0, 0, 0, 2, 10, 100],
+    6: [0, 0, 0, 1.5, 4, 20, 200], 7: [0, 0, 0, 1, 2.5, 8, 50, 400],
+    8: [0, 0, 0, 0, 2, 5, 20, 100, 500], 9: [0, 0, 0, 0, 1.5, 3, 10, 50, 200, 800],
+    10: [0, 0, 0, 0, 1, 2, 5, 20, 80, 300, 1000]
+  };
+  return (table[picks] && table[picks][hits]) || 0;
+}
+async function playKeno() {
+  if (kenoSelected.size === 0) { showToast('Pick at least 1 number'); return; }
+  const bet = getBet('keno-bet');
+  if (bet <= 0 || bet > balance) return;
+  balance -= bet;
+  updateBalance();
+
+  const seedBefore = { serverSeedHash: pfState.serverSeedHash, clientSeed: pfState.clientSeed, nonce: pfState.nonce };
+  const drawn = [];
+  const avail = Array.from({length: 40}, (_, i) => i + 1);
+  for (let i = 0; i < 10; i++) {
+    const rand = await fairRandom();
+    const idx = Math.floor(rand * avail.length);
+    drawn.push(avail[idx]);
+    avail.splice(idx, 1);
+  }
+  const seedAfter = { ...seedBefore, serverSeed: pfState.serverSeed };
+  await rotateServerSeed(); savePFState();
+
+  const cells = document.querySelectorAll('.keno-cell');
+  const drawnSet = new Set(drawn);
+  let hits = 0;
+  cells.forEach((cell, i) => {
+    const num = i + 1;
+    if (drawnSet.has(num)) {
+      cell.classList.add('drawn');
+      if (kenoSelected.has(num)) { cell.classList.add('hit'); hits++; }
+      else cell.classList.add('miss');
+    } else if (kenoSelected.has(num)) {
+      cell.classList.add('drawn', 'selected', 'miss');
+    }
+  });
+
+  const multi = getKenoMultiplier(kenoSelected.size, hits);
+  showGameSeed('keno-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
+  if (multi > 0) {
+    const payout = Math.floor(bet * multi);
+    balance += payout;
+    showResult('keno-result', true, hits + ' hits! ' + multi + 'x payout. Won +' + (payout - bet).toLocaleString() + ' SPUNK\u2022BET');
+    addHistory('Keno', bet, 'win', payout - bet, seedAfter);
+  } else {
+    showResult('keno-result', false, hits + ' hits. Not enough to win. Lost ' + bet.toLocaleString() + ' SPUNK\u2022BET');
+    addHistory('Keno', bet, 'lose', -bet, seedAfter);
+  }
+  updateBalance(); saveState();
+}
+
+// ===== WHEEL =====
+let wheelRisk = 'low';
+let wheelSpinning = false;
+const WHEEL_SEGMENTS = {
+  low:    [1.5, 1.2, 1.2, 1.5, 0, 1.2, 1.5, 1.2, 3, 1.2, 1.5, 1.2, 0, 1.2, 1.5, 1.2, 2, 1.2, 1.5, 1.2],
+  medium: [2, 0, 1.5, 0, 3, 0, 1.5, 0, 2, 0, 5, 0, 1.5, 0, 2, 0, 1.5, 0, 10, 0],
+  high:   [0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 5, 0, 0, 0, 0, 50, 0, 0, 0, 0]
+};
+const WHEEL_COLORS = {
+  0: '#ef4444', 1.2: '#3b82f6', 1.5: '#6366f1', 2: '#8b5cf6',
+  3: '#a855f7', 5: '#d946ef', 10: '#f59e0b', 50: '#22c55e'
+};
+function setWheelRisk(risk) {
+  wheelRisk = risk;
+  ['low','medium','high'].forEach(r => {
+    document.getElementById('wheel-risk-' + (r === 'medium' ? 'med' : r)).classList.toggle('active', r === risk);
+  });
+  drawWheel();
+}
+function drawWheel(rotation) {
+  const canvas = document.getElementById('wheel-canvas');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const cx = w/2, cy = h/2, r = w/2 - 10;
+  ctx.clearRect(0, 0, w, h);
+  const segs = WHEEL_SEGMENTS[wheelRisk];
+  const angle = (2 * Math.PI) / segs.length;
+  const rot = rotation || 0;
+  segs.forEach((val, i) => {
+    const start = i * angle + rot - Math.PI/2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, start + angle);
+    ctx.closePath();
+    ctx.fillStyle = WHEEL_COLORS[val] || '#1e1e2e';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // Label
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(start + angle / 2);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold ' + (val >= 10 ? '16' : '14') + 'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(val > 0 ? val + 'x' : '0', r * 0.7, 5);
+    ctx.restore();
+  });
+}
+async function spinWheel() {
+  if (wheelSpinning) return;
+  const bet = getBet('wheel-bet');
+  if (bet <= 0 || bet > balance) return;
+  balance -= bet; updateBalance();
+  wheelSpinning = true;
+  document.getElementById('wheel-spin-btn').disabled = true;
+
+  const seedBefore = { serverSeedHash: pfState.serverSeedHash, clientSeed: pfState.clientSeed, nonce: pfState.nonce };
+  const rand = await fairRandom();
+  const seedAfter = { ...seedBefore, serverSeed: pfState.serverSeed };
+  await rotateServerSeed(); savePFState();
+
+  const segs = WHEEL_SEGMENTS[wheelRisk];
+  const winIndex = Math.floor(rand * segs.length);
+  const segAngle = (2 * Math.PI) / segs.length;
+  const targetAngle = -(winIndex * segAngle + segAngle / 2);
+  const spins = 5 + Math.random() * 3;
+  const totalRotation = spins * 2 * Math.PI + targetAngle;
+  const duration = 4000;
+  const startTime = Date.now();
+
+  function animateSpin() {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(1, elapsed / duration);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    const currentRotation = ease * totalRotation;
+    drawWheel(currentRotation);
+    if (progress < 1) {
+      requestAnimationFrame(animateSpin);
+    } else {
+      const val = segs[winIndex];
+      document.getElementById('wheel-center').textContent = val > 0 ? val + 'x' : '0';
+      showGameSeed('wheel-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
+      if (val > 0) {
+        const payout = Math.floor(bet * val);
+        balance += payout;
+        document.getElementById('wheel-result-text').style.color = 'var(--green)';
+        document.getElementById('wheel-result-text').textContent = val + 'x! +' + (payout - bet).toLocaleString();
+        showResult('wheel-result', true, 'Landed on ' + val + 'x! Won +' + (payout - bet).toLocaleString() + ' SPUNK\u2022BET');
+        addHistory('Wheel', bet, 'win', payout - bet, seedAfter);
+      } else {
+        document.getElementById('wheel-result-text').style.color = 'var(--red)';
+        document.getElementById('wheel-result-text').textContent = '0x - Bust!';
+        showResult('wheel-result', false, 'Landed on 0. Lost ' + bet.toLocaleString() + ' SPUNK\u2022BET');
+        addHistory('Wheel', bet, 'lose', -bet, seedAfter);
+      }
+      updateBalance(); saveState();
+      wheelSpinning = false;
+      document.getElementById('wheel-spin-btn').disabled = false;
+    }
+  }
+  requestAnimationFrame(animateSpin);
+}
+
+// ===== PLINKO =====
+let plinkoRisk = 'low';
+let plinkoRows = 12;
+let plinkoDropping = false;
+const PLINKO_MULTIS = {
+  low:    { 8: [5.6,2.1,1.1,1,0.5,1,1.1,2.1,5.6], 12: [8.9,3,1.4,1.1,1,0.5,0.3,0.5,1,1.1,1.4,3,8.9], 16: [16,9,2,1.4,1.4,1.2,1.1,1,0.5,1,1.1,1.2,1.4,1.4,2,9,16] },
+  medium: { 8: [13,3,1.3,0.7,0.4,0.7,1.3,3,13], 12: [24,6,1.7,0.7,0.5,0.2,0.2,0.5,0.7,1.7,6,24], 16: [110,41,10,5,3,1.5,1,0.5,0.3,0.5,1,1.5,3,5,10,41,110] },
+  high:   { 8: [29,4,1.5,0.3,0.2,0.3,1.5,4,29], 12: [170,24,8.1,2,0.7,0.2,0.2,0.7,2,8.1,24,170], 16: [1000,130,26,9,4,2,0.2,0.2,0.2,0.2,0.2,2,4,9,26,130,1000] }
+};
+function setPlinkoRisk(risk) {
+  plinkoRisk = risk;
+  ['low','medium','high'].forEach(r => {
+    document.getElementById('plinko-risk-' + (r === 'medium' ? 'med' : r)).classList.toggle('active', r === risk);
+  });
+}
+function changePlinkoRows(d) {
+  plinkoRows = Math.min(16, Math.max(8, plinkoRows + d));
+  document.getElementById('plinko-rows').textContent = plinkoRows;
+}
+function drawPlinkoBoard(rows, ballPath, finalSlot) {
+  const canvas = document.getElementById('plinko-canvas');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  const pegR = 4;
+  const padTop = 30, padBot = 60;
+  const rowH = (h - padTop - padBot) / (rows + 1);
+  // Draw pegs
+  for (let r = 0; r < rows; r++) {
+    const pegsInRow = r + 3;
+    const rowW = w * 0.8;
+    const startX = (w - rowW) / 2;
+    for (let p = 0; p < pegsInRow; p++) {
+      const x = startX + (p / (pegsInRow - 1)) * rowW;
+      const y = padTop + (r + 1) * rowH;
+      ctx.beginPath();
+      ctx.arc(x, y, pegR, 0, 2 * Math.PI);
+      ctx.fillStyle = '#3f3f46';
+      ctx.fill();
+    }
+  }
+  // Draw slots
+  const multis = PLINKO_MULTIS[plinkoRisk][rows] || PLINKO_MULTIS[plinkoRisk][12];
+  const slotCount = multis.length;
+  const slotW = (w * 0.85) / slotCount;
+  const slotStartX = (w - slotW * slotCount) / 2;
+  const slotY = h - padBot + 10;
+  multis.forEach((m, i) => {
+    const x = slotStartX + i * slotW;
+    const isHit = finalSlot === i;
+    ctx.fillStyle = isHit ? (m >= 1 ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)') : 'rgba(30,30,46,0.8)';
+    ctx.strokeStyle = isHit ? (m >= 1 ? '#22c55e' : '#ef4444') : '#27272a';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(x + 2, slotY, slotW - 4, 30, 4);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = m >= 5 ? '#22c55e' : m >= 1 ? '#e4e4e7' : '#ef4444';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(m + 'x', x + slotW / 2, slotY + 20);
+  });
+  // Draw ball path
+  if (ballPath && ballPath.length > 0) {
+    ctx.fillStyle = '#ff5f1f';
+    const lastPos = ballPath[ballPath.length - 1];
+    ctx.beginPath();
+    ctx.arc(lastPos.x, lastPos.y, 8, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+}
+async function dropPlinko() {
+  if (plinkoDropping) return;
+  const bet = getBet('plinko-bet');
+  if (bet <= 0 || bet > balance) return;
+  balance -= bet; updateBalance();
+  plinkoDropping = true;
+  document.getElementById('plinko-drop-btn').disabled = true;
+
+  const rows = plinkoRows;
+  const seedBefore = { serverSeedHash: pfState.serverSeedHash, clientSeed: pfState.clientSeed, nonce: pfState.nonce };
+  const directions = [];
+  for (let i = 0; i < rows; i++) {
+    const r = await fairRandom();
+    directions.push(r < 0.5 ? 0 : 1);
+  }
+  const seedAfter = { ...seedBefore, serverSeed: pfState.serverSeed };
+  await rotateServerSeed(); savePFState();
+
+  // Calculate path
+  const canvas = document.getElementById('plinko-canvas');
+  const w = canvas.width, h = canvas.height;
+  const padTop = 30, padBot = 60;
+  const rowH = (h - padTop - padBot) / (rows + 1);
+  let slot = 0;
+  const path = [{ x: w / 2, y: 10 }];
+  for (let r = 0; r < rows; r++) {
+    if (directions[r] === 1) slot++;
+    const pegsInRow = r + 3;
+    const rowW = w * 0.8;
+    const startX = (w - rowW) / 2;
+    const pegX = startX + (slot / (pegsInRow - 1 + 1)) * rowW + (rowW / (pegsInRow + 1)) * 0.5;
+    path.push({ x: pegX, y: padTop + (r + 1) * rowH + 10 });
+  }
+  const multis = PLINKO_MULTIS[plinkoRisk][rows] || PLINKO_MULTIS[plinkoRisk][12];
+  const slotCount = multis.length;
+  const slotW = (w * 0.85) / slotCount;
+  const slotStartX = (w - slotW * slotCount) / 2;
+  const finalSlot = Math.min(slot, slotCount - 1);
+  path.push({ x: slotStartX + finalSlot * slotW + slotW / 2, y: h - padBot + 25 });
+
+  // Animate
+  let step = 0;
+  function animatePlinko() {
+    step++;
+    const currentPath = path.slice(0, Math.min(step, path.length));
+    drawPlinkoBoard(rows, currentPath, step >= path.length ? finalSlot : undefined);
+    if (step < path.length) {
+      setTimeout(() => requestAnimationFrame(animatePlinko), 120);
+    } else {
+      const multi = multis[finalSlot];
+      showGameSeed('plinko-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
+      if (multi >= 1) {
+        const payout = Math.floor(bet * multi);
+        balance += payout;
+        document.getElementById('plinko-result-text').style.color = 'var(--green)';
+        document.getElementById('plinko-result-text').textContent = multi + 'x! +' + (payout - bet).toLocaleString();
+        showResult('plinko-result', true, 'Landed on ' + multi + 'x! Won +' + (payout - bet).toLocaleString() + ' SPUNK\u2022BET');
+        addHistory('Plinko', bet, 'win', payout - bet, seedAfter);
+      } else {
+        const payout = Math.floor(bet * multi);
+        balance += payout;
+        document.getElementById('plinko-result-text').style.color = 'var(--red)';
+        document.getElementById('plinko-result-text').textContent = multi + 'x - ' + (bet - payout).toLocaleString() + ' lost';
+        showResult('plinko-result', false, 'Landed on ' + multi + 'x. Lost ' + (bet - payout).toLocaleString() + ' SPUNK\u2022BET');
+        addHistory('Plinko', bet, 'lose', -(bet - payout), seedAfter);
+      }
+      updateBalance(); saveState();
+      plinkoDropping = false;
+      document.getElementById('plinko-drop-btn').disabled = false;
+    }
+  }
+  drawPlinkoBoard(rows, [], undefined);
+  requestAnimationFrame(animatePlinko);
+}
+
+// ===== HILO =====
+let hiloState = null;
+const CARD_RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const CARD_SUITS = ['\u2665','\u2666','\u2663','\u2660'];
+function cardValue(rank) { return CARD_RANKS.indexOf(rank) + 1; }
+function renderCard(elId, rank, suit, extraClass) {
+  const el = document.getElementById(elId);
+  const isRed = suit === '\u2665' || suit === '\u2666';
+  el.className = 'hilo-card ' + (isRed ? 'red' : 'black') + (extraClass ? ' ' + extraClass : '');
+  el.querySelector('.card-rank').textContent = rank;
+  el.querySelector('.card-suit').textContent = suit;
+}
+async function startHiLo() {
+  const bet = getBet('hilo-bet');
+  if (bet <= 0 || bet > balance) return;
+  balance -= bet; updateBalance(); saveState();
+
+  const seedBefore = { serverSeedHash: pfState.serverSeedHash, clientSeed: pfState.clientSeed, nonce: pfState.nonce };
+  const rand = await fairRandom();
+  const cardIdx = Math.floor(rand * 52);
+  const rank = CARD_RANKS[cardIdx % 13];
+  const suit = CARD_SUITS[Math.floor(cardIdx / 13)];
+
+  hiloState = {
+    bet, currentRank: rank, currentSuit: suit, streak: 0, multi: 1.00, active: true,
+    seedBefore, firstSeed: pfState.serverSeed
+  };
+  renderCard('hilo-current', rank, suit);
+  document.getElementById('hilo-next').className = 'hilo-card next';
+  document.getElementById('hilo-next').querySelector('.card-rank').textContent = '?';
+  document.getElementById('hilo-next').querySelector('.card-suit').textContent = '';
+  document.getElementById('hilo-multi').textContent = '1.00x';
+  document.getElementById('hilo-streak').textContent = '0';
+  document.getElementById('hilo-result').className = 'result';
+  document.getElementById('hilo-start-btn').style.display = 'none';
+  document.getElementById('hilo-cashout-btn').style.display = '';
+  document.getElementById('hilo-hi-btn').disabled = false;
+  document.getElementById('hilo-lo-btn').disabled = false;
+
+  // Calculate odds display
+  const val = cardValue(rank);
+  const hiChance = (13 - val) / 13;
+  const loChance = (val - 1) / 13;
+  document.getElementById('hilo-hi-btn').textContent = '\u25B2 Higher (' + Math.round(hiChance * 100) + '%)';
+  document.getElementById('hilo-lo-btn').textContent = '\u25BC Lower (' + Math.round(loChance * 100) + '%)';
+}
+async function guessHiLo(guess) {
+  if (!hiloState || !hiloState.active) return;
+  document.getElementById('hilo-hi-btn').disabled = true;
+  document.getElementById('hilo-lo-btn').disabled = true;
+
+  const rand = await fairRandom();
+  const cardIdx = Math.floor(rand * 52);
+  const newRank = CARD_RANKS[cardIdx % 13];
+  const newSuit = CARD_SUITS[Math.floor(cardIdx / 13)];
+  const oldVal = cardValue(hiloState.currentRank);
+  const newVal = cardValue(newRank);
+
+  const correct = (guess === 'hi' && newVal >= oldVal) || (guess === 'lo' && newVal <= oldVal);
+
+  setTimeout(() => {
+    renderCard('hilo-next', newRank, newSuit, correct ? 'win' : 'lose');
+    if (correct) {
+      hiloState.streak++;
+      const odds = guess === 'hi' ? (13 - oldVal + 1) / 13 : oldVal / 13;
+      hiloState.multi *= (0.98 / odds);
+      hiloState.multi = Math.round(hiloState.multi * 100) / 100;
+      document.getElementById('hilo-multi').textContent = hiloState.multi.toFixed(2) + 'x';
+      document.getElementById('hilo-streak').textContent = hiloState.streak;
+      // Shift cards
+      setTimeout(() => {
+        hiloState.currentRank = newRank;
+        hiloState.currentSuit = newSuit;
+        renderCard('hilo-current', newRank, newSuit);
+        document.getElementById('hilo-next').className = 'hilo-card next';
+        document.getElementById('hilo-next').querySelector('.card-rank').textContent = '?';
+        document.getElementById('hilo-next').querySelector('.card-suit').textContent = '';
+        document.getElementById('hilo-hi-btn').disabled = false;
+        document.getElementById('hilo-lo-btn').disabled = false;
+        const val = cardValue(newRank);
+        document.getElementById('hilo-hi-btn').textContent = '\u25B2 Higher (' + Math.round(((13 - val) / 13) * 100) + '%)';
+        document.getElementById('hilo-lo-btn').textContent = '\u25BC Lower (' + Math.round(((val - 1) / 13) * 100) + '%)';
+      }, 600);
+    } else {
+      hiloState.active = false;
+      const seedAfter = { ...hiloState.seedBefore, serverSeed: hiloState.firstSeed };
+      showGameSeed('hilo-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
+      showResult('hilo-result', false, newRank + newSuit + ' was not ' + (guess === 'hi' ? 'higher' : 'lower') + '. Lost ' + hiloState.bet.toLocaleString() + ' SPUNK\u2022BET');
+      addHistory('HiLo', hiloState.bet, 'lose', -hiloState.bet, seedAfter);
+      document.getElementById('hilo-cashout-btn').style.display = 'none';
+      document.getElementById('hilo-start-btn').style.display = '';
+    }
+  }, 300);
+}
+function cashoutHiLo() {
+  if (!hiloState || !hiloState.active) return;
+  hiloState.active = false;
+  const payout = Math.floor(hiloState.bet * hiloState.multi);
+  balance += payout;
+  const profit = payout - hiloState.bet;
+  const seedAfter = { ...hiloState.seedBefore, serverSeed: hiloState.firstSeed };
+  showGameSeed('hilo-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
+  showResult('hilo-result', true, 'Cashed out at ' + hiloState.multi.toFixed(2) + 'x! Won +' + profit.toLocaleString() + ' SPUNK\u2022BET');
+  addHistory('HiLo', hiloState.bet, 'win', profit, seedAfter);
+  document.getElementById('hilo-cashout-btn').style.display = 'none';
+  document.getElementById('hilo-start-btn').style.display = '';
+  updateBalance(); saveState();
+}
+
+// ===== RUNE TOWER =====
+let towerState = null;
+let towerDiff = 'easy';
+const TOWER_CONFIG = {
+  easy: { cols: 4, traps: 1, floors: 10 },
+  medium: { cols: 3, traps: 1, floors: 10 },
+  hard: { cols: 2, traps: 1, floors: 10 },
+  expert: { cols: 3, traps: 2, floors: 8 }
+};
+function setTowerDiff(diff) {
+  towerDiff = diff;
+  ['easy','medium','hard','expert'].forEach(d => {
+    document.getElementById('tower-' + d).classList.toggle('active', d === diff);
+  });
+  initTowerGrid();
+}
+function getTowerMulti(floor, diff) {
+  const cfg = TOWER_CONFIG[diff];
+  const safeOdds = (cfg.cols - cfg.traps) / cfg.cols;
+  return Math.pow(0.98 / safeOdds, floor);
+}
+function initTowerGrid() {
+  const cfg = TOWER_CONFIG[towerDiff];
+  const grid = document.getElementById('tower-grid');
+  grid.innerHTML = '';
+  for (let f = 0; f < cfg.floors; f++) {
+    const floor = document.createElement('div');
+    floor.className = 'tower-floor cols-' + cfg.cols;
+    floor.dataset.floor = f;
+    for (let c = 0; c < cfg.cols; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'tower-cell' + (f > 0 ? ' locked' : '');
+      cell.dataset.floor = f;
+      cell.dataset.col = c;
+      cell.textContent = f === 0 ? '' : '';
+      floor.appendChild(cell);
+    }
+    grid.appendChild(floor);
+  }
+  document.getElementById('tower-floor').textContent = '0';
+  document.getElementById('tower-multi').textContent = '1.00x';
+  document.getElementById('tower-profit').textContent = '+0';
+  document.getElementById('tower-result').className = 'result';
+  document.getElementById('tower-start-btn').style.display = '';
+  document.getElementById('tower-cashout-btn').style.display = 'none';
+  towerState = null;
+}
+async function startTower() {
+  const bet = getBet('tower-bet');
+  if (bet <= 0 || bet > balance) return;
+  balance -= bet; updateBalance(); saveState();
+
+  const cfg = TOWER_CONFIG[towerDiff];
+  const seedBefore = { serverSeedHash: pfState.serverSeedHash, clientSeed: pfState.clientSeed, nonce: pfState.nonce };
+
+  // Generate trap positions for each floor
+  const traps = [];
+  for (let f = 0; f < cfg.floors; f++) {
+    const floorTraps = [];
+    const avail = Array.from({length: cfg.cols}, (_, i) => i);
+    for (let t = 0; t < cfg.traps; t++) {
+      const rand = await fairRandom();
+      const idx = Math.floor(rand * avail.length);
+      floorTraps.push(avail[idx]);
+      avail.splice(idx, 1);
+    }
+    traps.push(floorTraps);
+  }
+  const seedAfter = { ...seedBefore, serverSeed: pfState.serverSeed };
+  await rotateServerSeed(); savePFState();
+
+  towerState = { bet, diff: towerDiff, traps, currentFloor: 0, active: true, seedData: seedAfter, config: cfg };
+  initTowerGrid();
+  // Unlock floor 0
+  document.querySelectorAll('.tower-cell[data-floor="0"]').forEach(cell => {
+    cell.classList.remove('locked');
+    cell.onclick = () => climbTower(parseInt(cell.dataset.floor), parseInt(cell.dataset.col));
+  });
+  document.getElementById('tower-start-btn').style.display = 'none';
+  document.getElementById('tower-cashout-btn').style.display = '';
+  showGameSeed('tower-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
+}
+function climbTower(floor, col) {
+  if (!towerState || !towerState.active || floor !== towerState.currentFloor) return;
+  const cell = document.querySelector('.tower-cell[data-floor="' + floor + '"][data-col="' + col + '"]');
+  if (!cell || cell.classList.contains('revealed')) return;
+
+  const isTrapped = towerState.traps[floor].includes(col);
+  if (isTrapped) {
+    cell.classList.add('revealed', 'trap');
+    cell.textContent = '\u2620';
+    towerState.active = false;
+    // Reveal all traps on this floor
+    towerState.traps[floor].forEach(t => {
+      const tc = document.querySelector('.tower-cell[data-floor="' + floor + '"][data-col="' + t + '"]');
+      if (tc && !tc.classList.contains('revealed')) { tc.classList.add('revealed', 'shown'); tc.textContent = '\u2620'; }
+    });
+    showResult('tower-result', false, 'Trapped on floor ' + (floor + 1) + '! Lost ' + towerState.bet.toLocaleString() + ' SPUNK\u2022BET');
+    addHistory('Rune Tower', towerState.bet, 'lose', -towerState.bet, towerState.seedData);
+    document.getElementById('tower-cashout-btn').style.display = 'none';
+    document.getElementById('tower-start-btn').style.display = '';
+  } else {
+    cell.classList.add('revealed', 'safe');
+    cell.textContent = '\u2B50';
+    // Reveal traps on this floor
+    towerState.traps[floor].forEach(t => {
+      const tc = document.querySelector('.tower-cell[data-floor="' + floor + '"][data-col="' + t + '"]');
+      if (tc && !tc.classList.contains('revealed')) { tc.classList.add('revealed', 'shown'); tc.textContent = '\u2620'; }
+    });
+    towerState.currentFloor++;
+    const multi = getTowerMulti(towerState.currentFloor, towerState.diff);
+    const profit = Math.floor(towerState.bet * multi) - towerState.bet;
+    document.getElementById('tower-floor').textContent = towerState.currentFloor;
+    document.getElementById('tower-multi').textContent = multi.toFixed(2) + 'x';
+    document.getElementById('tower-profit').textContent = '+' + profit.toLocaleString();
+    if (towerState.currentFloor >= towerState.config.floors) {
+      cashoutTower();
+    } else {
+      // Unlock next floor
+      document.querySelectorAll('.tower-cell[data-floor="' + towerState.currentFloor + '"]').forEach(c => {
+        c.classList.remove('locked');
+        c.classList.add('current');
+        c.onclick = () => climbTower(parseInt(c.dataset.floor), parseInt(c.dataset.col));
+      });
+    }
+  }
+}
+function cashoutTower() {
+  if (!towerState || !towerState.active) return;
+  towerState.active = false;
+  const multi = getTowerMulti(towerState.currentFloor, towerState.diff);
+  const payout = Math.floor(towerState.bet * multi);
+  balance += payout;
+  const profit = payout - towerState.bet;
+  showResult('tower-result', true, 'Escaped at floor ' + towerState.currentFloor + ' (' + multi.toFixed(2) + 'x)! Won +' + profit.toLocaleString() + ' SPUNK\u2022BET');
+  addHistory('Rune Tower', towerState.bet, 'win', profit, towerState.seedData);
+  document.getElementById('tower-cashout-btn').style.display = 'none';
+  document.getElementById('tower-start-btn').style.display = '';
+  updateBalance(); saveState();
 }
 
 // ===== XVERSE WALLET =====
