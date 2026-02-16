@@ -150,69 +150,54 @@
 
     /* ORIGINALS SECTION */
     .originals-header {
-      max-width: 1100px; margin: 0 auto; padding: 0 2rem 1rem;
-      display: flex; align-items: center; gap: 0.75rem;
+      max-width: 1100px; margin: 0 auto; padding: 0 2rem 0.75rem;
+      display: flex; align-items: center; gap: 0.5rem;
     }
     .originals-header h2 {
-      font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em;
+      font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; color: #fff;
     }
     .originals-header .tag {
-      background: var(--accent-glow); color: var(--accent); font-size: 0.7rem;
-      font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 20px;
-      letter-spacing: 0.03em;
+      background: rgba(255,95,31,0.12); color: var(--accent); font-size: 0.65rem;
+      font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 4px;
+      letter-spacing: 0.04em;
     }
 
-    /* GAME CARDS */
+    /* GAME CARDS - Winna/Stake Style */
     .game-grid {
       max-width: 1100px; margin: 0 auto; padding: 0 2rem 4rem;
-      display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem;
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem;
     }
     .game-card {
-      border: 1px solid transparent; border-radius: 18px;
-      padding: 1.75rem 1.25rem; cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden;
+      background: #181818; border: 1px solid #222; border-radius: 12px;
+      padding: 1.5rem 1rem 2.2rem; cursor: pointer; transition: all 0.2s ease; position: relative; overflow: hidden;
       display: flex; flex-direction: column; align-items: center; text-align: center;
-      min-height: 200px; justify-content: center;
+      min-height: 170px; justify-content: center;
     }
-    .game-card::before {
-      content: ''; position: absolute; inset: 0; opacity: 1; transition: opacity 0.3s;
-      border-radius: 18px; z-index: 0;
+    .game-card:hover {
+      background: #1e1e1e; border-color: #333;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
     }
-    .game-card::after {
-      content: ''; position: absolute; inset: 0; border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.04); z-index: 0;
-    }
-    .game-card:hover { transform: translateY(-6px) scale(1.02);
-      box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06);
-    }
-    .game-card:hover::after { border-color: rgba(255,255,255,0.1); }
     .game-card-icon {
-      font-size: 3.5rem; margin-bottom: 0.75rem; position: relative; z-index: 1;
-      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
-      transition: transform 0.3s ease;
+      font-size: 2.8rem; margin-bottom: 0.6rem; transition: transform 0.2s ease;
     }
-    .game-card:hover .game-card-icon { transform: scale(1.12); }
+    .game-card:hover .game-card-icon { transform: scale(1.1); }
     .game-card h3 {
-      font-size: 1.05rem; font-weight: 700; margin-bottom: 0.4rem; position: relative; z-index: 1;
+      font-size: 0.9rem; font-weight: 700; margin-bottom: 0.15rem; color: #fff;
       letter-spacing: -0.01em;
     }
-    .game-card p { color: var(--muted); font-size: 0.72rem; line-height: 1.4; position: relative; z-index: 1; display: none; }
+    .game-card p { display: none; }
     .game-card-desc {
-      display: block !important; font-size: 0.75rem !important; color: rgba(228,228,231,0.45) !important;
-      margin: 0; position: relative; z-index: 1; font-weight: 500;
+      display: block !important; font-size: 0.7rem !important; color: #666 !important;
+      margin: 0; font-weight: 500;
     }
     .game-card-edge {
-      position: absolute; bottom: 0.75rem; left: 50%; transform: translateX(-50%);
-      font-size: 0.75rem; font-weight: 800; z-index: 1;
-      padding: 0.25rem 0.75rem; border-radius: 20px;
+      position: absolute; bottom: 0.5rem; left: 50%; transform: translateX(-50%);
+      font-size: 0.7rem; font-weight: 700; color: var(--accent);
+      padding: 0.15rem 0.6rem; border-radius: 4px;
       letter-spacing: 0.02em;
-      background: rgba(0,0,0,0.45); backdrop-filter: blur(8px);
-      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,95,31,0.1);
     }
-    /* Unified card theme - black + orange (Stake/Winna style) */
-    .game-card { background: linear-gradient(160deg, #111 0%, #0d0d0d 100%); }
-    .game-card::before { background: radial-gradient(ellipse at 50% 20%, rgba(255,95,31,0.08) 0%, transparent 70%); }
-    .game-card:hover::before { background: radial-gradient(ellipse at 50% 20%, rgba(255,95,31,0.18) 0%, transparent 70%); }
-    .game-card-edge { color: var(--accent); }
 
     /* GAME CONTAINER */
     .game-container {
@@ -411,10 +396,15 @@
     }
     .keno-cell:hover:not(.drawn) { border-color: var(--accent); }
     .keno-cell.selected { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
-    .keno-cell.drawn.hit { background: rgba(34,197,94,0.2); border-color: var(--green); color: var(--green); }
-    .keno-cell.drawn.miss { background: rgba(113,113,122,0.1); border-color: var(--border); color: var(--muted); opacity: 0.5; }
-    .keno-cell.drawn.selected.hit { background: rgba(34,197,94,0.3); border-color: var(--green); color: var(--green); }
-    .keno-cell.drawn.selected.miss { background: rgba(239,68,68,0.15); border-color: var(--red); color: var(--red); }
+    .keno-cell.drawn.hit { background: rgba(255,95,31,0.15); border-color: var(--accent); color: var(--accent); }
+    .keno-cell.drawn.miss { background: rgba(113,113,122,0.08); border-color: var(--border); color: var(--muted); opacity: 0.4; }
+    .keno-cell.drawn.selected.hit, .keno-cell.selected.drawn.hit, .keno-cell.hit.selected {
+      background: rgba(34,197,94,0.25); border-color: var(--green); color: #fff;
+      box-shadow: 0 0 12px rgba(34,197,94,0.4), inset 0 0 8px rgba(34,197,94,0.15);
+      animation: kenoHitPulse 0.5s ease-out; transform: scale(1.08);
+    }
+    .keno-cell.drawn.selected.miss, .keno-cell.selected.drawn.miss { background: rgba(239,68,68,0.15); border-color: var(--red); color: var(--red); opacity: 0.7; }
+    @keyframes kenoHitPulse { 0% { transform:scale(1.3); box-shadow:0 0 20px rgba(34,197,94,0.6); } 100% { transform:scale(1.08); box-shadow:0 0 12px rgba(34,197,94,0.4); } }
     .keno-info { font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0; }
     .keno-info span { color: var(--accent); font-weight: 600; }
     .keno-picks { display: flex; gap: 0.25rem; flex-wrap: wrap; margin: 0.5rem 0; }
@@ -817,11 +807,12 @@
     @keyframes heroScale { 0%,100% { transform:scale(1); } 50% { transform:scale(1.05); } }
 
     /* LIMBO RESULTS BAR */
-    .limbo-history { display:flex; gap:4px; overflow-x:auto; padding:0.5rem 0; margin-bottom:0.5rem; scrollbar-width:none; }
+    .limbo-history { display:flex; gap:5px; overflow-x:auto; padding:0.4rem 0.5rem; margin-bottom:0.75rem; scrollbar-width:none; background:var(--bg); border:1px solid var(--border); border-radius:8px; min-height:32px; align-items:center; width:100%; }
     .limbo-history::-webkit-scrollbar { display:none; }
-    .limbo-history-item { flex-shrink:0; padding:0.2rem 0.5rem; border-radius:6px; font-size:0.7rem; font-weight:700; }
-    .limbo-history-item.win { background:rgba(34,197,94,0.15); color:var(--green); border:1px solid rgba(34,197,94,0.3); }
-    .limbo-history-item.lose { background:rgba(239,68,68,0.15); color:var(--red); border:1px solid rgba(239,68,68,0.3); }
+    .limbo-history:empty::before { content:'Previous results appear here'; color:var(--muted); font-size:0.7rem; opacity:0.5; }
+    .limbo-history-item { flex-shrink:0; padding:0.2rem 0.6rem; border-radius:4px; font-size:0.72rem; font-weight:700; line-height:1.2; }
+    .limbo-history-item.win { background:rgba(34,197,94,0.15); color:var(--green); }
+    .limbo-history-item.lose { background:rgba(239,68,68,0.12); color:var(--red); }
 
     /* KENO BALL ANIMATION */
     .keno-drawn-area { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:0.75rem 0; min-height:44px; }
@@ -833,18 +824,18 @@
     @keyframes ballWinPop { 0% { opacity:0; transform:translateX(-50%) translateY(5px); } 100% { opacity:1; transform:translateX(-50%) translateY(0); } }
 
     @media (max-width: 900px) {
-      .game-grid { grid-template-columns: repeat(3, 1fr); }
+      .game-grid { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
     }
     @media (max-width: 640px) {
       nav { padding: 0.75rem 1rem; }
       .nav-center { display: none; }
       .hamburger { display: flex; }
       .game-container { padding: 1.5rem 1rem; }
-      .game-grid { padding: 0 1rem 3rem; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
-      .game-card { min-height: 155px; padding: 1.25rem 1rem; border-radius: 14px; }
-      .game-card-icon { font-size: 2.6rem; }
-      .game-card h3 { font-size: 0.9rem; }
-      .game-card-edge { font-size: 0.65rem; padding: 0.2rem 0.55rem; }
+      .game-grid { padding: 0 1rem 3rem; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+      .game-card { min-height: 140px; padding: 1.1rem 0.75rem 1.8rem; border-radius: 10px; }
+      .game-card-icon { font-size: 2.2rem; }
+      .game-card h3 { font-size: 0.82rem; }
+      .game-card-edge { font-size: 0.6rem; padding: 0.12rem 0.5rem; }
       .hero { padding: 3rem 1.5rem 2rem; }
       .mine-cell { width: 52px; height: 52px; font-size: 1.1rem; }
       .mines-grid { width: 290px; gap: 5px; }
@@ -989,7 +980,6 @@
     <h1>Play. Bet. <span>Win.</span></h1>
     <p>Provably fair casino games powered by the SPUNK•BET rune on Bitcoin. No accounts, no KYC. Connect and play.</p>
     <div class="shield-icon">Provably Fair</div>
-    <div class="hero-flash hero-flash-pulse" onclick="document.getElementById('faucet-btn').scrollIntoView({behavior:'smooth'});document.getElementById('faucet-btn').click();" style="cursor:pointer;">10,000 FREE SPUNK•BET — Claim Now</div>
   </section>
 
   <!-- Faucet Banner -->
@@ -1015,6 +1005,10 @@
         <div class="label">Spots Left</div>
       </div>
     </div>
+  </div>
+
+  <div style="max-width:1100px; margin:0 auto; padding:0 2rem 1rem; text-align:center;">
+    <div class="hero-flash hero-flash-pulse" onclick="document.getElementById('faucet-btn').scrollIntoView({behavior:'smooth'});document.getElementById('faucet-btn').click();" style="cursor:pointer;">10,000 FREE SPUNK•BET — Claim Now</div>
   </div>
 
   <div class="originals-header">
@@ -3588,6 +3582,8 @@ function renderLimboHistory() {
   container.innerHTML = limboHistory.map(h =>
     '<div class="limbo-history-item ' + (h.win ? 'win' : 'lose') + '">' + h.result.toFixed(2) + 'x</div>'
   ).join('');
+  // Scroll to show newest (leftmost)
+  container.scrollLeft = 0;
 }
 
 // ===== KENO ANIMATED DRAW =====
@@ -3626,11 +3622,15 @@ async function playKenoAnimated() {
         const isHit = kenoSelected.has(num);
         if (isHit) hits++;
 
-        // Mark on grid
+        // Mark on grid with highlight
         const cell = cells[num - 1];
         cell.classList.add('drawn');
-        if (isHit) cell.classList.add('hit');
-        else cell.classList.add('miss');
+        if (isHit) {
+          cell.classList.add('hit');
+          cell.textContent = '\u2713';
+        } else {
+          cell.classList.add('miss');
+        }
 
         // Add ball to drawn area
         if (drawnArea) {
