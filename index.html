@@ -4297,28 +4297,56 @@ function onWalletConnected() {
 }
 
 function getXverseProvider() {
-  if (window.XverseProviders?.BitcoinProvider) return window.XverseProviders.BitcoinProvider;
-  if (window.BitcoinProvider) return window.BitcoinProvider;
-  if (window.btc_providers) {
+  // 1. WBIP004 standard — btc_providers array (newest Xverse versions)
+  if (window.btc_providers && Array.isArray(window.btc_providers)) {
     const xverse = window.btc_providers.find(p =>
-      p.id === 'BitcoinProvider' || p.id === 'xverseProviders.BitcoinProvider'
+      p.name === 'Xverse Wallet' || p.id === 'BitcoinProvider' || p.id === 'xverseProviders.BitcoinProvider'
     );
-    if (xverse) return xverse.id.split('.').reduce((obj, key) => obj?.[key], window);
+    if (xverse) {
+      const providerObj = xverse.id.split('.').reduce((obj, key) => obj?.[key], window);
+      if (providerObj && typeof providerObj.request === 'function') return providerObj;
+    }
+  }
+  // 2. Direct XverseProviders object
+  if (window.XverseProviders?.BitcoinProvider && typeof window.XverseProviders.BitcoinProvider.request === 'function') {
+    return window.XverseProviders.BitcoinProvider;
+  }
+  // 3. Global BitcoinProvider
+  if (window.BitcoinProvider && typeof window.BitcoinProvider.request === 'function') {
+    return window.BitcoinProvider;
   }
   return null;
 }
 
 async function connectXverse() {
   const provider = getXverseProvider();
-  if (!provider) { document.getElementById('wallet-install-hint').style.display = 'block'; return; }
+  if (!provider) {
+    const hint = document.getElementById('wallet-install-hint');
+    document.getElementById('wallet-install-text').innerHTML = 'Xverse not detected. <a href="https://www.xverse.app/download" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:600;">Download Xverse</a> and refresh.';
+    hint.style.display = 'block';
+    return;
+  }
   try {
-    const connectResponse = await provider.request('wallet_connect', {
-      addresses: ['payment', 'ordinals'],
-      message: 'Spunk.bet wants to connect your wallet',
-      network: 'Mainnet'
-    });
-    if (connectResponse.status === 'success') {
-      const addresses = connectResponse.result.addresses || [];
+    // Try wallet_connect with null first (sats-connect standard)
+    let connectResponse;
+    try {
+      connectResponse = await provider.request('wallet_connect', null);
+    } catch(e1) {
+      // Fallback: try with params
+      try {
+        connectResponse = await provider.request('wallet_connect', {
+          addresses: ['payment', 'ordinals'],
+          message: 'SPUNK·BET wants to connect',
+          network: 'Mainnet'
+        });
+      } catch(e2) {
+        // Final fallback: try getAddresses
+        connectResponse = null;
+      }
+    }
+
+    if (connectResponse && connectResponse.status === 'success') {
+      const addresses = connectResponse.result?.addresses || [];
       const payment = addresses.find(a => a.purpose === 'payment');
       const ordinals = addresses.find(a => a.purpose === 'ordinals');
       if (payment || addresses.length > 0) {
@@ -4327,20 +4355,38 @@ async function connectXverse() {
         return;
       }
     }
-    const addrResponse = await provider.request('getAddresses', { purposes: ['payment', 'ordinals'] });
-    if (addrResponse.status === 'success') {
-      const addresses = addrResponse.result.addresses || addrResponse.result || [];
-      const payment = addresses.find(a => a.purpose === 'payment');
-      const ordinals = addresses.find(a => a.purpose === 'ordinals');
-      walletState = { connected: true, paymentAddress: payment?.address || addresses[0]?.address, ordinalsAddress: ordinals?.address || null, provider: 'xverse' };
-      onWalletConnected();
-    }
+
+    // Fallback: getAddresses method
+    try {
+      const addrResponse = await provider.request('getAddresses', { purposes: ['payment', 'ordinals'] });
+      if (addrResponse.status === 'success') {
+        const addresses = addrResponse.result?.addresses || addrResponse.result || [];
+        const payment = Array.isArray(addresses) ? addresses.find(a => a.purpose === 'payment') : null;
+        const ordinals = Array.isArray(addresses) ? addresses.find(a => a.purpose === 'ordinals') : null;
+        walletState = { connected: true, paymentAddress: payment?.address || (Array.isArray(addresses) ? addresses[0]?.address : addresses) || '', ordinalsAddress: ordinals?.address || null, provider: 'xverse' };
+        onWalletConnected();
+        return;
+      }
+    } catch(e3) {}
+
+    // Fallback: getAccounts (oldest API)
+    try {
+      const accounts = await provider.request('getAccounts', { purposes: ['payment', 'ordinals'] });
+      if (accounts && accounts.result) {
+        const addrs = accounts.result;
+        walletState = { connected: true, paymentAddress: addrs[0]?.address || addrs[0] || '', ordinalsAddress: addrs[1]?.address || null, provider: 'xverse' };
+        onWalletConnected();
+        return;
+      }
+    } catch(e4) {}
+
+    showToast('Could not connect — please try again');
   } catch (err) {
     if (err?.error?.code === -32000 || err?.code === 4001 || err?.error?.code === 4001) {
       closeWalletModal();
     } else {
       console.error('Xverse connection error:', err);
-      document.getElementById('wallet-install-hint').style.display = 'block';
+      showToast('Connection failed — check Xverse is unlocked');
     }
   }
 }
