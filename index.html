@@ -4730,8 +4730,8 @@ function renderPrizes(containerId) {
   }).join('');
 }
 
-// Background polling — check for new prizes every 60s
-setInterval(scanPrizeWallet, 60000);
+// Background polling — check for new prizes every 15 minutes
+setInterval(scanPrizeWallet, 900000);
 
 // ===== INIT =====
 captureReferral();
