@@ -1280,7 +1280,7 @@
     </div>
     <div class="prize-cta" style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
       <button class="prize-cta-btn" onclick="sharePrizeOnX()"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> Share Prizes &amp; Tag Friends</button>
-      <a href="https://magiceden.us/ordinals/wallet/bc1p27l6s82w5dek9yffjtlyj58ue2sndxm6zszpcz9zcwqpd4v86n9s5l37xm" target="_blank" class="prize-cta-btn" style="background:linear-gradient(90deg,#7c3aed,#a855f7);text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;">🔍 Verify on Magic Eden</a>
+      <a href="https://magiceden.us/ordinals/wallet?walletAddress=bc1p27l6s82w5dek9yffjtlyj58ue2sndxm6zszpcz9zcwqpd4v86n9s5l37xm" target="_blank" class="prize-cta-btn" style="background:linear-gradient(90deg,#7c3aed,#a855f7);text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;">🔍 Verify on Magic Eden</a>
     </div>
   </div>
 </div>
@@ -4855,7 +4855,7 @@ function renderPrizes(containerId) {
       '<p style="color:var(--text);font-weight:700;margin-bottom:0.3rem;">Prize Pool Restocking!</p>' +
       '<p style="color:var(--muted);font-size:0.8rem;">New ordinal prizes are being added soon. Send ordinals to the prize wallet to contribute!</p>' +
       '<p style="color:var(--muted);font-size:0.75rem;margin-top:0.5rem;">Fast. Fair. Free. <span style="color:var(--accent);">Auto-scan every 15 min.</span></p>' +
-      '<p style="margin-top:0.5rem;"><a href="https://magiceden.us/ordinals/wallet/' + PRIZE_WALLET + '" target="_blank" style="color:var(--accent);font-size:0.65rem;font-family:monospace;text-decoration:none;opacity:0.6;">View on Magic Eden ↗</a></p>' +
+      '<p style="margin-top:0.5rem;"><a href="https://magiceden.us/ordinals/wallet?walletAddress=' + PRIZE_WALLET + '" target="_blank" style="color:var(--accent);font-size:0.65rem;font-family:monospace;text-decoration:none;opacity:0.6;">View on Magic Eden ↗</a></p>' +
       '<p style="margin-top:0.3rem;"><a href="https://mempool.space/address/' + PRIZE_WALLET + '" target="_blank" style="color:var(--muted);font-size:0.6rem;font-family:monospace;text-decoration:none;opacity:0.5;">' + PRIZE_WALLET.slice(0,16) + '...' + PRIZE_WALLET.slice(-6) + ' ↗</a></p>' +
       '</div>';
     return;
