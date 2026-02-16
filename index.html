@@ -2085,6 +2085,11 @@ function setBet(id, action) {
 function addHistory(game, bet, result, amount, seedData) {
   history.unshift({ game, bet, result, amount, time: new Date(), seed: seedData || null });
   if (history.length > 50) history.pop();
+  if (result === 'win') {
+    // Extract multiplier from amount
+    const multi = bet > 0 ? ((amount + bet) / bet).toFixed(2) + 'x' : '';
+    lastWin = { game, amount: Math.abs(amount), multi };
+  }
   renderHistory();
   saveState();
 }
@@ -2106,18 +2111,91 @@ function renderHistory() {
   }).join('');
 }
 
+let lastWin = { game: '', amount: 0, multi: '' };
+
 function showResult(id, win, msg) {
   const el = document.getElementById(id);
   el.className = 'result ' + (win ? 'win' : 'lose');
   if (win) {
-    el.innerHTML = msg + ' <button class="share-x-btn" onclick="shareWinOnX(\'' + msg.replace(/'/g, "\\'") + '\')">Share on 𝕏</button>';
+    el.innerHTML = msg + ' <button class="share-x-btn" onclick="shareWinOnX()">Share on 𝕏</button>';
   } else {
     el.textContent = msg;
   }
 }
 
-function shareWinOnX(msg) {
-  const text = '🎰 ' + msg + '\n\nPlaying on @SpunkArt13 spunk.bet — provably fair Bitcoin casino powered by SPUNK•BET rune!\n\nTry it: https://spunk.bet';
+function generateWinCard() {
+  const c = document.createElement('canvas');
+  c.width = 600; c.height = 314;
+  const ctx = c.getContext('2d');
+  // Background
+  ctx.fillStyle = '#0d0d0d';
+  ctx.fillRect(0, 0, 600, 314);
+  // Orange accent bar
+  ctx.fillStyle = '#ff5f1f';
+  ctx.fillRect(0, 0, 600, 4);
+  // Logo
+  ctx.font = 'bold 22px -apple-system, sans-serif';
+  ctx.fillStyle = '#fff';
+  ctx.fillText('spunk', 30, 42);
+  ctx.fillStyle = '#ff5f1f';
+  ctx.fillText('.bet', 30 + ctx.measureText('spunk').width, 42);
+  // Game name
+  ctx.font = '600 16px -apple-system, sans-serif';
+  ctx.fillStyle = '#71717a';
+  ctx.fillText(lastWin.game.toUpperCase(), 30, 100);
+  // Win amount
+  ctx.font = 'bold 52px -apple-system, sans-serif';
+  ctx.fillStyle = '#22c55e';
+  ctx.fillText('+' + lastWin.amount.toLocaleString(), 30, 165);
+  // SPUNK•BET label
+  ctx.font = 'bold 20px -apple-system, sans-serif';
+  ctx.fillStyle = '#ff5f1f';
+  ctx.fillText('SPUNK•BET', 30, 195);
+  // Multiplier
+  if (lastWin.multi) {
+    ctx.font = 'bold 36px -apple-system, sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'right';
+    ctx.fillText(lastWin.multi, 570, 165);
+    ctx.textAlign = 'left';
+  }
+  // Footer
+  ctx.font = '500 13px -apple-system, sans-serif';
+  ctx.fillStyle = '#555';
+  ctx.fillText('Provably Fair \u00B7 Bitcoin \u00B7 No KYC', 30, 280);
+  // Border
+  ctx.strokeStyle = '#222';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(0, 0, 600, 314);
+  return c;
+}
+
+async function shareWinOnX() {
+  const refCode = walletState.connected ? walletState.paymentAddress.slice(0, 8) : '';
+  const link = refCode ? 'https://spunk.bet?ref=' + refCode : 'https://spunk.bet';
+  const text = '+' + lastWin.amount.toLocaleString() + ' SPUNK\u2022BET on ' + lastWin.game + '! \uD83C\uDFB0\n\nPlay free \u2192 ' + link;
+
+  // Try Web Share API with image (mobile)
+  try {
+    const card = generateWinCard();
+    const blob = await new Promise(r => card.toBlob(r, 'image/png'));
+    const file = new File([blob], 'spunkbet-win.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ text: text, files: [file] });
+      return;
+    }
+  } catch(e) {}
+
+  // Fallback: download image + open X intent
+  try {
+    const card = generateWinCard();
+    const a = document.createElement('a');
+    a.href = card.toDataURL('image/png');
+    a.download = 'spunkbet-win.png';
+    a.click();
+    showToast('Win card saved! Attach it to your tweet.');
+  } catch(e) {}
+
   const url = 'https://x.com/intent/tweet?text=' + encodeURIComponent(text);
   window.open(url, '_blank', 'width=550,height=420');
 }
@@ -3407,8 +3485,8 @@ function closeReferralModal() { document.getElementById('referral-modal').classL
 function shareReferralOnX() {
   if (!walletState.connected) return;
   const code = walletState.paymentAddress.slice(0, 8);
-  const link = window.location.origin + window.location.pathname + '?ref=' + code;
-  const text = '🎲 Play provably fair casino games on @SpunkArt13 spunk.bet!\n\nPowered by SPUNK•BET rune on Bitcoin. No KYC, connect & play.\n\nJoin me: ' + link;
+  const link = 'https://spunk.bet?ref=' + code;
+  const text = 'Free crypto casino on Bitcoin \uD83C\uDFB0\n\nNo KYC, provably fair. Claim 10k free tokens \u2192 ' + link;
   const url = 'https://x.com/intent/tweet?text=' + encodeURIComponent(text);
   window.open(url, '_blank', 'width=550,height=420');
 }
