@@ -632,14 +632,28 @@
     <h3>Connect Wallet</h3>
     <p>Connect your Bitcoin wallet to play with Spunk.Bet rune</p>
     <div class="wallet-option" onclick="connectXverse()">
-      <div class="wallet-option-icon">X</div>
+      <div class="wallet-option-icon" style="background:#ee7b30;">X</div>
       <div class="wallet-option-info">
         <div class="wallet-option-name">Xverse</div>
         <div class="wallet-option-desc">Bitcoin, Ordinals, Runes & Stacks</div>
       </div>
     </div>
+    <div class="wallet-option" onclick="connectUnisat()">
+      <div class="wallet-option-icon" style="background:#000;border:1px solid #333;">U</div>
+      <div class="wallet-option-info">
+        <div class="wallet-option-name">Unisat</div>
+        <div class="wallet-option-desc">Bitcoin, Ordinals, BRC-20 & Runes</div>
+      </div>
+    </div>
+    <div class="wallet-option" onclick="connectMagicEden()">
+      <div class="wallet-option-icon" style="background:#e42575;">M</div>
+      <div class="wallet-option-info">
+        <div class="wallet-option-name">Magic Eden</div>
+        <div class="wallet-option-desc">Bitcoin, Ordinals & Runes</div>
+      </div>
+    </div>
     <div id="wallet-install-hint" style="display:none; margin-top:0.75rem; padding:0.75rem; background:var(--bg); border-radius:8px; border:1px solid var(--border);">
-      <p style="font-size:0.8rem; color:var(--muted); margin:0;">Xverse not detected. <a href="https://www.xverse.app/download" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:600;">Download Xverse</a> and refresh.</p>
+      <p style="font-size:0.8rem; color:var(--muted); margin:0;" id="wallet-install-text">Wallet not detected. Install the wallet extension and refresh.</p>
     </div>
     <button class="wallet-modal-close" onclick="closeWalletModal()">Cancel</button>
   </div>
@@ -1199,6 +1213,10 @@ function claimFaucet() {
   saveState();
   updateFaucetButton();
   showToast('Claimed <span class="toast-amount">10,000 SPUNK</span>! Go play some games.');
+  // Also send real runes on-chain if wallet is connected
+  if (walletState.connected) {
+    claimFaucetOnChain();
+  }
 }
 
 // ===== LOCALSTORAGE PERSISTENCE =====
@@ -1263,6 +1281,8 @@ function processReferralOnConnect(address) {
   if (isReferred) {
     trackReferral(referrer, address);
     showToast('Welcome! You were referred by <span class="toast-amount">' + referrer + '</span>. Share your own link to earn SPUNK!');
+    // Send on-chain referral reward to the referrer
+    claimReferralOnChain(address);
   } else {
     showToast('Welcome to <span class="toast-amount">Spunk.bet</span>! Share your referral link to earn SPUNK.');
   }
@@ -1765,6 +1785,7 @@ function handleWalletClick() {
   } else {
     document.getElementById('wallet-modal').classList.add('show');
     document.getElementById('wallet-install-hint').style.display = 'none';
+    document.getElementById('wallet-install-text').innerHTML = '';
   }
 }
 
@@ -1853,7 +1874,7 @@ async function connectXverse() {
       const payment = addresses.find(a => a.purpose === 'payment');
       const ordinals = addresses.find(a => a.purpose === 'ordinals');
       if (payment || addresses.length > 0) {
-        walletState = { connected: true, paymentAddress: payment?.address || addresses[0]?.address, ordinalsAddress: ordinals?.address || null };
+        walletState = { connected: true, paymentAddress: payment?.address || addresses[0]?.address, ordinalsAddress: ordinals?.address || null, provider: 'xverse' };
         onWalletConnected();
         return;
       }
@@ -1863,7 +1884,7 @@ async function connectXverse() {
       const addresses = addrResponse.result.addresses || addrResponse.result || [];
       const payment = addresses.find(a => a.purpose === 'payment');
       const ordinals = addresses.find(a => a.purpose === 'ordinals');
-      walletState = { connected: true, paymentAddress: payment?.address || addresses[0]?.address, ordinalsAddress: ordinals?.address || null };
+      walletState = { connected: true, paymentAddress: payment?.address || addresses[0]?.address, ordinalsAddress: ordinals?.address || null, provider: 'xverse' };
       onWalletConnected();
     }
   } catch (err) {
@@ -1873,6 +1894,124 @@ async function connectXverse() {
       console.error('Xverse connection error:', err);
       document.getElementById('wallet-install-hint').style.display = 'block';
     }
+  }
+}
+
+// ===== UNISAT WALLET =====
+async function connectUnisat() {
+  if (!window.unisat) {
+    const hint = document.getElementById('wallet-install-hint');
+    document.getElementById('wallet-install-text').innerHTML = 'Unisat not detected. <a href="https://unisat.io/download" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:600;">Download Unisat</a> and refresh.';
+    hint.style.display = 'block';
+    return;
+  }
+  try {
+    const accounts = await window.unisat.requestAccounts();
+    if (accounts && accounts.length > 0) {
+      walletState = {
+        connected: true,
+        paymentAddress: accounts[0],
+        ordinalsAddress: accounts[0],
+        provider: 'unisat'
+      };
+      onWalletConnected();
+    }
+  } catch (err) {
+    if (err?.code === 4001) {
+      closeWalletModal();
+    } else {
+      console.error('Unisat connection error:', err);
+    }
+  }
+}
+
+// ===== MAGIC EDEN WALLET =====
+async function connectMagicEden() {
+  const provider = window.magicEden?.bitcoin || window.MagicEden?.bitcoin;
+  if (!provider) {
+    const hint = document.getElementById('wallet-install-hint');
+    document.getElementById('wallet-install-text').innerHTML = 'Magic Eden wallet not detected. <a href="https://wallet.magiceden.io/" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:600;">Download Magic Eden Wallet</a> and refresh.';
+    hint.style.display = 'block';
+    return;
+  }
+  try {
+    const accounts = await provider.connect();
+    if (accounts && accounts.length > 0) {
+      const payment = accounts.find(a => a.purpose === 'payment');
+      const ordinals = accounts.find(a => a.purpose === 'ordinals');
+      walletState = {
+        connected: true,
+        paymentAddress: payment?.address || accounts[0]?.address || accounts[0],
+        ordinalsAddress: ordinals?.address || accounts[0]?.address || accounts[0],
+        provider: 'magiceden'
+      };
+      onWalletConnected();
+    }
+  } catch (err) {
+    if (err?.code === 4001) {
+      closeWalletModal();
+    } else {
+      console.error('Magic Eden connection error:', err);
+      // Try alternative API
+      try {
+        const res = await provider.requestAccounts();
+        if (res && res.length > 0) {
+          walletState = {
+            connected: true,
+            paymentAddress: res[0],
+            ordinalsAddress: res[0],
+            provider: 'magiceden'
+          };
+          onWalletConnected();
+        }
+      } catch (e2) {
+        console.error('Magic Eden fallback error:', e2);
+      }
+    }
+  }
+}
+
+// ===== PAYOUT API =====
+const API_BASE = 'https://spunkbet-api.vercel.app';
+
+async function claimFaucetOnChain() {
+  if (!walletState.connected) return;
+  try {
+    const res = await fetch(API_BASE + '/api/claim', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'faucet', address: walletState.paymentAddress })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Runes sent! TX: <span class="toast-amount">' + data.txid.slice(0, 12) + '...</span>');
+    } else if (data.error) {
+      showToast(data.error);
+    }
+  } catch (err) {
+    console.error('Faucet claim error:', err);
+  }
+}
+
+async function claimReferralOnChain(referrerAddress) {
+  if (!walletState.connected) return;
+  try {
+    const res = await fetch(API_BASE + '/api/claim', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'referral',
+        address: referrerAddress,
+        referrerCode: walletState.paymentAddress.slice(0, 8),
+        referredAddress: walletState.paymentAddress
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Referral reward sent on-chain! TX: <span class="toast-amount">' + data.txid.slice(0, 12) + '...</span>');
+    }
+  } catch (err) {
+    console.error('Referral claim error:', err);
   }
 }
 
