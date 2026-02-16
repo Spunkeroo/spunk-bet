@@ -4044,6 +4044,7 @@ function getAutobetPanelHTML(game) {
     '<div class="autobet-row"><span class="autobet-label">On Loss</span><select class="autobet-select" id="ab-onloss-'+game+'"><option value="reset">Reset</option><option value="increase">Increase by %</option></select><input type="number" class="autobet-input" id="ab-onloss-pct-'+game+'" value="0" min="0" style="max-width:60px;display:none;" placeholder="%"></div>' +
     '<div class="autobet-row"><span class="autobet-label">Stop on Profit</span><input type="number" class="autobet-input" id="ab-stopprofit-'+game+'" value="0" min="0" placeholder="0 = no limit"></div>' +
     '<div class="autobet-row"><span class="autobet-label">Stop on Loss</span><input type="number" class="autobet-input" id="ab-stoploss-'+game+'" value="0" min="0" placeholder="0 = no limit"></div>' +
+    '<div class="autobet-row"><span class="autobet-label">Max Bet</span><input type="number" class="autobet-input" id="ab-maxbet-'+game+'" value="0" min="0" placeholder="0 = no limit"></div>' +
     '<button class="autobet-btn start" id="ab-btn-'+game+'" onclick="toggleAutobet(\''+game+'\')">Start Autobet</button>';
 }
 
@@ -4110,7 +4111,8 @@ function getAutobetSettings(game) {
     onLoss: document.getElementById('ab-onloss-' + game).value,
     onLossPct: parseFloat(document.getElementById('ab-onloss-pct-' + game).value) || 0,
     stopProfit: parseInt(document.getElementById('ab-stopprofit-' + game).value) || 0,
-    stopLoss: parseInt(document.getElementById('ab-stoploss-' + game).value) || 0
+    stopLoss: parseInt(document.getElementById('ab-stoploss-' + game).value) || 0,
+    maxBet: parseInt(document.getElementById('ab-maxbet-' + game).value) || 0
   };
 }
 
@@ -4128,6 +4130,10 @@ function adjustAutobetBet(game, won) {
     else currentBet = Math.floor(currentBet * (1 + settings.onLossPct / 100));
   }
   currentBet = Math.max(MIN_BET, currentBet);
+  if (settings.maxBet > 0 && currentBet > settings.maxBet) {
+    stopAutobet(game);
+    currentBet = settings.maxBet;
+  }
   betInput.value = currentBet;
 }
 
