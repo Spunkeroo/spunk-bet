@@ -754,8 +754,9 @@
       background: linear-gradient(135deg, rgba(255,95,31,0.08), rgba(168,85,247,0.08));
       border: 1px solid var(--accent); border-radius: 14px;
       padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between;
-      gap: 1rem; flex-wrap: wrap;
+      gap: 1rem; flex-wrap: wrap; transition: border-color 0.2s, box-shadow 0.2s;
     }
+    .first100-card:hover { box-shadow: 0 0 20px rgba(255,95,31,0.15); }
     .first100-left h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.2rem; }
     .first100-left h3 span { color: var(--accent); }
     .first100-left p { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
@@ -1018,6 +1019,7 @@
       <div class="first100-left">
         <h3>First 100 Referrers Get <span>Bonus SPUNK•BET</span></h3>
         <p>Share your referral link and be among the first 100 to refer a friend. Early referrers earn 2x bonus rewards!</p>
+        <button class="btn" style="margin-top:0.6rem;padding:0.45rem 1.2rem;font-size:0.8rem;" onclick="shareFirst100()">Share &amp; Claim Your Spot</button>
       </div>
       <div class="first100-counter">
         <div class="count" id="first100-count">100</div>
@@ -3564,6 +3566,22 @@ function shareReferralOnX() {
   const code = walletState.paymentAddress.slice(0, 8);
   const link = 'https://spunk.bet?ref=' + code;
   const text = 'Free crypto casino on Bitcoin \uD83C\uDFB0\n\nNo KYC, provably fair. Claim 10k free tokens \u2192 ' + link;
+  const url = 'https://x.com/intent/tweet?text=' + encodeURIComponent(text);
+  window.open(url, '_blank', 'width=550,height=420');
+}
+
+function shareFirst100() {
+  if (!walletState.connected) {
+    document.getElementById('wallet-modal').classList.add('show');
+    document.getElementById('wallet-install-hint').style.display = 'none';
+    document.getElementById('wallet-install-text').innerHTML = '';
+    showToast('Connect wallet first to get your referral link');
+    return;
+  }
+  const code = walletState.paymentAddress.slice(0, 8);
+  const link = 'https://spunk.bet?ref=' + code;
+  const remaining = document.getElementById('first100-count')?.textContent || '?';
+  const text = 'Only ' + remaining + ' spots left for 2x bonus rewards on Spunk.Bet \uD83C\uDFB0\n\nFree Bitcoin casino, no KYC. Claim yours \u2192 ' + link;
   const url = 'https://x.com/intent/tweet?text=' + encodeURIComponent(text);
   window.open(url, '_blank', 'width=550,height=420');
 }
