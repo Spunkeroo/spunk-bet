@@ -7,4 +7,4 @@ compatibility_date = "2024-01-01"
 # Then paste the id below:
 [[kv_namespaces]]
 binding = "ANALYTICS"
-id = "YOUR_KV_NAMESPACE_ID_HERE"
+id = "6d37213cf0d14d008bd2ac79b0d2c1ab"
