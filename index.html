@@ -1379,7 +1379,7 @@
         <button class="dice-mode-btn active" id="dice-under-btn" onclick="setDiceMode('under')">ROLL UNDER</button>
         <button class="dice-mode-btn" id="dice-over-btn" onclick="setDiceMode('over')">ROLL OVER</button>
       </div>
-      <div class="dice-target">Roll <span id="dice-mode-label">under</span> <span id="dice-target-val">50</span> to win</div>
+      <div class="dice-target">Roll <span id="dice-mode-label">under</span> <input type="number" id="dice-target-input" class="bet-input" style="width:60px;display:inline-block;text-align:center;padding:0.2rem 0.4rem;font-size:1rem;font-weight:700;" value="50" min="5" max="95" oninput="syncDiceTarget()"> <span id="dice-target-val" style="display:none;">50</span> to win</div>
       <div class="dice-display">
         <div class="die" id="dice-die">&#8212;</div>
       </div>
@@ -1795,8 +1795,14 @@
 <!-- HISTORY PAGE -->
 <div id="history-page" class="page">
   <div class="game-container">
-    <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:1rem;">Bet History</h2>
-    <div id="history-full-list" class="history-list" style="font-size:0.85rem;">
+    <div style="display:flex;gap:0;margin-bottom:1rem;">
+      <button class="mode-tab active" id="hist-tab-all" onclick="switchHistoryTab('all',this)">All Bets</button>
+      <button class="mode-tab" id="hist-tab-mine" onclick="switchHistoryTab('mine',this)">My Bets</button>
+    </div>
+    <div id="history-all-list" class="history-list" style="font-size:0.85rem;">
+      <div style="color:var(--muted);text-align:center;padding:2rem;">Loading live bets...</div>
+    </div>
+    <div id="history-full-list" class="history-list" style="font-size:0.85rem;display:none;">
       <div style="color:var(--muted);text-align:center;padding:2rem;">No bets yet. Go play!</div>
     </div>
   </div>
@@ -2424,6 +2430,7 @@ function addHistory(game, bet, result, amount, seedData) {
   // Update live ticker
   updateLiveTicker(game, bet, result, amount);
   renderHistory();
+  renderCommunityHistory();
   saveState();
 }
 
@@ -2443,6 +2450,67 @@ function renderHistory() {
     '</div>';
   }).join('');
 }
+
+function switchHistoryTab(tab, tabEl) {
+  document.querySelectorAll('#history-page .mode-tab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+  document.getElementById('history-all-list').style.display = tab === 'all' ? '' : 'none';
+  document.getElementById('history-full-list').style.display = tab === 'mine' ? '' : 'none';
+}
+
+// Simulated community bet feed
+const COMMUNITY_GAMES = ['Keno','Limbo','Dice','Coin Flip','Plinko','Mines','Wheel','HiLo','Crash','Rune Tower'];
+const COMMUNITY_NAMES = ['Player_','Anon_','Degen_','Whale_','Lucky_','Rune_','BTC_','Sat_','Punk_','Spunky_'];
+let communityBets = [];
+
+function generateCommunityBet() {
+  const game = COMMUNITY_GAMES[Math.floor(Math.random() * COMMUNITY_GAMES.length)];
+  const prefix = COMMUNITY_NAMES[Math.floor(Math.random() * COMMUNITY_NAMES.length)];
+  const player = prefix + Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+  const betAmounts = [100, 200, 500, 1000, 2500, 5000, 10000, 25000, 50000];
+  const bet = betAmounts[Math.floor(Math.random() * betAmounts.length)];
+  const isWin = Math.random() < 0.45;
+  const multi = isWin ? (1 + Math.random() * 9).toFixed(2) : 0;
+  const amount = isWin ? Math.floor(bet * multi) - bet : -bet;
+  return { player, game, bet, result: isWin ? 'win' : 'lose', amount, time: new Date() };
+}
+
+function renderCommunityHistory() {
+  const el = document.getElementById('history-all-list');
+  if (!el) return;
+  // Mix real player bets with community bets
+  const allBets = [
+    ...history.map(h => ({ ...h, player: 'You' })),
+    ...communityBets
+  ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 50);
+
+  if (allBets.length === 0) {
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:2rem;">No bets yet.</div>';
+    return;
+  }
+  el.innerHTML = allBets.map(h => {
+    const isWin = h.result === 'win';
+    const playerStyle = h.player === 'You' ? 'color:var(--accent);font-weight:700;' : 'color:var(--muted);';
+    return '<div class="history-item">' +
+      '<span style="' + playerStyle + 'font-size:0.75rem;min-width:80px;">' + h.player + '</span>' +
+      '<span class="history-game">' + h.game + '</span>' +
+      '<span>' + h.bet.toLocaleString() + '</span>' +
+      '<span class="history-result ' + h.result + '">' + (isWin ? '+' : '-') + Math.abs(h.amount).toLocaleString() + '</span>' +
+    '</div>';
+  }).join('');
+}
+
+// Generate initial community bets and keep adding
+for (let i = 0; i < 20; i++) {
+  const b = generateCommunityBet();
+  b.time = new Date(Date.now() - Math.random() * 300000);
+  communityBets.push(b);
+}
+setInterval(() => {
+  communityBets.push(generateCommunityBet());
+  if (communityBets.length > 40) communityBets.shift();
+  renderCommunityHistory();
+}, 4000 + Math.random() * 6000);
 
 let lastWin = { game: '', amount: 0, multi: '' };
 
@@ -2700,11 +2768,21 @@ function setDiceMode(mode) {
   updateDiceSlider();
 }
 
+function syncDiceTarget() {
+  const input = document.getElementById('dice-target-input');
+  let val = parseInt(input.value);
+  if (isNaN(val)) return;
+  val = Math.min(95, Math.max(5, val));
+  document.getElementById('dice-slider').value = val;
+  updateDiceSlider();
+}
 function updateDiceSlider() {
   const slider = document.getElementById('dice-slider');
   const val = parseInt(slider.value);
   slider.style.setProperty('--val', val + '%');
   document.getElementById('dice-target-val').textContent = val;
+  const input = document.getElementById('dice-target-input');
+  if (input && document.activeElement !== input) input.value = val;
   let chance, payout;
   if (diceMode === 'under') {
     chance = val - 1;
@@ -4295,7 +4373,7 @@ async function autoplayHiLo() {
   await new Promise(r => setTimeout(r, 400));
   // Always pick higher, then cashout after 1 correct
   if (hiloState && hiloState.active) {
-    guessHiLo('hi');
+    await guessHiLo('hi');
     await new Promise(r => setTimeout(r, 800));
     if (hiloState && hiloState.active) cashoutHiLo();
   }
@@ -5016,6 +5094,7 @@ updateStreakBadge();
 updateDailySpinButton();
 initLiveTicker();
 scanPrizeWallet();
+renderCommunityHistory();
 setInterval(updateDailySpinButton, 60000);
 
 // Close big win overlay on backdrop click
