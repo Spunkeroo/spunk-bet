@@ -4,16 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Spunk.bet — Casino Games on Bitcoin</title>
-  <meta name="description" content="Provably fair casino games on Bitcoin. Coin Flip, Dice, Mines, Crash. No accounts, no KYC.">
-  <meta property="og:title" content="Spunk.bet — Casino Games on Bitcoin">
-  <meta property="og:description" content="Provably fair casino games on Bitcoin. No accounts, no KYC. Just connect and play.">
+  <meta name="description" content="Play provably fair casino games with SPUNK•BETS rune. Refer friends, earn 500 SPUNK per referral. Top referrers win bonus rewards.">
+  <meta property="og:title" content="Spunk.bet — Casino Games with SPUNK•BETS Rune">
+  <meta property="og:description" content="Provably fair Bitcoin casino. Refer friends &amp; earn 500 SPUNK per signup. First 100 referrers get bonus SPUNK. Join now.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://spunk.bet">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@SpunkArt13">
   <meta name="twitter:creator" content="@SpunkArt13">
-  <meta name="twitter:title" content="Spunk.bet — Casino Games on Bitcoin">
-  <meta name="twitter:description" content="Provably fair casino games on Bitcoin. No accounts, no KYC. Just connect and play.">
+  <meta name="twitter:title" content="Spunk.bet — Earn SPUNK•BETS by Referring Friends">
+  <meta name="twitter:description" content="Provably fair Bitcoin casino powered by SPUNK•BETS rune. Refer friends, earn 500 SPUNK each. First 100 referrers get bonus rewards.">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -30,6 +30,8 @@
       --green: #22c55e;
       --red: #ef4444;
       --yellow: #eab308;
+      --gold: #f59e0b;
+      --purple: #a855f7;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
@@ -54,7 +56,7 @@
     }
     .nav-tab:hover { color: var(--text); }
     .nav-tab.active { color: var(--accent); background: var(--accent-glow); }
-    .nav-right { display: flex; align-items: center; gap: 1rem; }
+    .nav-right { display: flex; align-items: center; gap: 0.75rem; }
     .balance-display {
       background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
       padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 600;
@@ -87,6 +89,11 @@
     .hero h1 { font-size: clamp(2.5rem,6vw,4rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 1rem; }
     .hero h1 span { color: var(--accent); }
     .hero p { color: var(--muted); font-size: 1.1rem; max-width: 480px; margin: 0 auto 2rem; line-height: 1.6; }
+    .hero-rune {
+      display: inline-block; background: var(--accent-glow); border: 1px solid var(--accent);
+      border-radius: 8px; padding: 0.3rem 0.8rem; font-size: 0.8rem; font-weight: 700;
+      color: var(--accent); margin-bottom: 1rem; letter-spacing: 0.05em;
+    }
 
     /* GAME CARDS */
     .game-grid {
@@ -179,9 +186,7 @@
     .flip-choice.selected { border-color: var(--accent); background: var(--accent-glow); color: var(--accent); }
 
     /* DICE */
-    .dice-display {
-      display: flex; gap: 1rem; margin: 1rem 0;
-    }
+    .dice-display { display: flex; gap: 1rem; margin: 1rem 0; }
     .die {
       width: 80px; height: 80px; background: var(--surface2); border: 2px solid var(--border);
       border-radius: 12px; display: flex; align-items: center; justify-content: center;
@@ -251,10 +256,6 @@
     .crash-status { font-size: 0.85rem; color: var(--muted); margin-top: 0.25rem; }
 
     /* HISTORY */
-    .history {
-      max-width: 560px; margin: 0 auto; padding: 0 2rem;
-    }
-    .history h3 { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.08em; }
     .history-list { display: flex; flex-direction: column; gap: 0.35rem; }
     .history-item {
       display: flex; justify-content: space-between; align-items: center;
@@ -285,9 +286,7 @@
       font-size: 0.8rem;
     }
     .wallet-btn.connected:hover { border-color: var(--accent); }
-    .wallet-dot {
-      width: 6px; height: 6px; border-radius: 50%; background: var(--green);
-    }
+    .wallet-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
     .wallet-modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200;
       display: none; align-items: center; justify-content: center;
@@ -296,7 +295,7 @@
     .wallet-modal-overlay.show { display: flex; }
     .wallet-modal {
       background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-      padding: 2rem; width: 380px; max-width: 90vw; text-align: center;
+      padding: 2rem; width: 420px; max-width: 90vw; text-align: center;
     }
     .wallet-modal h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
     .wallet-modal p { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
@@ -331,6 +330,126 @@
     .wallet-info-label { color: var(--muted); }
     .wallet-info-value { font-weight: 600; font-family: monospace; font-size: 0.75rem; }
 
+    /* WELCOME TOAST */
+    .toast {
+      position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+      background: var(--surface); border: 1px solid var(--accent); border-radius: 12px;
+      padding: 1rem 1.5rem; z-index: 300; font-size: 0.9rem; font-weight: 600;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4); transition: top 0.4s ease;
+      max-width: 90vw; text-align: center;
+    }
+    .toast.show { top: 1rem; }
+    .toast .toast-amount { color: var(--accent); }
+
+    /* SHARE & EARN BUTTON */
+    .share-btn {
+      background: transparent; border: 1px solid var(--border); color: var(--text);
+      padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.8rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; display: none; align-items: center; gap: 0.3rem;
+    }
+    .share-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .share-btn.visible { display: flex; }
+
+    /* REFERRAL MODAL */
+    .referral-modal-content { text-align: left; }
+    .referral-link-box {
+      display: flex; align-items: center; gap: 0.5rem; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.75rem;
+      margin: 0.75rem 0;
+    }
+    .referral-link-box input {
+      flex: 1; background: none; border: none; color: var(--text); font-size: 0.8rem;
+      font-family: monospace; outline: none;
+    }
+    .referral-link-box button {
+      background: var(--accent); border: none; color: #fff; padding: 0.3rem 0.6rem;
+      border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;
+      white-space: nowrap;
+    }
+    .referral-stat {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem;
+    }
+    .referral-stat:last-child { border-bottom: none; }
+    .referral-stat-label { color: var(--muted); }
+    .referral-stat-value { font-weight: 700; color: var(--accent); }
+
+    /* TIER BADGES */
+    .tier-badge {
+      display: inline-block; padding: 0.15rem 0.5rem; border-radius: 6px;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.03em;
+    }
+    .tier-badge.starter { background: rgba(113,113,122,0.2); color: var(--muted); }
+    .tier-badge.bronze { background: rgba(234,179,8,0.15); color: var(--yellow); }
+    .tier-badge.silver { background: rgba(168,162,158,0.2); color: #a8a29e; }
+    .tier-badge.gold { background: rgba(245,158,11,0.2); color: var(--gold); }
+    .tier-badge.vip { background: rgba(168,85,247,0.2); color: var(--purple); }
+
+    /* LEADERBOARD */
+    .leaderboard-section {
+      max-width: 560px; margin: 0 auto 2rem; padding: 0 2rem;
+    }
+    .leaderboard-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 1.25rem; margin-top: 1rem;
+    }
+    .leaderboard-card h3 {
+      font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .leaderboard-entry {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.82rem;
+    }
+    .leaderboard-entry:last-child { border-bottom: none; }
+    .leaderboard-rank {
+      width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-weight: 800; font-size: 0.75rem; flex-shrink: 0;
+    }
+    .leaderboard-rank.r1 { background: rgba(245,158,11,0.2); color: var(--gold); }
+    .leaderboard-rank.r2 { background: rgba(168,162,158,0.2); color: #a8a29e; }
+    .leaderboard-rank.r3 { background: rgba(234,179,8,0.15); color: var(--yellow); }
+    .leaderboard-rank.r4 { background: var(--border); color: var(--muted); }
+    .leaderboard-addr { flex: 1; font-family: monospace; font-size: 0.75rem; color: var(--muted); }
+    .leaderboard-count { font-weight: 700; color: var(--accent); }
+    .leaderboard-empty { color: var(--muted); font-size: 0.8rem; text-align: center; padding: 1rem; }
+
+    /* FIRST 100 BANNER */
+    .first100-banner {
+      max-width: 900px; margin: 0 auto; padding: 0 2rem 1.5rem;
+    }
+    .first100-card {
+      background: linear-gradient(135deg, rgba(255,95,31,0.08), rgba(168,85,247,0.08));
+      border: 1px solid var(--accent); border-radius: 14px;
+      padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; flex-wrap: wrap;
+    }
+    .first100-left h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.2rem; }
+    .first100-left h3 span { color: var(--accent); }
+    .first100-left p { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+    .first100-counter {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 0.6rem 1rem; text-align: center; min-width: 100px;
+    }
+    .first100-counter .count { font-size: 1.5rem; font-weight: 800; color: var(--accent); }
+    .first100-counter .label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    /* TIERS DISPLAY */
+    .tiers-section {
+      margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border);
+    }
+    .tiers-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; margin-top: 0.5rem;
+    }
+    .tier-card {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 0.5rem; text-align: center; font-size: 0.7rem;
+    }
+    .tier-card .tier-name { font-weight: 700; margin-bottom: 0.15rem; }
+    .tier-card .tier-req { color: var(--muted); }
+    .tier-card .tier-reward { color: var(--green); font-weight: 600; margin-top: 0.15rem; }
+    .tier-card.active { border-color: var(--accent); background: var(--accent-glow2); }
+
     @media (max-width: 640px) {
       nav { padding: 0.75rem 1rem; }
       .nav-center { display: none; }
@@ -339,6 +458,9 @@
       .hero { padding: 3rem 1.5rem 2rem; }
       .mine-cell { width: 44px; height: 44px; font-size: 1rem; }
       .mines-grid { width: 240px; gap: 4px; }
+      .first100-card { flex-direction: column; text-align: center; }
+      .tiers-grid { grid-template-columns: repeat(2, 1fr); }
+      .nav-right { gap: 0.5rem; }
     }
   </style>
 </head>
@@ -348,20 +470,24 @@
   <div class="logo" onclick="showPage('home')">spunk<span>.bet</span></div>
   <div class="nav-center">
     <button class="nav-tab active" onclick="showPage('home')">Games</button>
+    <button class="nav-tab" onclick="showPage('leaderboard-page')">Leaderboard</button>
     <button class="nav-tab" onclick="showPage('history-page')">History</button>
   </div>
   <div class="nav-right">
-    <div class="balance-display"><span id="balance-display">10,000</span> sats</div>
-    <button class="btn btn-sm" onclick="addFunds()">+ Add</button>
+    <div class="balance-display"><span id="balance-display">0</span> SPUNK</div>
+    <button class="share-btn" id="share-btn" onclick="openReferralModal()">Share &amp; Earn</button>
     <button class="wallet-btn" id="wallet-btn" onclick="handleWalletClick()">Connect Wallet</button>
   </div>
 </nav>
+
+<!-- Welcome Toast -->
+<div class="toast" id="welcome-toast"></div>
 
 <!-- Wallet Modal -->
 <div class="wallet-modal-overlay" id="wallet-modal">
   <div class="wallet-modal">
     <h3>Connect Wallet</h3>
-    <p>Connect your Bitcoin wallet to play with real sats</p>
+    <p>Connect your Bitcoin wallet to play with SPUNK&bull;BETS rune</p>
     <div class="wallet-option" onclick="connectXverse()">
       <div class="wallet-option-icon">X</div>
       <div class="wallet-option-info">
@@ -381,17 +507,71 @@
   <div class="wallet-modal">
     <h3>Wallet Connected</h3>
     <div class="wallet-info" id="wallet-info-details"></div>
+    <div id="wallet-tier-display" style="margin-bottom:1rem;"></div>
     <button class="btn" style="width:100%; margin-bottom:0.5rem;" onclick="disconnectWallet()">Disconnect</button>
     <button class="wallet-modal-close" onclick="closeWalletDetails()">Close</button>
+  </div>
+</div>
+
+<!-- Referral Modal -->
+<div class="wallet-modal-overlay" id="referral-modal">
+  <div class="wallet-modal">
+    <h3>Share &amp; Earn SPUNK</h3>
+    <p>Earn 500 SPUNK for every friend who connects. First 100 referrers get bonus rewards!</p>
+    <div class="referral-modal-content">
+      <div style="font-size:0.8rem; color:var(--muted); margin-bottom:0.25rem;">Your referral link</div>
+      <div class="referral-link-box">
+        <input type="text" id="referral-link-input" readonly>
+        <button onclick="copyReferralLink()">Copy</button>
+      </div>
+      <div class="referral-stat">
+        <span class="referral-stat-label">Your code</span>
+        <span class="referral-stat-value" id="referral-code">&mdash;</span>
+      </div>
+      <div class="referral-stat">
+        <span class="referral-stat-label">Friends referred</span>
+        <span class="referral-stat-value" id="referral-count">0</span>
+      </div>
+      <div class="referral-stat">
+        <span class="referral-stat-label">Your tier</span>
+        <span id="referral-tier"></span>
+      </div>
+      <div class="referral-stat">
+        <span class="referral-stat-label">SPUNK earned</span>
+        <span class="referral-stat-value" id="referral-earned">0</span>
+      </div>
+      <!-- Tier progression -->
+      <div class="tiers-section">
+        <div style="font-size:0.75rem; color:var(--muted); font-weight:600;">REFERRAL TIERS</div>
+        <div class="tiers-grid" id="tiers-grid"></div>
+      </div>
+    </div>
+    <button class="wallet-modal-close" onclick="closeReferralModal()">Close</button>
   </div>
 </div>
 
 <!-- HOME -->
 <div id="home" class="page active">
   <section class="hero">
+    <div class="hero-rune">SPUNK&bull;BETS RUNE</div>
     <h1>Play. Bet. <span>Win.</span></h1>
-    <p>Provably fair casino games on Bitcoin. No accounts, no KYC. Just connect your wallet and play.</p>
+    <p>Provably fair casino games powered by the SPUNK&bull;BETS rune on Bitcoin. No accounts, no KYC. Connect and play.</p>
   </section>
+
+  <!-- First 100 Referrers Banner -->
+  <div class="first100-banner" id="first100-banner">
+    <div class="first100-card">
+      <div class="first100-left">
+        <h3>First 100 Referrers Get <span>Bonus SPUNK</span></h3>
+        <p>Share your referral link and be among the first 100 to refer a friend. Early referrers earn 2x bonus rewards!</p>
+      </div>
+      <div class="first100-counter">
+        <div class="count" id="first100-count">100</div>
+        <div class="label">Spots Left</div>
+      </div>
+    </div>
+  </div>
+
   <div class="game-grid">
     <div class="game-card" onclick="openGame('coinflip')">
       <div class="game-card-edge">1.98x</div>
@@ -427,7 +607,7 @@
     <div class="game-title">&#x1FA99; Coin Flip</div>
     <div class="bet-controls">
       <div class="bet-row">
-        <span class="bet-label">Bet (sats)</span>
+        <span class="bet-label">Bet (SPUNK)</span>
         <input type="number" class="bet-input" id="cf-bet" value="100" min="1">
         <div class="bet-quick">
           <button onclick="setBet('cf-bet','half')">&#189;</button>
@@ -459,7 +639,7 @@
     <div class="game-title">&#127922; Dice</div>
     <div class="bet-controls">
       <div class="bet-row">
-        <span class="bet-label">Bet (sats)</span>
+        <span class="bet-label">Bet (SPUNK)</span>
         <input type="number" class="bet-input" id="dice-bet" value="100" min="1">
         <div class="bet-quick">
           <button onclick="setBet('dice-bet','half')">&#189;</button>
@@ -491,7 +671,7 @@
     <div class="game-title">&#128163; Mines</div>
     <div class="bet-controls">
       <div class="bet-row">
-        <span class="bet-label">Bet (sats)</span>
+        <span class="bet-label">Bet (SPUNK)</span>
         <input type="number" class="bet-input" id="mines-bet" value="100" min="1">
         <div class="bet-quick">
           <button onclick="setBet('mines-bet','half')">&#189;</button>
@@ -514,7 +694,7 @@
       <div class="mines-info">
         <div>Revealed: <span id="mines-revealed">0</span></div>
         <div>Multiplier: <span id="mines-multi">1.00x</span></div>
-        <div>Profit: <span id="mines-profit">+0</span> sats</div>
+        <div>Profit: <span id="mines-profit">+0</span> SPUNK</div>
       </div>
     </div>
     <div style="display:flex;gap:0.5rem;">
@@ -531,7 +711,7 @@
     <div class="game-title">&#128200; Crash</div>
     <div class="bet-controls">
       <div class="bet-row">
-        <span class="bet-label">Bet (sats)</span>
+        <span class="bet-label">Bet (SPUNK)</span>
         <input type="number" class="bet-input" id="crash-bet" value="100" min="1">
         <div class="bet-quick">
           <button onclick="setBet('crash-bet','half')">&#189;</button>
@@ -553,6 +733,22 @@
   </div>
 </div>
 
+<!-- LEADERBOARD PAGE -->
+<div id="leaderboard-page" class="page">
+  <div class="game-container">
+    <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:0.25rem;">Referral Leaderboard</h2>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;">Top referrers earn bonus SPUNK&bull;BETS rewards</p>
+    <div class="leaderboard-card">
+      <h3>Top Referrers</h3>
+      <div id="leaderboard-list"></div>
+    </div>
+    <div class="leaderboard-card" style="margin-top:1rem;">
+      <h3>Tier Rewards</h3>
+      <div class="tiers-grid" id="leaderboard-tiers"></div>
+    </div>
+  </div>
+</div>
+
 <!-- HISTORY PAGE -->
 <div id="history-page" class="page">
   <div class="game-container">
@@ -564,15 +760,213 @@
 </div>
 
 <footer>
-  <p>spunk.bet &mdash; provably fair games on Bitcoin &middot; <a href="https://x.com/SpunkArt13" target="_blank">@SpunkArt13</a></p>
-  <p style="margin-top:0.5rem; opacity:0.5;">Demo mode &mdash; playing with virtual sats</p>
+  <p>spunk.bet &mdash; powered by SPUNK&bull;BETS rune on Bitcoin &middot; <a href="https://x.com/SpunkArt13" target="_blank">@SpunkArt13</a></p>
+  <p style="margin-top:0.5rem; opacity:0.5;">Playing with SPUNK&bull;BETS rune tokens</p>
 </footer>
 
 <script>
 // ===== STATE =====
-let balance = 10000;
+let balance = 0;
 let history = [];
 let cfSide = 'heads';
+
+// ===== REFERRAL TIER CONFIG =====
+const TIERS = [
+  { name: 'Starter', min: 0, reward: 500, css: 'starter' },
+  { name: 'Bronze', min: 3, reward: 500, css: 'bronze' },
+  { name: 'Silver', min: 5, reward: 750, css: 'silver' },
+  { name: 'Gold', min: 10, reward: 1000, css: 'gold' },
+  { name: 'VIP', min: 25, reward: 1500, css: 'vip' },
+];
+
+function getTier(count) {
+  let tier = TIERS[0];
+  for (const t of TIERS) {
+    if (count >= t.min) tier = t;
+  }
+  return tier;
+}
+
+function getTierReward(referrerCount) {
+  // First 100 referrers get 2x
+  const totalReferrers = getTotalReferrerCount();
+  const tier = getTier(referrerCount);
+  const isFirst100 = totalReferrers <= 100;
+  return isFirst100 ? tier.reward * 2 : tier.reward;
+}
+
+function getTotalReferrerCount() {
+  let ledger = {};
+  try { ledger = JSON.parse(localStorage.getItem('spunkbet_referral_ledger') || '{}'); } catch(e) {}
+  return Object.keys(ledger).length;
+}
+
+// ===== LOCALSTORAGE PERSISTENCE =====
+function saveState() {
+  localStorage.setItem('spunkbet_balance', balance.toString());
+  localStorage.setItem('spunkbet_history', JSON.stringify(history));
+  if (walletState.connected) {
+    localStorage.setItem('spunkbet_wallet', JSON.stringify(walletState));
+  }
+}
+
+function loadState() {
+  const savedBalance = localStorage.getItem('spunkbet_balance');
+  if (savedBalance !== null) balance = parseInt(savedBalance) || 0;
+
+  const savedHistory = localStorage.getItem('spunkbet_history');
+  if (savedHistory) {
+    try { history = JSON.parse(savedHistory); } catch(e) { history = []; }
+  }
+
+  const savedWallet = localStorage.getItem('spunkbet_wallet');
+  if (savedWallet) {
+    try {
+      const w = JSON.parse(savedWallet);
+      if (w.connected) {
+        walletState = w;
+        updateWalletButton();
+        updateShareButton();
+      }
+    } catch(e) {}
+  }
+
+  updateBalance();
+  renderHistory();
+  updateFirst100();
+  renderLeaderboard();
+}
+
+// ===== REFERRAL CAPTURE =====
+function captureReferral() {
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get('ref');
+  if (ref && ref.length >= 6) {
+    if (!localStorage.getItem('spunkbet_referrer')) {
+      localStorage.setItem('spunkbet_referrer', ref);
+    }
+  }
+}
+
+// ===== REFERRAL TRACKING (NO AUTO BONUS ON CONNECT) =====
+function processReferralOnConnect(address) {
+  const claimKey = 'spunkbet_claimed_' + address;
+  if (localStorage.getItem(claimKey)) return; // Already processed
+
+  const referrer = localStorage.getItem('spunkbet_referrer');
+  const selfRef = address.slice(0, 8);
+  const isReferred = referrer && referrer !== selfRef;
+
+  // Mark wallet as claimed (no bonus given - just tracking)
+  localStorage.setItem(claimKey, Date.now().toString());
+
+  if (isReferred) {
+    // Track the referral in ledger
+    trackReferral(referrer, address);
+    showToast('Welcome! You were referred by <span class="toast-amount">' + referrer + '</span>. Share your own link to earn SPUNK!');
+  } else {
+    showToast('Welcome to <span class="toast-amount">Spunk.bet</span>! Share your referral link to earn SPUNK.');
+  }
+
+  updateFirst100();
+  renderLeaderboard();
+  saveState();
+}
+
+function trackReferral(referrerCode, newAddress) {
+  let ledger = {};
+  try { ledger = JSON.parse(localStorage.getItem('spunkbet_referral_ledger') || '{}'); } catch(e) {}
+  if (!ledger[referrerCode]) ledger[referrerCode] = [];
+  // Prevent duplicate tracking
+  if (ledger[referrerCode].some(e => e.address === newAddress)) return;
+  ledger[referrerCode].push({ address: newAddress, time: Date.now() });
+  localStorage.setItem('spunkbet_referral_ledger', JSON.stringify(ledger));
+}
+
+function getReferralCount() {
+  if (!walletState.connected) return 0;
+  const code = walletState.paymentAddress.slice(0, 8);
+  let ledger = {};
+  try { ledger = JSON.parse(localStorage.getItem('spunkbet_referral_ledger') || '{}'); } catch(e) {}
+  return (ledger[code] || []).length;
+}
+
+function getReferralEarnings() {
+  const count = getReferralCount();
+  if (count === 0) return 0;
+  let total = 0;
+  const tier = getTier(count);
+  // Each referral earns the tier reward at the time
+  // Simplified: current tier reward * count
+  total = tier.reward * count;
+  // First 100 bonus
+  const totalReferrers = getTotalReferrerCount();
+  if (totalReferrers <= 100) total *= 2;
+  return total;
+}
+
+// ===== FIRST 100 REFERRERS =====
+function updateFirst100() {
+  const total = getTotalReferrerCount();
+  const remaining = Math.max(0, 100 - total);
+  const el = document.getElementById('first100-count');
+  if (el) el.textContent = remaining;
+  const banner = document.getElementById('first100-banner');
+  if (banner) banner.style.display = remaining > 0 ? '' : 'none';
+}
+
+// ===== LEADERBOARD =====
+function renderLeaderboard() {
+  let ledger = {};
+  try { ledger = JSON.parse(localStorage.getItem('spunkbet_referral_ledger') || '{}'); } catch(e) {}
+
+  const entries = Object.entries(ledger)
+    .map(([code, refs]) => ({ code, count: refs.length }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+
+  const listEl = document.getElementById('leaderboard-list');
+  if (!listEl) return;
+
+  if (entries.length === 0) {
+    listEl.innerHTML = '<div class="leaderboard-empty">No referrals yet. Be the first!</div>';
+  } else {
+    listEl.innerHTML = entries.map((e, i) => {
+      const rankClass = i < 3 ? 'r' + (i + 1) : 'r4';
+      const tier = getTier(e.count);
+      return `<div class="leaderboard-entry">
+        <div class="leaderboard-rank ${rankClass}">${i + 1}</div>
+        <div class="leaderboard-addr">${e.code}...</div>
+        <span class="tier-badge ${tier.css}">${tier.name}</span>
+        <div class="leaderboard-count">${e.count} refs</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Render tier cards in leaderboard page
+  renderTierCards('leaderboard-tiers', -1);
+}
+
+function renderTierCards(containerId, activeCount) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = TIERS.slice(1).map(t => {
+    const isActive = activeCount >= t.min;
+    return `<div class="tier-card ${isActive ? 'active' : ''}">
+      <div class="tier-name" style="color:var(--${t.css === 'gold' ? 'gold' : t.css === 'vip' ? 'purple' : t.css === 'silver' ? 'muted' : t.css === 'bronze' ? 'yellow' : 'muted'})">${t.name}</div>
+      <div class="tier-req">${t.min}+ refs</div>
+      <div class="tier-reward">+${t.reward}/ref</div>
+    </div>`;
+  }).join('');
+}
+
+// ===== TOAST =====
+function showToast(html) {
+  const toast = document.getElementById('welcome-toast');
+  toast.innerHTML = html;
+  setTimeout(() => toast.classList.add('show'), 50);
+  setTimeout(() => toast.classList.remove('show'), 4500);
+}
 
 // ===== NAVIGATION =====
 function showPage(id) {
@@ -580,7 +974,9 @@ function showPage(id) {
   document.getElementById(id).classList.add('active');
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   if (id === 'home') document.querySelectorAll('.nav-tab')[0].classList.add('active');
-  if (id === 'history-page') document.querySelectorAll('.nav-tab')[1].classList.add('active');
+  if (id === 'leaderboard-page') document.querySelectorAll('.nav-tab')[1].classList.add('active');
+  if (id === 'history-page') document.querySelectorAll('.nav-tab')[2].classList.add('active');
+  if (id === 'leaderboard-page') renderLeaderboard();
   window.scrollTo(0, 0);
 }
 
@@ -593,11 +989,6 @@ function openGame(id) {
 // ===== BALANCE =====
 function updateBalance() {
   document.getElementById('balance-display').textContent = balance.toLocaleString();
-}
-
-function addFunds() {
-  balance += 10000;
-  updateBalance();
 }
 
 function getBet(id) {
@@ -618,6 +1009,7 @@ function addHistory(game, bet, result, amount) {
   history.unshift({ game, bet, result, amount, time: new Date() });
   if (history.length > 50) history.pop();
   renderHistory();
+  saveState();
 }
 
 function renderHistory() {
@@ -630,8 +1022,8 @@ function renderHistory() {
     const isWin = h.result === 'win';
     return `<div class="history-item">
       <span class="history-game">${h.game}</span>
-      <span>${h.bet} sats</span>
-      <span class="history-result ${h.result}">${isWin ? '+' : '-'}${Math.abs(h.amount).toLocaleString()} sats</span>
+      <span>${h.bet} SPUNK</span>
+      <span class="history-result ${h.result}">${isWin ? '+' : '-'}${Math.abs(h.amount).toLocaleString()} SPUNK</span>
     </div>`;
   }).join('');
 }
@@ -654,27 +1046,25 @@ function flipCoin() {
   if (bet > balance) return;
   balance -= bet;
   updateBalance();
-
   const coin = document.getElementById('cf-coin');
   coin.className = 'coin flipping';
   coin.textContent = '?';
-
   setTimeout(() => {
     const result = Math.random() < 0.5 ? 'heads' : 'tails';
     const win = result === cfSide;
     coin.className = 'coin ' + result;
     coin.textContent = result === 'heads' ? 'H' : 'T';
-
     if (win) {
       const payout = Math.floor(bet * 1.98);
       balance += payout;
-      showResult('cf-result', true, `${result.toUpperCase()}! You won +${(payout - bet).toLocaleString()} sats`);
+      showResult('cf-result', true, `${result.toUpperCase()}! You won +${(payout - bet).toLocaleString()} SPUNK`);
       addHistory('Coin Flip', bet, 'win', payout - bet);
     } else {
-      showResult('cf-result', false, `${result.toUpperCase()}. You lost ${bet.toLocaleString()} sats`);
+      showResult('cf-result', false, `${result.toUpperCase()}. You lost ${bet.toLocaleString()} SPUNK`);
       addHistory('Coin Flip', bet, 'lose', -bet);
     }
     updateBalance();
+    saveState();
   }, 650);
 }
 
@@ -696,30 +1086,27 @@ function rollDice() {
   const target = parseInt(document.getElementById('dice-slider').value);
   balance -= bet;
   updateBalance();
-
   const die = document.getElementById('dice-die');
   die.className = 'die rolling';
   die.textContent = '?';
-
   setTimeout(() => {
     const roll = Math.floor(Math.random() * 100) + 1;
     const win = roll < target;
     die.className = 'die ' + (win ? 'hit' : 'miss');
     die.textContent = roll;
-
     const chance = target - 1;
     const multi = chance > 0 ? (98 / chance) : 0;
-
     if (win) {
       const payout = Math.floor(bet * multi);
       balance += payout;
-      showResult('dice-result', true, `Rolled ${roll} (under ${target}). Won +${(payout - bet).toLocaleString()} sats`);
+      showResult('dice-result', true, `Rolled ${roll} (under ${target}). Won +${(payout - bet).toLocaleString()} SPUNK`);
       addHistory('Dice', bet, 'win', payout - bet);
     } else {
-      showResult('dice-result', false, `Rolled ${roll} (needed under ${target}). Lost ${bet.toLocaleString()} sats`);
+      showResult('dice-result', false, `Rolled ${roll} (needed under ${target}). Lost ${bet.toLocaleString()} SPUNK`);
       addHistory('Dice', bet, 'lose', -bet);
     }
     updateBalance();
+    saveState();
   }, 450);
 }
 
@@ -753,36 +1140,29 @@ function initMinesGrid() {
 }
 
 function getMinesMulti(revealed, mineCount) {
-  // Simplified multiplier: each reveal increases payout
   let multi = 1;
   for (let i = 0; i < revealed; i++) {
     multi *= (25 - mineCount - i) > 0 ? (25 - i) / (25 - mineCount - i) : 1;
   }
-  return multi * 0.98; // 2% house edge
+  return multi * 0.98;
 }
 
 function startMines() {
   const bet = getBet('mines-bet');
   if (bet > balance) return;
   const mineCount = parseInt(document.getElementById('mines-count').textContent);
-
   balance -= bet;
   updateBalance();
+  saveState();
   initMinesGrid();
-
-  // Place mines
   const positions = [];
   while (positions.length < mineCount) {
     const r = Math.floor(Math.random() * 25);
     if (!positions.includes(r)) positions.push(r);
   }
-
   minesState = { bet, mineCount, mines: positions, revealed: 0, active: true };
-
   document.getElementById('mines-start-btn').style.display = 'none';
   document.getElementById('mines-cashout-btn').style.display = '';
-
-  // Attach click handlers
   document.querySelectorAll('.mine-cell').forEach(cell => {
     cell.onclick = () => revealMine(parseInt(cell.dataset.index));
   });
@@ -792,42 +1172,28 @@ function revealMine(index) {
   if (!minesState || !minesState.active) return;
   const cell = document.querySelectorAll('.mine-cell')[index];
   if (cell.classList.contains('revealed')) return;
-
   if (minesState.mines.includes(index)) {
-    // HIT MINE
     cell.classList.add('revealed', 'bomb');
     cell.textContent = '\u{1F4A5}';
     minesState.active = false;
-
-    // Show all mines
     minesState.mines.forEach(m => {
       const c = document.querySelectorAll('.mine-cell')[m];
-      if (!c.classList.contains('revealed')) {
-        c.classList.add('revealed', 'shown');
-        c.textContent = '\u{1F4A3}';
-      }
+      if (!c.classList.contains('revealed')) { c.classList.add('revealed', 'shown'); c.textContent = '\u{1F4A3}'; }
     });
-
-    showResult('mines-result', false, `BOOM! Lost ${minesState.bet.toLocaleString()} sats`);
+    showResult('mines-result', false, `BOOM! Lost ${minesState.bet.toLocaleString()} SPUNK`);
     addHistory('Mines', minesState.bet, 'lose', -minesState.bet);
     document.getElementById('mines-cashout-btn').style.display = 'none';
     document.getElementById('mines-start-btn').style.display = '';
   } else {
-    // SAFE
     cell.classList.add('revealed', 'safe');
     cell.textContent = '\u{1F48E}';
     minesState.revealed++;
-
     const multi = getMinesMulti(minesState.revealed, minesState.mineCount);
     const profit = Math.floor(minesState.bet * multi) - minesState.bet;
     document.getElementById('mines-revealed').textContent = minesState.revealed;
     document.getElementById('mines-multi').textContent = multi.toFixed(2) + 'x';
     document.getElementById('mines-profit').textContent = '+' + profit.toLocaleString();
-
-    // Auto-win if all safe tiles revealed
-    if (minesState.revealed >= 25 - minesState.mineCount) {
-      cashoutMines();
-    }
+    if (minesState.revealed >= 25 - minesState.mineCount) cashoutMines();
   }
 }
 
@@ -838,20 +1204,16 @@ function cashoutMines() {
   const payout = Math.floor(minesState.bet * multi);
   balance += payout;
   updateBalance();
-
   const profit = payout - minesState.bet;
-  showResult('mines-result', true, `Cashed out at ${multi.toFixed(2)}x! Won +${profit.toLocaleString()} sats`);
+  showResult('mines-result', true, `Cashed out at ${multi.toFixed(2)}x! Won +${profit.toLocaleString()} SPUNK`);
   addHistory('Mines', minesState.bet, 'win', profit);
-
-  // Show remaining mines
   minesState.mines.forEach(m => {
     const c = document.querySelectorAll('.mine-cell')[m];
-    c.classList.add('revealed', 'shown');
-    c.textContent = '\u{1F4A3}';
+    c.classList.add('revealed', 'shown'); c.textContent = '\u{1F4A3}';
   });
-
   document.getElementById('mines-cashout-btn').style.display = 'none';
   document.getElementById('mines-start-btn').style.display = '';
+  saveState();
 }
 
 // ===== CRASH =====
@@ -862,44 +1224,34 @@ function startCrash() {
   if (bet > balance) return;
   balance -= bet;
   updateBalance();
-
-  // Generate crash point (house edge ~3%)
+  saveState();
   const r = Math.random();
   const crashAt = Math.max(1, (0.97 / (1 - r)));
-
   crashState = { bet, crashAt, multi: 1.00, active: true, cashed: false, startTime: Date.now() };
-
   document.getElementById('crash-start-btn').style.display = 'none';
   document.getElementById('crash-cashout-btn').style.display = '';
   document.getElementById('crash-result').className = 'result';
   document.getElementById('crash-multi').className = 'crash-multi live';
   document.getElementById('crash-status').textContent = 'Rising...';
-
   const canvas = document.getElementById('crash-canvas');
   const ctx = canvas.getContext('2d');
   canvas.width = canvas.offsetWidth * 2;
   canvas.height = canvas.offsetHeight * 2;
   ctx.scale(2, 2);
-
   animateCrash(ctx, canvas);
 }
 
 function animateCrash(ctx, canvas) {
   if (!crashState) return;
-  const w = canvas.width / 2;
-  const h = canvas.height / 2;
+  const w = canvas.width / 2, h = canvas.height / 2;
   const elapsed = (Date.now() - crashState.startTime) / 1000;
   const multi = Math.pow(Math.E, elapsed * 0.5);
-
   crashState.multi = Math.round(multi * 100) / 100;
   document.getElementById('crash-multi').textContent = crashState.multi.toFixed(2) + 'x';
-
-  // Draw
   ctx.clearRect(0, 0, w, h);
   ctx.strokeStyle = crashState.cashed ? '#ff5f1f' : '#22c55e';
   ctx.lineWidth = 2;
   ctx.beginPath();
-
   const points = 100;
   for (let i = 0; i <= points; i++) {
     const t = (elapsed * i) / points;
@@ -911,25 +1263,18 @@ function animateCrash(ctx, canvas) {
     else ctx.lineTo(x, Math.min(y, h));
   }
   ctx.stroke();
-
   if (crashState.multi >= crashState.crashAt && !crashState.cashed) {
-    // CRASHED
     crashState.active = false;
     document.getElementById('crash-multi').className = 'crash-multi crashed';
     document.getElementById('crash-multi').textContent = crashState.crashAt.toFixed(2) + 'x';
     document.getElementById('crash-status').textContent = 'Crashed!';
     document.getElementById('crash-cashout-btn').style.display = 'none';
     document.getElementById('crash-start-btn').style.display = '';
-    showResult('crash-result', false, `Crashed at ${crashState.crashAt.toFixed(2)}x. Lost ${crashState.bet.toLocaleString()} sats`);
+    showResult('crash-result', false, `Crashed at ${crashState.crashAt.toFixed(2)}x. Lost ${crashState.bet.toLocaleString()} SPUNK`);
     addHistory('Crash', crashState.bet, 'lose', -crashState.bet);
     return;
   }
-
-  if (crashState.cashed) {
-    // Already cashed, just stop
-    return;
-  }
-
+  if (crashState.cashed) return;
   requestAnimationFrame(() => animateCrash(ctx, canvas));
 }
 
@@ -940,14 +1285,14 @@ function cashoutCrash() {
   const payout = Math.floor(crashState.bet * crashState.multi);
   balance += payout;
   updateBalance();
-
   const profit = payout - crashState.bet;
   document.getElementById('crash-multi').className = 'crash-multi cashed';
   document.getElementById('crash-status').textContent = `Cashed out at ${crashState.multi.toFixed(2)}x`;
   document.getElementById('crash-cashout-btn').style.display = 'none';
   document.getElementById('crash-start-btn').style.display = '';
-  showResult('crash-result', true, `Cashed at ${crashState.multi.toFixed(2)}x! Won +${profit.toLocaleString()} sats`);
+  showResult('crash-result', true, `Cashed at ${crashState.multi.toFixed(2)}x! Won +${profit.toLocaleString()} SPUNK`);
   addHistory('Crash', crashState.bet, 'win', profit);
+  saveState();
 }
 
 // ===== XVERSE WALLET =====
@@ -962,29 +1307,28 @@ function handleWalletClick() {
   }
 }
 
-function closeWalletModal() {
-  document.getElementById('wallet-modal').classList.remove('show');
-}
-
-function closeWalletDetails() {
-  document.getElementById('wallet-details-modal').classList.remove('show');
-}
+function closeWalletModal() { document.getElementById('wallet-modal').classList.remove('show'); }
+function closeWalletDetails() { document.getElementById('wallet-details-modal').classList.remove('show'); }
 
 function showWalletDetails() {
   const el = document.getElementById('wallet-info-details');
   const shortAddr = (a) => a ? a.slice(0, 8) + '...' + a.slice(-6) : 'N/A';
   el.innerHTML = `
-    <div class="wallet-info-row">
-      <span class="wallet-info-label">Payment</span>
-      <span class="wallet-info-value">${shortAddr(walletState.paymentAddress)}</span>
+    <div class="wallet-info-row"><span class="wallet-info-label">Payment</span><span class="wallet-info-value">${shortAddr(walletState.paymentAddress)}</span></div>
+    <div class="wallet-info-row"><span class="wallet-info-label">Ordinals</span><span class="wallet-info-value">${shortAddr(walletState.ordinalsAddress)}</span></div>
+    <div class="wallet-info-row"><span class="wallet-info-label">Network</span><span class="wallet-info-value">Mainnet</span></div>
+  `;
+  // Show tier in wallet details
+  const count = getReferralCount();
+  const tier = getTier(count);
+  document.getElementById('wallet-tier-display').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.85rem;">
+      <span style="color:var(--muted);">Referral Tier</span>
+      <span class="tier-badge ${tier.css}">${tier.name}</span>
     </div>
-    <div class="wallet-info-row">
-      <span class="wallet-info-label">Ordinals</span>
-      <span class="wallet-info-value">${shortAddr(walletState.ordinalsAddress)}</span>
-    </div>
-    <div class="wallet-info-row">
-      <span class="wallet-info-label">Network</span>
-      <span class="wallet-info-value">Mainnet</span>
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.85rem;margin-top:0.3rem;">
+      <span style="color:var(--muted);">Referrals</span>
+      <span style="font-weight:700;color:var(--accent);">${count}</span>
     </div>
   `;
   document.getElementById('wallet-details-modal').classList.add('show');
@@ -1002,82 +1346,67 @@ function updateWalletButton() {
   }
 }
 
+function updateShareButton() {
+  document.getElementById('share-btn').classList.toggle('visible', walletState.connected);
+}
+
 function disconnectWallet() {
   walletState = { connected: false, paymentAddress: null, ordinalsAddress: null };
+  localStorage.removeItem('spunkbet_wallet');
   updateWalletButton();
+  updateShareButton();
   closeWalletDetails();
 }
 
+function onWalletConnected() {
+  updateWalletButton();
+  updateShareButton();
+  closeWalletModal();
+  saveState();
+  // NO auto bonus - just track referral if applicable
+  processReferralOnConnect(walletState.paymentAddress);
+}
+
 function getXverseProvider() {
-  // Check all known injection points
   if (window.XverseProviders?.BitcoinProvider) return window.XverseProviders.BitcoinProvider;
   if (window.BitcoinProvider) return window.BitcoinProvider;
-  // WBIP004 standard: check btc_providers array
   if (window.btc_providers) {
     const xverse = window.btc_providers.find(p =>
       p.id === 'BitcoinProvider' || p.id === 'xverseProviders.BitcoinProvider'
     );
-    if (xverse) {
-      // Resolve provider from window path
-      return xverse.id.split('.').reduce((obj, key) => obj?.[key], window);
-    }
+    if (xverse) return xverse.id.split('.').reduce((obj, key) => obj?.[key], window);
   }
   return null;
 }
 
 async function connectXverse() {
   const provider = getXverseProvider();
-
-  if (!provider) {
-    document.getElementById('wallet-install-hint').style.display = 'block';
-    return;
-  }
-
+  if (!provider) { document.getElementById('wallet-install-hint').style.display = 'block'; return; }
   try {
-    // Use wallet_connect (modern sats-connect API)
     const connectResponse = await provider.request('wallet_connect', {
       addresses: ['payment', 'ordinals'],
       message: 'Spunk.bet wants to connect your wallet',
       network: 'Mainnet'
     });
-
     if (connectResponse.status === 'success') {
       const addresses = connectResponse.result.addresses || [];
       const payment = addresses.find(a => a.purpose === 'payment');
       const ordinals = addresses.find(a => a.purpose === 'ordinals');
-
       if (payment || addresses.length > 0) {
-        walletState = {
-          connected: true,
-          paymentAddress: payment?.address || addresses[0]?.address,
-          ordinalsAddress: ordinals?.address || null,
-        };
-        updateWalletButton();
-        closeWalletModal();
+        walletState = { connected: true, paymentAddress: payment?.address || addresses[0]?.address, ordinalsAddress: ordinals?.address || null };
+        onWalletConnected();
         return;
       }
     }
-
-    // Fallback: try legacy getAddresses if wallet_connect didn't return addresses
-    const addrResponse = await provider.request('getAddresses', {
-      purposes: ['payment', 'ordinals'],
-    });
-
+    const addrResponse = await provider.request('getAddresses', { purposes: ['payment', 'ordinals'] });
     if (addrResponse.status === 'success') {
       const addresses = addrResponse.result.addresses || addrResponse.result || [];
       const payment = addresses.find(a => a.purpose === 'payment');
       const ordinals = addresses.find(a => a.purpose === 'ordinals');
-
-      walletState = {
-        connected: true,
-        paymentAddress: payment?.address || addresses[0]?.address,
-        ordinalsAddress: ordinals?.address || null,
-      };
-      updateWalletButton();
-      closeWalletModal();
+      walletState = { connected: true, paymentAddress: payment?.address || addresses[0]?.address, ordinalsAddress: ordinals?.address || null };
+      onWalletConnected();
     }
   } catch (err) {
-    // User rejection
     if (err?.error?.code === -32000 || err?.code === 4001 || err?.error?.code === 4001) {
       closeWalletModal();
     } else {
@@ -1087,15 +1416,41 @@ async function connectXverse() {
   }
 }
 
-// Close modals on backdrop click
-document.getElementById('wallet-modal').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) closeWalletModal();
-});
-document.getElementById('wallet-details-modal').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) closeWalletDetails();
-});
+// ===== REFERRAL MODAL =====
+function openReferralModal() {
+  if (!walletState.connected) return;
+  const code = walletState.paymentAddress.slice(0, 8);
+  const link = window.location.origin + window.location.pathname + '?ref=' + code;
+  document.getElementById('referral-link-input').value = link;
+  document.getElementById('referral-code').textContent = code;
+  const count = getReferralCount();
+  document.getElementById('referral-count').textContent = count;
+  const tier = getTier(count);
+  document.getElementById('referral-tier').innerHTML = `<span class="tier-badge ${tier.css}">${tier.name}</span>`;
+  document.getElementById('referral-earned').textContent = getReferralEarnings().toLocaleString();
+  renderTierCards('tiers-grid', count);
+  document.getElementById('referral-modal').classList.add('show');
+}
 
-// Init
+function closeReferralModal() { document.getElementById('referral-modal').classList.remove('show'); }
+
+function copyReferralLink() {
+  const input = document.getElementById('referral-link-input');
+  navigator.clipboard.writeText(input.value).then(() => {
+    const btn = input.nextElementSibling;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+  });
+}
+
+// Close modals on backdrop click
+document.getElementById('wallet-modal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeWalletModal(); });
+document.getElementById('wallet-details-modal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeWalletDetails(); });
+document.getElementById('referral-modal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeReferralModal(); });
+
+// ===== INIT =====
+captureReferral();
+loadState();
 updateDiceSlider();
 </script>
 </body>
