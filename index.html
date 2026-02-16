@@ -357,6 +357,37 @@
       font-size: 0.8rem; font-weight: 600; color: var(--green); margin-bottom: 1rem;
     }
 
+    /* WALLETS PAGE */
+    .wallets-container { max-width: 620px; margin: 0 auto; padding: 2rem; }
+    .wallets-container h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .wallets-container p { color: var(--muted); font-size: 0.85rem; line-height: 1.7; margin-bottom: 0.75rem; }
+    .wallet-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 1.5rem; margin-bottom: 1.25rem;
+    }
+    .wallet-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem; display: flex; align-items: center; gap: 0.4rem; }
+    .wallet-card .wallet-purpose { color: var(--muted); font-size: 0.8rem; margin-bottom: 1rem; line-height: 1.5; }
+    .wallet-addr-box {
+      display: flex; align-items: center; gap: 0.5rem; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.75rem;
+    }
+    .wallet-addr-box input {
+      flex: 1; background: none; border: none; color: var(--text); font-size: 0.75rem;
+      font-family: monospace; outline: none;
+    }
+    .wallet-addr-box button {
+      background: var(--accent); border: none; color: #fff; padding: 0.3rem 0.6rem;
+      border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;
+      white-space: nowrap;
+    }
+    .wallet-tag {
+      display: inline-block; padding: 0.15rem 0.5rem; border-radius: 6px;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.03em;
+    }
+    .wallet-tag.rune { background: rgba(255,95,31,0.15); color: var(--accent); }
+    .wallet-tag.btc { background: rgba(245,158,11,0.15); color: var(--gold); }
+    .wallet-tag.ord { background: rgba(168,85,247,0.15); color: var(--purple); }
+
     /* FOOTER */
     footer {
       border-top: 1px solid var(--border); padding: 2rem; text-align: center;
@@ -569,6 +600,7 @@
     <button class="nav-tab active" onclick="showPage('home')">Games</button>
     <button class="nav-tab" onclick="showPage('leaderboard-page')">Leaderboard</button>
     <button class="nav-tab" onclick="showPage('history-page')">History</button>
+    <button class="nav-tab" onclick="showPage('wallets-page')">Wallets</button>
     <button class="nav-tab" onclick="showPage('fair-page')">Provably Fair</button>
   </div>
   <button class="hamburger" id="hamburger-btn" onclick="toggleMobileMenu()">
@@ -586,6 +618,7 @@
   <button onclick="showPage('home'); toggleMobileMenu()">Games</button>
   <button onclick="showPage('leaderboard-page'); toggleMobileMenu()">Leaderboard</button>
   <button onclick="showPage('history-page'); toggleMobileMenu()">History</button>
+  <button onclick="showPage('wallets-page'); toggleMobileMenu()">Wallets</button>
   <button onclick="showPage('fair-page'); toggleMobileMenu()">Provably Fair</button>
   <button onclick="openReferralModal(); toggleMobileMenu()" id="mobile-share-btn" style="display:none;">Share &amp; Earn</button>
 </div>
@@ -729,7 +762,7 @@
     <div class="bet-controls">
       <div class="bet-row">
         <span class="bet-label">Bet (SPUNK)</span>
-        <input type="number" class="bet-input" id="cf-bet" value="100" min="1">
+        <input type="number" class="bet-input" id="cf-bet" value="100" min="100">
         <div class="bet-quick">
           <button onclick="setBet('cf-bet','half')">&#189;</button>
           <button onclick="setBet('cf-bet','double')">2x</button>
@@ -762,7 +795,7 @@
     <div class="bet-controls">
       <div class="bet-row">
         <span class="bet-label">Bet (SPUNK)</span>
-        <input type="number" class="bet-input" id="dice-bet" value="100" min="1">
+        <input type="number" class="bet-input" id="dice-bet" value="100" min="100">
         <div class="bet-quick">
           <button onclick="setBet('dice-bet','half')">&#189;</button>
           <button onclick="setBet('dice-bet','double')">2x</button>
@@ -795,7 +828,7 @@
     <div class="bet-controls">
       <div class="bet-row">
         <span class="bet-label">Bet (SPUNK)</span>
-        <input type="number" class="bet-input" id="mines-bet" value="100" min="1">
+        <input type="number" class="bet-input" id="mines-bet" value="100" min="100">
         <div class="bet-quick">
           <button onclick="setBet('mines-bet','half')">&#189;</button>
           <button onclick="setBet('mines-bet','double')">2x</button>
@@ -836,7 +869,7 @@
     <div class="bet-controls">
       <div class="bet-row">
         <span class="bet-label">Bet (SPUNK)</span>
-        <input type="number" class="bet-input" id="crash-bet" value="100" min="1">
+        <input type="number" class="bet-input" id="crash-bet" value="100" min="100">
         <div class="bet-quick">
           <button onclick="setBet('crash-bet','half')">&#189;</button>
           <button onclick="setBet('crash-bet','double')">2x</button>
@@ -880,6 +913,37 @@
     <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:1rem;">Bet History</h2>
     <div id="history-full-list" class="history-list" style="font-size:0.85rem;">
       <div style="color:var(--muted);text-align:center;padding:2rem;">No bets yet. Go play!</div>
+    </div>
+  </div>
+</div>
+
+<!-- WALLETS PAGE -->
+<div id="wallets-page" class="page">
+  <div class="wallets-container">
+    <h2>Spunk.Bet Wallets</h2>
+    <p>These are the official Spunk.Bet wallets. Send runes, BTC, or ordinals to fund rewards, prizes, and payouts for players.</p>
+
+    <div class="wallet-card">
+      <h3>House Wallet <span class="wallet-tag rune">RUNES</span> <span class="wallet-tag btc">BTC</span></h3>
+      <div class="wallet-purpose">Funds SPUNK rune payouts for faucet claims, referral rewards, and game winnings. Also accepts BTC for operational costs.</div>
+      <div class="wallet-addr-box">
+        <input type="text" value="bc1pkepg42ctsvsxk499qu02qqyyz88gwjchnjpsu22wmng9rhpfv3jqw2t2hm" readonly id="house-wallet-addr">
+        <button onclick="copyWalletAddr('house-wallet-addr')">Copy</button>
+      </div>
+    </div>
+
+    <div class="wallet-card">
+      <h3>Prize Wallet <span class="wallet-tag ord">ORDINALS</span></h3>
+      <div class="wallet-purpose">Holds ordinal inscriptions for giveaways, tournament prizes, and special events. Ordinals sent here will be used as player rewards.</div>
+      <div class="wallet-addr-box">
+        <input type="text" value="bc1p27l6s82w5dek9yffjtlyj58ue2sndxm6zszpcz9zcwqpd4v86n9s5l37xm" readonly id="prize-wallet-addr">
+        <button onclick="copyWalletAddr('prize-wallet-addr')">Copy</button>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-top:1rem;">
+      <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:0.5rem;color:var(--green);">Transparency</h3>
+      <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;margin:0;">All wallet balances are publicly verifiable on-chain. These are taproot (P2TR) addresses on Bitcoin mainnet. You can verify balances using any Bitcoin block explorer.</p>
     </div>
   </div>
 </div>
@@ -928,6 +992,7 @@
 
 <footer>
   <div class="footer-links">
+    <a href="javascript:showPage('wallets-page')">Wallets</a>
     <a href="javascript:showPage('fair-page')">Provably Fair</a>
     <a href="https://x.com/SpunkArt13" target="_blank">@SpunkArt13</a>
   </div>
@@ -1314,7 +1379,8 @@ function showPage(id) {
   if (id === 'home') document.querySelectorAll('.nav-tab')[0].classList.add('active');
   if (id === 'leaderboard-page') document.querySelectorAll('.nav-tab')[1].classList.add('active');
   if (id === 'history-page') document.querySelectorAll('.nav-tab')[2].classList.add('active');
-  if (id === 'fair-page') document.querySelectorAll('.nav-tab')[3].classList.add('active');
+  if (id === 'wallets-page') document.querySelectorAll('.nav-tab')[3].classList.add('active');
+  if (id === 'fair-page') document.querySelectorAll('.nav-tab')[4].classList.add('active');
   if (id === 'leaderboard-page') renderLeaderboard();
   if (id === 'fair-page') updatePFDisplay();
   window.scrollTo(0, 0);
@@ -1331,15 +1397,21 @@ function updateBalance() {
   document.getElementById('balance-display').textContent = balance.toLocaleString();
 }
 
+const MIN_BET = 100;
+
 function getBet(id) {
   const v = parseInt(document.getElementById(id).value) || 0;
-  return Math.min(Math.max(v, 1), balance);
+  if (v < MIN_BET) {
+    showToast('Minimum bet is <span class="toast-amount">' + MIN_BET + ' SPUNK</span>');
+    return 0;
+  }
+  return Math.min(v, balance);
 }
 
 function setBet(id, action) {
   const el = document.getElementById(id);
   let v = parseInt(el.value) || 100;
-  if (action === 'half') v = Math.max(1, Math.floor(v / 2));
+  if (action === 'half') v = Math.max(MIN_BET, Math.floor(v / 2));
   if (action === 'double') v = Math.min(balance, v * 2);
   if (action === 'max') v = balance;
   el.value = v;
@@ -1384,7 +1456,7 @@ function pickSide(side) {
 
 async function flipCoin() {
   const bet = getBet('cf-bet');
-  if (bet > balance || bet <= 0) return;
+  if (bet <= 0 || bet > balance) return;
   balance -= bet;
   updateBalance();
 
@@ -1824,6 +1896,16 @@ function closeReferralModal() { document.getElementById('referral-modal').classL
 
 function copyReferralLink() {
   const input = document.getElementById('referral-link-input');
+  navigator.clipboard.writeText(input.value).then(() => {
+    const btn = input.nextElementSibling;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+  });
+}
+
+// ===== WALLET ADDRESS COPY =====
+function copyWalletAddr(id) {
+  const input = document.getElementById(id);
   navigator.clipboard.writeText(input.value).then(() => {
     const btn = input.nextElementSibling;
     btn.textContent = 'Copied!';
