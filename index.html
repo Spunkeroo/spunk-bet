@@ -606,8 +606,22 @@
     }
     footer a { color: var(--muted); text-decoration: none; }
     footer a:hover { color: var(--text); }
-    .footer-links { display: flex; justify-content: center; gap: 1.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+    .footer-links { display: flex; justify-content: center; gap: 1.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; align-items: center; }
     .footer-links a { font-weight: 500; }
+    .tip-spunk-btn { display:inline-flex; align-items:center; gap:0.5rem; padding:0.65rem 1.6rem; border:none; border-radius:999px; font-weight:800; font-size:1rem; cursor:pointer; color:#fff; background:linear-gradient(135deg,#a855f7,#7c3aed,#c026d3); box-shadow:0 0 16px rgba(168,85,247,0.6),0 0 32px rgba(168,85,247,0.3),inset 0 1px 0 rgba(255,255,255,0.2); transition:all 0.2s; text-decoration:none; animation:tipGlow 2s ease-in-out infinite; letter-spacing:0.5px; }
+    @keyframes tipGlow { 0%,100% { box-shadow:0 0 16px rgba(168,85,247,0.6),0 0 32px rgba(168,85,247,0.3); } 50% { box-shadow:0 0 24px rgba(192,38,211,0.8),0 0 48px rgba(168,85,247,0.5),0 0 64px rgba(124,58,237,0.3); } }
+    .tip-spunk-btn:hover { box-shadow:0 0 30px rgba(192,38,211,0.9),0 0 60px rgba(168,85,247,0.5); transform:scale(1.1); }
+    .tip-spunk-btn .tip-icon { font-size:1.2rem; animation:tipPulse 1.5s ease-in-out infinite; }
+    @keyframes tipPulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.3); } }
+    .tip-modal-overlay { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); justify-content:center; align-items:center; }
+    .tip-modal-overlay.active { display:flex; }
+    .tip-modal { background:var(--card); border:2px solid #7c3aed; border-radius:1rem; padding:2rem; max-width:400px; width:90%; text-align:center; box-shadow:0 0 40px rgba(168,85,247,0.3); }
+    .tip-modal h3 { margin:0 0 0.5rem; font-size:1.5rem; background:linear-gradient(135deg,#a855f7,#c084fc,#e879f9); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .tip-modal p { color:var(--muted); margin:0.5rem 0 1rem; font-size:0.9rem; }
+    .tip-addr { background:#111; border:1px solid #7c3aed; border-radius:0.5rem; padding:0.75rem; font-family:monospace; font-size:0.72rem; word-break:break-all; color:#c084fc; cursor:pointer; margin-bottom:1rem; transition:all 0.2s; }
+    .tip-addr:hover { background:#1a0a2e; border-color:#a855f7; }
+    .tip-qr { margin:1rem auto; width:160px; height:160px; background:#fff; border-radius:0.5rem; display:flex; align-items:center; justify-content:center; padding:8px; }
+    .tip-qr img { width:100%; height:100%; }
 
     /* WALLET */
     .wallet-btn {
@@ -848,6 +862,114 @@
     @media (max-width: 900px) {
       .game-grid { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
     }
+    /* DICE OVER/UNDER TOGGLE */
+    .dice-mode-toggle { display:flex; gap:0; margin-bottom:0.75rem; width:100%; }
+    .dice-mode-btn { flex:1; padding:0.6rem; border:2px solid var(--border); background:var(--bg); color:var(--muted); font-size:0.9rem; font-weight:700; cursor:pointer; text-align:center; transition:all 0.2s; letter-spacing:0.02em; }
+    .dice-mode-btn:first-child { border-radius:10px 0 0 10px; }
+    .dice-mode-btn:last-child { border-radius:0 10px 10px 0; }
+    .dice-mode-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .dice-mode-btn:hover:not(.active) { border-color:var(--accent); color:var(--text); }
+
+    /* LIVE WINS TICKER */
+    .live-ticker-wrap { max-width:1100px; margin:0 auto; padding:0 2rem 1.5rem; overflow:hidden; }
+    .live-ticker-label { font-size:0.7rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.4rem; display:flex; align-items:center; gap:0.4rem; }
+    .live-ticker-label .live-dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:livePulse 1.5s infinite; }
+    @keyframes livePulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+    .live-ticker { display:flex; gap:1rem; overflow:hidden; white-space:nowrap; mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent); -webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent); }
+    .live-ticker-inner { display:flex; gap:1rem; animation:tickerScroll 30s linear infinite; }
+    @keyframes tickerScroll { 0% { transform:translateX(0); } 100% { transform:translateX(-50%); } }
+    .ticker-item { flex-shrink:0; font-size:0.75rem; color:var(--muted); padding:0.35rem 0.75rem; background:var(--surface); border:1px solid var(--border); border-radius:8px; }
+    .ticker-item .ticker-win { color:var(--green); font-weight:700; }
+    .ticker-item .ticker-game { color:var(--accent); font-weight:600; }
+
+    /* BIG WIN OVERLAY */
+    .bigwin-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:500; display:none; align-items:center; justify-content:center; backdrop-filter:blur(8px); }
+    .bigwin-overlay.show { display:flex; }
+    .bigwin-card { background:linear-gradient(135deg,#111 0%,#1a1a1a 100%); border:2px solid var(--accent); border-radius:20px; padding:2.5rem; text-align:center; max-width:420px; width:90vw; position:relative; overflow:hidden; animation:bigwinPop 0.4s ease-out; }
+    @keyframes bigwinPop { 0% { transform:scale(0.8); opacity:0; } 100% { transform:scale(1); opacity:1; } }
+    .bigwin-card::before { content:''; position:absolute; inset:-50%; background:conic-gradient(from 0deg,transparent,rgba(255,95,31,0.1),transparent,rgba(255,95,31,0.05),transparent); animation:bigwinSpin 4s linear infinite; }
+    @keyframes bigwinSpin { 100% { transform:rotate(360deg); } }
+    .bigwin-card > * { position:relative; z-index:1; }
+    .bigwin-emoji { font-size:3.5rem; margin-bottom:0.5rem; }
+    .bigwin-title { font-size:1.5rem; font-weight:800; color:#fff; margin-bottom:0.25rem; }
+    .bigwin-amount { font-size:2.5rem; font-weight:800; color:var(--green); margin:0.5rem 0; }
+    .bigwin-multi { font-size:1.1rem; color:var(--accent); font-weight:700; margin-bottom:1rem; }
+    .bigwin-bonus { font-size:0.8rem; color:var(--muted); margin-bottom:1rem; }
+    .bigwin-share { width:100%; padding:0.75rem; border-radius:10px; background:#000; border:1px solid #333; color:#fff; font-size:0.9rem; font-weight:700; cursor:pointer; transition:all 0.2s; margin-bottom:0.5rem; display:flex; align-items:center; justify-content:center; gap:0.4rem; }
+    .bigwin-share:hover { background:#111; border-color:#555; }
+    .bigwin-dismiss { background:none; border:none; color:var(--muted); font-size:0.8rem; cursor:pointer; padding:0.5rem; }
+    .bigwin-dismiss:hover { color:var(--text); }
+
+    /* CONFETTI PARTICLES */
+    .confetti-particle { position:fixed; width:8px; height:8px; z-index:501; pointer-events:none; animation:confettiFall 2.5s ease-in forwards; }
+    @keyframes confettiFall { 0% { opacity:1; transform:translateY(0) rotate(0deg); } 100% { opacity:0; transform:translateY(100vh) rotate(720deg); } }
+
+    /* WIN STREAK BADGE */
+    .streak-badge { display:none; align-items:center; gap:0.3rem; background:linear-gradient(135deg,rgba(255,95,31,0.15),rgba(245,158,11,0.15)); border:1px solid rgba(255,95,31,0.3); border-radius:8px; padding:0.3rem 0.6rem; font-size:0.75rem; font-weight:700; color:var(--accent); cursor:pointer; animation:streakGlow 2s ease-in-out infinite; }
+    .streak-badge.show { display:flex; }
+    @keyframes streakGlow { 0%,100% { box-shadow:0 0 4px rgba(255,95,31,0.2); } 50% { box-shadow:0 0 12px rgba(255,95,31,0.4); } }
+
+    /* DAILY BONUS WHEEL */
+    .daily-spin-section { max-width:900px; margin:0 auto; padding:0 2rem 1.5rem; }
+    .daily-spin-card { background:linear-gradient(135deg,rgba(168,85,247,0.08),rgba(255,95,31,0.08)); border:1px solid var(--purple); border-radius:14px; padding:1.25rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+    .daily-spin-left h3 { font-size:1rem; font-weight:700; margin-bottom:0.2rem; }
+    .daily-spin-left h3 span { color:var(--purple); }
+    .daily-spin-left p { font-size:0.8rem; color:var(--muted); line-height:1.5; }
+    .daily-spin-btn { background:var(--purple); color:#fff; border:none; padding:0.6rem 1.5rem; border-radius:10px; font-size:0.9rem; font-weight:700; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+    .daily-spin-btn:hover { opacity:0.9; }
+    .daily-spin-btn:disabled { opacity:0.4; cursor:not-allowed; }
+    .daily-spin-modal { position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:400; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+    .daily-spin-modal.show { display:flex; }
+    .daily-spin-modal-inner { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:2rem; width:400px; max-width:90vw; text-align:center; }
+    .daily-spin-modal-inner h3 { font-size:1.1rem; font-weight:700; margin-bottom:0.5rem; }
+    .daily-spin-result { font-size:2rem; font-weight:800; color:var(--purple); margin:1rem 0; }
+    .daily-spin-bonus { font-size:0.8rem; color:var(--muted); margin-bottom:1rem; }
+
+    /* PRIZE SHOWCASE */
+    .prize-section { max-width:1100px; margin:0 auto; padding:0 2rem 3rem; }
+    .prize-section-header { text-align:center; margin-bottom:1.5rem; }
+    .prize-section-header h2 { font-size:1.5rem; font-weight:800; letter-spacing:-0.02em; margin-bottom:0.3rem; }
+    .prize-section-header h2 span { background:linear-gradient(90deg,var(--accent),var(--purple),var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .prize-section-header p { color:var(--muted); font-size:0.85rem; }
+    .prize-section-header .prize-wallet-link { display:inline-block; margin-top:0.4rem; font-size:0.7rem; color:var(--muted); font-family:monospace; cursor:pointer; padding:0.25rem 0.6rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; transition:all 0.2s; }
+    .prize-section-header .prize-wallet-link:hover { border-color:var(--accent); color:var(--accent); }
+    .prize-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; }
+    .prize-card { background:linear-gradient(135deg,#151520,#1a1a2e); border:1px solid #2a2a3e; border-radius:16px; overflow:hidden; transition:all 0.3s; cursor:pointer; position:relative; }
+    .prize-card:hover { border-color:var(--accent); transform:translateY(-5px) scale(1.02); box-shadow:0 12px 32px rgba(255,95,31,0.15), 0 0 0 1px rgba(255,95,31,0.1); }
+    .prize-card::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,95,31,0.05),rgba(168,85,247,0.05)); opacity:0; transition:opacity 0.3s; z-index:0; }
+    .prize-card:hover::before { opacity:1; }
+    .prize-img { width:100%; aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:3.5rem; position:relative; overflow:hidden; }
+    .prize-img-bg { position:absolute; inset:0; opacity:0.15; }
+    .prize-img-bg.bg1 { background:radial-gradient(circle at 30% 40%,#ff5f1f,transparent 60%),radial-gradient(circle at 70% 60%,#a855f7,transparent 60%); }
+    .prize-img-bg.bg2 { background:radial-gradient(circle at 60% 30%,#3b82f6,transparent 60%),radial-gradient(circle at 40% 70%,#22c55e,transparent 60%); }
+    .prize-img-bg.bg3 { background:radial-gradient(circle at 50% 50%,#eab308,transparent 50%),radial-gradient(circle at 20% 80%,#ff5f1f,transparent 60%); }
+    .prize-img-bg.bg4 { background:radial-gradient(circle at 40% 40%,#ec4899,transparent 60%),radial-gradient(circle at 60% 60%,#a855f7,transparent 60%); }
+    .prize-img > span:not(.prize-badge) { position:relative; z-index:1; filter:drop-shadow(0 4px 12px rgba(0,0,0,0.5)); animation:prizeFloat 3s ease-in-out infinite; }
+    @keyframes prizeFloat { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+    .prize-card:nth-child(2) .prize-img > span:not(.prize-badge) { animation-delay:0.5s; }
+    .prize-card:nth-child(3) .prize-img > span:not(.prize-badge) { animation-delay:1s; }
+    .prize-card:nth-child(4) .prize-img > span:not(.prize-badge) { animation-delay:1.5s; }
+    .prize-badge { position:absolute; top:0.6rem; right:0.6rem; padding:0.25rem 0.6rem; border-radius:6px; font-size:0.65rem; font-weight:700; letter-spacing:0.04em; z-index:2; }
+    .prize-badge.win-this { background:linear-gradient(90deg,var(--accent),#ff8c42); color:#fff; box-shadow:0 2px 8px rgba(255,95,31,0.4); animation:badgePulse 2s ease-in-out infinite; }
+    @keyframes badgePulse { 0%,100% { box-shadow:0 2px 8px rgba(255,95,31,0.4); } 50% { box-shadow:0 2px 16px rgba(255,95,31,0.7); } }
+    .prize-badge.coming { background:rgba(168,85,247,0.2); color:var(--purple); border:1px solid rgba(168,85,247,0.3); }
+    .prize-info { padding:0.75rem 0.85rem; position:relative; z-index:1; }
+    .prize-info h4 { font-size:0.85rem; font-weight:700; margin-bottom:0.15rem; color:#fff; }
+    .prize-info p { font-size:0.65rem; color:var(--muted); }
+    .prize-info .prize-share-hint { font-size:0.6rem; color:var(--accent); margin-top:0.3rem; opacity:0; transition:opacity 0.2s; }
+    .prize-card:hover .prize-share-hint { opacity:1; }
+    .prize-cta { text-align:center; margin-top:1.25rem; }
+    .prize-cta-btn { display:inline-flex; align-items:center; gap:0.5rem; background:linear-gradient(90deg,var(--accent),#ff8c42); color:#fff; border:none; padding:0.7rem 1.5rem; border-radius:10px; font-size:0.9rem; font-weight:700; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 16px rgba(255,95,31,0.3); }
+    .prize-cta-btn:hover { transform:translateY(-2px); box-shadow:0 6px 24px rgba(255,95,31,0.4); }
+    .prize-cta-btn svg { width:16px; height:16px; fill:#fff; }
+
+    /* MILESTONE TOAST (enhanced) */
+    .toast-milestone { border-color:var(--green) !important; }
+    .toast-milestone .toast-share-btn { display:inline-flex; align-items:center; gap:0.3rem; margin-top:0.5rem; padding:0.3rem 0.7rem; border-radius:6px; border:1px solid #333; background:#000; color:#fff; font-size:0.7rem; font-weight:600; cursor:pointer; }
+
+    @media (max-width: 900px) {
+      .prize-grid { grid-template-columns: repeat(2, 1fr); }
+    }
     @media (max-width: 640px) {
       nav { padding: 0.75rem 1rem; }
       .nav-center { display: none; }
@@ -878,6 +1000,11 @@
       .game-area { padding: 1.75rem; min-height: 240px; }
       .limbo-display { font-size: 3.5rem; }
       .crash-graph { height: 200px; }
+      .prize-grid { grid-template-columns: repeat(2, 1fr); }
+      .daily-spin-card { flex-direction:column; text-align:center; }
+      .streak-badge { font-size:0.65rem; padding:0.2rem 0.4rem; }
+      .bigwin-card { padding:1.5rem; }
+      .bigwin-amount { font-size:2rem; }
     }
   </style>
 </head>
@@ -896,6 +1023,7 @@
     <span></span><span></span><span></span>
   </button>
   <div class="nav-right">
+    <div class="streak-badge" id="streak-badge" onclick="shareStreakOnX()">&#128293; <span id="streak-count">0</span> Streak</div>
     <div class="balance-display"><span id="balance-display">0</span> SPUNK•BET</div>
     <button class="share-btn" id="share-btn" onclick="openReferralModal()">Share &amp; Earn</button>
     <button class="wallet-btn" id="wallet-btn" onclick="handleWalletClick()">Connect Wallet</button>
@@ -999,20 +1127,28 @@
 <!-- HOME -->
 <div id="home" class="page active">
   <section class="hero">
-    <div class="hero-flash hero-flash-pulse" onclick="document.getElementById('faucet-btn').scrollIntoView({behavior:'smooth'});document.getElementById('faucet-btn').click();" style="cursor:pointer;">10,000 FREE SPUNK•BET — Claim Now</div>
+    <div class="hero-flash hero-flash-pulse" onclick="document.getElementById('faucet-btn').scrollIntoView({behavior:'smooth'});document.getElementById('faucet-btn').click();" style="cursor:pointer;">FREE SPUNK•BET — Play Instantly</div>
     <h1>Play. Bet. <span>Win.</span></h1>
     <p>Provably fair casino games powered by the SPUNK•BET rune on Bitcoin. No accounts, no KYC. Connect and play.</p>
     <div class="shield-icon">Provably Fair</div>
   </section>
+
+  <!-- Live Wins Ticker -->
+  <div class="live-ticker-wrap" id="live-ticker-wrap" style="display:none;">
+    <div class="live-ticker-label"><span class="live-dot"></span> LIVE WINS</div>
+    <div class="live-ticker">
+      <div class="live-ticker-inner" id="live-ticker-inner"></div>
+    </div>
+  </div>
 
   <!-- Faucet Banner -->
   <div class="faucet-banner" id="faucet-banner">
     <div class="faucet-card">
       <div class="faucet-left">
         <h3>Need SPUNK•BET to play? <span>Claim free tokens</span></h3>
-        <p>Get 10,000 free SPUNK•BET tokens to try all games. Claim once every 24 hours.</p>
+        <p id="faucet-desc">Get free SPUNK•BET tokens to try all games. Connect wallet for 10,000 tokens or play with 2,000 for free!</p>
       </div>
-      <button class="faucet-btn" id="faucet-btn" onclick="claimFaucet()">Claim 10,000 SPUNK•BET</button>
+      <button class="faucet-btn" id="faucet-btn" onclick="claimFaucet()">Claim 2,000 SPUNK•BET</button>
     </div>
   </div>
 
@@ -1098,6 +1234,73 @@
       <p class="game-card-desc">Climb the tower</p>
     </div>
   </div>
+
+  <!-- Daily Bonus Spin -->
+  <div class="daily-spin-section" id="daily-spin-section">
+    <div class="daily-spin-card">
+      <div class="daily-spin-left">
+        <h3>Daily Bonus <span>Spin</span></h3>
+        <p>Spin once per day for free SPUNK•BET. Share your result on X for 2x the prize!</p>
+      </div>
+      <button class="daily-spin-btn" id="daily-spin-btn" onclick="openDailySpin()">Spin Now</button>
+    </div>
+  </div>
+
+  <!-- Prize Wallet Showcase -->
+  <div class="prize-section">
+    <div class="prize-section-header">
+      <h2>Win Real <span>Ordinal Prizes</span></h2>
+      <p>Play games, hit milestones, and win Bitcoin ordinals. Real inscriptions, real prizes.</p>
+      <span class="prize-wallet-link" onclick="navigator.clipboard.writeText('bc1p27l6s82w5dek9yffjtlyj58ue2sndxm6zszpcz9zcwqpd4v86n9s5l37xm');showToast('Prize wallet copied!')">Prize Wallet: bc1p27l6...s5l37xm</span>
+    </div>
+    <div class="prize-grid" id="prize-grid">
+      <div class="prize-card" onclick="sharePrizeOnX('Spunk Skull #1')">
+        <div class="prize-img"><div class="prize-img-bg bg1"></div><span>&#128128;</span><span class="prize-badge win-this">WIN THIS</span></div>
+        <div class="prize-info"><h4>Spunk Skull #1</h4><p>Bitcoin Ordinal</p><div class="prize-share-hint">Tap to share on X</div></div>
+      </div>
+      <div class="prize-card" onclick="sharePrizeOnX('Bitcoin Punk #42')">
+        <div class="prize-img"><div class="prize-img-bg bg2"></div><span>&#128125;</span><span class="prize-badge win-this">WIN THIS</span></div>
+        <div class="prize-info"><h4>Bitcoin Punk #42</h4><p>Bitcoin Ordinal</p><div class="prize-share-hint">Tap to share on X</div></div>
+      </div>
+      <div class="prize-card" onclick="sharePrizeOnX('Rune Stone')">
+        <div class="prize-img"><div class="prize-img-bg bg3"></div><span>&#128142;</span><span class="prize-badge coming">COMING SOON</span></div>
+        <div class="prize-info"><h4>Rune Stone</h4><p>Bitcoin Ordinal</p><div class="prize-share-hint">Tap to share on X</div></div>
+      </div>
+      <div class="prize-card" onclick="sharePrizeOnX('SPUNK Gold Pass')">
+        <div class="prize-img"><div class="prize-img-bg bg4"></div><span>&#127941;</span><span class="prize-badge coming">COMING SOON</span></div>
+        <div class="prize-info"><h4>SPUNK Gold Pass</h4><p>Bitcoin Ordinal</p><div class="prize-share-hint">Tap to share on X</div></div>
+      </div>
+    </div>
+    <div class="prize-cta">
+      <button class="prize-cta-btn" onclick="sharePrizeOnX()"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> Share Prizes &amp; Tag Friends</button>
+    </div>
+  </div>
+</div>
+
+<!-- Daily Spin Modal -->
+<div class="daily-spin-modal" id="daily-spin-modal">
+  <div class="daily-spin-modal-inner">
+    <h3>Daily Bonus Spin</h3>
+    <p style="color:var(--muted);font-size:0.85rem;">Tap to spin!</p>
+    <div id="daily-spin-display" style="font-size:4rem;margin:1rem 0;cursor:pointer;" onclick="executeDailySpin()">&#127905;</div>
+    <div class="daily-spin-result" id="daily-spin-result" style="display:none;"></div>
+    <div class="daily-spin-bonus" id="daily-spin-bonus" style="display:none;">Share on X for 2x the prize!</div>
+    <button class="btn" id="daily-spin-share-btn" style="width:100%;margin-bottom:0.5rem;background:#000;border:1px solid #333;display:none;" onclick="shareDailySpinOnX()">Share on X for 2x Bonus</button>
+    <button class="wallet-modal-close" onclick="closeDailySpin()">Close</button>
+  </div>
+</div>
+
+<!-- Big Win Overlay -->
+<div class="bigwin-overlay" id="bigwin-overlay">
+  <div class="bigwin-card">
+    <div class="bigwin-emoji" id="bigwin-emoji">&#127881;</div>
+    <div class="bigwin-title">BIG WIN!</div>
+    <div class="bigwin-amount" id="bigwin-amount">+0</div>
+    <div class="bigwin-multi" id="bigwin-multi"></div>
+    <div class="bigwin-bonus">Share &amp; earn 2,500 bonus SPUNK•BET!</div>
+    <button class="bigwin-share" onclick="shareBigWinOnX()"><svg viewBox="0 0 24 24" width="16" height="16" fill="#fff"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> Share this win on X</button>
+    <button class="bigwin-dismiss" onclick="closeBigWin()">No thanks</button>
+  </div>
 </div>
 
 <!-- COIN FLIP -->
@@ -1164,7 +1367,11 @@
     </div>
     <div id="dice-result" class="result"></div>
     <div class="game-area">
-      <div class="dice-target">Roll under <span id="dice-target-val">50</span> to win</div>
+      <div class="dice-mode-toggle">
+        <button class="dice-mode-btn active" id="dice-under-btn" onclick="setDiceMode('under')">ROLL UNDER</button>
+        <button class="dice-mode-btn" id="dice-over-btn" onclick="setDiceMode('over')">ROLL OVER</button>
+      </div>
+      <div class="dice-target">Roll <span id="dice-mode-label">under</span> <span id="dice-target-val">50</span> to win</div>
       <div class="dice-display">
         <div class="die" id="dice-die">&#8212;</div>
       </div>
@@ -1665,10 +1872,27 @@
     <a href="javascript:showPage('wallets-page')">Wallets</a>
     <a href="javascript:showPage('fair-page')">Provably Fair</a>
     <a href="https://x.com/SpunkArt13" target="_blank">@SpunkArt13</a>
+    <button class="tip-spunk-btn" onclick="openTipModal()"><span class="tip-icon">💜</span> Tip Spunk</button>
   </div>
   <p>spunk.bet &mdash; powered by SPUNK•BET rune on Bitcoin</p>
   <p style="margin-top:0.5rem; opacity:0.5;">Playing with SPUNK•BET rune tokens &middot; All games are provably fair</p>
+  <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid #222; max-width:600px; margin-left:auto; margin-right:auto;">
+    <p style="font-size:0.7rem; opacity:0.4; line-height:1.6;">
+      <strong>Disclaimer:</strong> spunk.bet is an entertainment platform for fun only. All gameplay uses SPUNK•BET rune tokens and carries no guaranteed monetary value. We are not responsible for any losses, errors, bugs, or technical issues. Play at your own risk. No refunds. By using this site you acknowledge that this is a game, not financial advice, and you accept full responsibility for your actions. Must be 18+ or of legal age in your jurisdiction. This site does not collect personal data beyond what is stored locally in your browser.
+    </p>
+  </div>
 </footer>
+
+<!-- Tip Modal -->
+<div class="tip-modal-overlay" id="tip-modal" onclick="if(event.target===this)closeTipModal()">
+  <div class="tip-modal">
+    <h3>💜 Tip Spunk</h3>
+    <p>Send BTC to support the project. Every sat counts!</p>
+    <div class="tip-addr" id="tip-addr" onclick="copyTipAddr()">bc1q05ay5x4lwjl8pphy83j8wg08nwq2jdvnlw8ekl</div>
+    <div style="font-size:0.75rem;color:var(--muted);margin-bottom:1rem;">Tap address to copy</div>
+    <button class="btn" style="width:100%;background:#111;border:1px solid #333;" onclick="closeTipModal()">Close</button>
+  </div>
+</div>
 
 <script>
 // ===== PROVABLY FAIR SYSTEM =====
@@ -1849,7 +2073,8 @@ function updateFaucetButton() {
   if (!btn) return;
   if (canClaimFaucet()) {
     btn.disabled = false;
-    btn.textContent = 'Claim 10,000 SPUNK\u2022BET';
+    const amount = getFaucetAmount();
+    btn.textContent = 'Claim ' + amount.toLocaleString() + ' SPUNK\u2022BET';
   } else {
     btn.disabled = true;
     const lastClaim = parseInt(localStorage.getItem('spunkbet_faucet_time'));
@@ -1861,17 +2086,23 @@ function updateFaucetButton() {
   }
 }
 
+function getFaucetAmount() {
+  return walletState.connected ? 10000 : 2000;
+}
+
 function claimFaucet() {
   if (!canClaimFaucet()) return;
-  balance += 10000;
+  const amount = getFaucetAmount();
+  balance += amount;
   localStorage.setItem('spunkbet_faucet_time', Date.now().toString());
   updateBalance();
   saveState();
   updateFaucetButton();
-  showToast('Claimed <span class="toast-amount">10,000 SPUNK\u2022BET</span>! Go play some games.');
-  // Also send real runes on-chain if wallet is connected
   if (walletState.connected) {
+    showToast('Claimed <span class="toast-amount">' + amount.toLocaleString() + ' SPUNK\u2022BET</span>! Go play some games.');
     claimFaucetOnChain();
+  } else {
+    showToast('Claimed <span class="toast-amount">' + amount.toLocaleString() + ' SPUNK\u2022BET</span>! Connect wallet for 5x more tokens.');
   }
 }
 
@@ -1905,11 +2136,32 @@ function loadState() {
     } catch(e) {}
   }
 
+  // Auto-gift tokens to new visitors so they can play instantly
+  if (!localStorage.getItem('spunkbet_welcomed')) {
+    localStorage.setItem('spunkbet_welcomed', '1');
+    balance += 2000;
+    saveState();
+    setTimeout(() => {
+      showToast('Welcome! <span class="toast-amount">2,000 SPUNK\u2022BET</span> free to play. Connect wallet for 5x more!');
+    }, 500);
+  }
+
   updateBalance();
   renderHistory();
   updateFirst100();
   renderLeaderboard();
   updateFaucetButton();
+  updateFaucetDisplay();
+}
+
+function updateFaucetDisplay() {
+  const desc = document.getElementById('faucet-desc');
+  if (!desc) return;
+  if (walletState.connected) {
+    desc.textContent = 'Get 10,000 free SPUNK\u2022BET tokens every 24 hours. Wallet connected \u2014 you get the full amount!';
+  } else {
+    desc.textContent = 'Get 2,000 free tokens to play, or connect your wallet for 10,000! Claim every 24 hours.';
+  }
 }
 
 // ===== REFERRAL CAPTURE =====
@@ -2101,11 +2353,29 @@ function setBet(id, action) {
 function addHistory(game, bet, result, amount, seedData) {
   history.unshift({ game, bet, result, amount, time: new Date(), seed: seedData || null });
   if (history.length > 50) history.pop();
+
+  const multiNum = bet > 0 ? (amount + bet) / bet : 0;
   if (result === 'win') {
-    // Extract multiplier from amount
-    const multi = bet > 0 ? ((amount + bet) / bet).toFixed(2) + 'x' : '';
+    const multi = bet > 0 ? multiNum.toFixed(2) + 'x' : '';
     lastWin = { game, amount: Math.abs(amount), multi };
+    // Win streak tracking
+    winStreak++;
+    localStorage.setItem('spunkbet_streak', winStreak.toString());
+    updateStreakBadge();
+    checkStreakMilestone();
+    // Big win detection: 10x+ multiplier OR 50k+ profit
+    if (multiNum >= 10 || amount >= 50000) {
+      showBigWinOverlay(amount, multi, game);
+    }
+  } else {
+    winStreak = 0;
+    localStorage.setItem('spunkbet_streak', '0');
+    updateStreakBadge();
   }
+  // Update cumulative stats
+  updateCumulativeStats(game, bet, result, amount, multiNum);
+  // Update live ticker
+  updateLiveTicker(game, bet, result, amount);
   renderHistory();
   saveState();
 }
@@ -2271,37 +2541,25 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-async function shareWinOnX() {
+// Rotating viral tweet templates
+const TWEET_TEMPLATES = [
+  (g, amt, multi, link) => '+' + amt + ' SPUNK\u2022BET on ' + g + '! \uD83C\uDFB0\n\nPlay free \u2192 ' + link,
+  (g, amt, multi, link) => 'Just hit ' + multi + ' on ' + g + '! +' + amt + ' SPUNK\u2022BET \uD83C\uDFB0\n\n' + link,
+  (g, amt, multi, link) => 'Free crypto casino, no cap. Just won ' + amt + ' on ' + g + ' \uD83D\uDCB0\n\n' + link,
+  (g, amt, multi, link) => multi + ' multiplier on ' + g + '! This casino is actually fun \uD83D\uDD25\n\n' + link,
+  (g, amt, multi, link) => 'No KYC casino on Bitcoin. ' + amt + ' SPUNK\u2022BET win on ' + g + ' \uD83C\uDF89\n\n' + link,
+];
+function getViralTweet(game, amount, multi, link) {
+  const idx = Math.floor(Math.random() * TWEET_TEMPLATES.length);
+  return TWEET_TEMPLATES[idx](game, amount, multi, link);
+}
+
+function shareWinOnX() {
   const refCode = walletState.connected ? walletState.paymentAddress.slice(0, 8) : '';
   const link = refCode ? 'https://spunk.bet?ref=' + refCode : 'https://spunk.bet';
-  const text = '+' + lastWin.amount.toLocaleString() + ' SPUNK\u2022BET on ' + lastWin.game + '! \uD83C\uDFB0\n\nPlay free \u2192 ' + link;
-  const card = generateWinCard();
-  const blob = await new Promise(r => card.toBlob(r, 'image/png'));
-  const file = new File([blob], 'spunkbet-win.png', { type: 'image/png' });
-
-  // Mobile: Web Share API with image
-  try {
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ text, files: [file] });
-      return;
-    }
-  } catch(e) {}
-
-  // Desktop: copy image to clipboard + open X
-  try {
-    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-    showToast('Win card copied! Paste it into your tweet (Ctrl+V)');
-  } catch(e) {
-    // Clipboard failed, download instead
-    const a = document.createElement('a');
-    a.href = card.toDataURL('image/png');
-    a.download = 'spunkbet-win.png';
-    a.click();
-    showToast('Win card saved! Attach it to your tweet.');
-  }
-
-  const url = 'https://x.com/intent/tweet?text=' + encodeURIComponent(text);
-  window.open(url, '_blank', 'width=550,height=420');
+  const text = getViralTweet(lastWin.game, lastWin.amount.toLocaleString(), lastWin.multi, link);
+  window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+  shareBonus();
 }
 
 // ===== COIN FLIP =====
@@ -2311,9 +2569,12 @@ function pickSide(side) {
   document.getElementById('cf-tails').classList.toggle('selected', side === 'tails');
 }
 
+let coinFlipping = false;
 async function flipCoin() {
+  if (coinFlipping) return;
   const bet = getBet('cf-bet');
   if (bet <= 0 || bet > balance) return;
+  coinFlipping = true;
   balance -= bet;
   updateBalance();
 
@@ -2352,26 +2613,47 @@ async function flipCoin() {
     }
     updateBalance();
     saveState();
+    coinFlipping = false;
   }, cfDelay);
 }
 
 // ===== DICE =====
+let diceMode = 'under';
+
+function setDiceMode(mode) {
+  diceMode = mode;
+  document.getElementById('dice-under-btn').classList.toggle('active', mode === 'under');
+  document.getElementById('dice-over-btn').classList.toggle('active', mode === 'over');
+  document.getElementById('dice-mode-label').textContent = mode;
+  updateDiceSlider();
+}
+
 function updateDiceSlider() {
   const slider = document.getElementById('dice-slider');
   const val = parseInt(slider.value);
   slider.style.setProperty('--val', val + '%');
   document.getElementById('dice-target-val').textContent = val;
-  const chance = val - 1;
+  let chance, payout;
+  if (diceMode === 'under') {
+    chance = val - 1;
+    slider.style.background = 'linear-gradient(to right, var(--green) 0%, var(--green) ' + val + '%, var(--red) ' + val + '%, var(--red) 100%)';
+  } else {
+    chance = 100 - val;
+    slider.style.background = 'linear-gradient(to right, var(--red) 0%, var(--red) ' + val + '%, var(--green) ' + val + '%, var(--green) 100%)';
+  }
   document.getElementById('dice-chance').textContent = chance + '%';
-  const payout = chance > 0 ? (98 / chance).toFixed(2) : '0.00';
+  payout = chance > 0 ? (98 / chance).toFixed(2) : '0.00';
   document.getElementById('dice-payout').textContent = payout + 'x';
   const badge = document.getElementById('dice-payout-badge');
   if (badge) badge.textContent = payout + 'x';
 }
 
+let diceRolling = false;
 async function rollDice() {
+  if (diceRolling) return;
   const bet = getBet('dice-bet');
   if (bet > balance || bet <= 0) return;
+  diceRolling = true;
   const target = parseInt(document.getElementById('dice-slider').value);
   balance -= bet;
   updateBalance();
@@ -2388,25 +2670,27 @@ async function rollDice() {
 
   setTimeout(() => {
     const roll = Math.floor(rand * 100) + 1;
-    const win = roll < target;
+    const win = diceMode === 'under' ? roll < target : roll > target;
     die.className = 'die ' + (win ? 'hit' : 'miss');
     die.textContent = roll;
-    const chance = target - 1;
+    const chance = diceMode === 'under' ? (target - 1) : (100 - target);
     const multi = chance > 0 ? (98 / chance) : 0;
+    const modeLabel = diceMode === 'under' ? 'under' : 'over';
 
     showGameSeed('dice-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
 
     if (win) {
       const payout = Math.floor(bet * multi);
       balance += payout;
-      showResult('dice-result', true, 'Rolled ' + roll + ' (under ' + target + '). Won +' + (payout - bet).toLocaleString() + ' SPUNK•BET');
+      showResult('dice-result', true, 'Rolled ' + roll + ' (' + modeLabel + ' ' + target + '). Won +' + (payout - bet).toLocaleString() + ' SPUNK•BET');
       addHistory('Dice', bet, 'win', payout - bet, seedAfter);
     } else {
-      showResult('dice-result', false, 'Rolled ' + roll + ' (needed under ' + target + '). Lost ' + bet.toLocaleString() + ' SPUNK•BET');
+      showResult('dice-result', false, 'Rolled ' + roll + ' (needed ' + modeLabel + ' ' + target + '). Lost ' + bet.toLocaleString() + ' SPUNK•BET');
       addHistory('Dice', bet, 'lose', -bet, seedAfter);
     }
     updateBalance();
     saveState();
+    diceRolling = false;
   }, isTurbo('dice') ? 50 : 450);
 }
 
@@ -2468,7 +2752,7 @@ async function startMines() {
     available.splice(idx, 1);
   }
 
-  const seedAfter = { ...seedBefore, serverSeed: pfState.serverSeed, nonces: pfState.nonce - 1 };
+  const seedAfter = { ...seedBefore, serverSeed: pfState.serverSeed, nonce: pfState.nonce - 1 };
   await rotateServerSeed();
   savePFState();
 
@@ -2628,11 +2912,14 @@ function updateLimboDisplay() {
   const chance = Math.min(98, (98 / target));
   document.getElementById('limbo-chance').textContent = chance.toFixed(1) + '%';
 }
+let limboPlaying = false;
 async function playLimbo() {
+  if (limboPlaying) return;
   const bet = getBet('limbo-bet');
   if (bet <= 0 || bet > balance) return;
+  limboPlaying = true;
   const target = parseFloat(document.getElementById('limbo-target').value) || 2;
-  if (target < 1.01) { showToast('Target must be at least 1.01x'); return; }
+  if (target < 1.01) { showToast('Target must be at least 1.01x'); limboPlaying = false; return; }
   balance -= bet;
   updateBalance();
 
@@ -2661,6 +2948,7 @@ async function playLimbo() {
       addHistory('Limbo', bet, 'lose', -bet, seedAfter);
     }
     updateBalance(); saveState();
+    limboPlaying = false;
   }, isTurbo('limbo') ? 50 : 400);
 }
 
@@ -2918,7 +3206,7 @@ async function spinWheel() {
   const winIndex = Math.floor(rand * segs.length);
   const segAngle = (2 * Math.PI) / segs.length;
   const targetAngle = -(winIndex * segAngle + segAngle / 2);
-  const spins = 5 + Math.random() * 3;
+  const spins = Math.round(5 + Math.random() * 3);
   const totalRotation = spins * 2 * Math.PI + targetAngle;
   const duration = 4000;
   const startTime = Date.now();
@@ -3197,8 +3485,8 @@ async function startHiLo() {
 
   // Calculate odds display
   const val = cardValue(rank);
-  const hiChance = (13 - val) / 13;
-  const loChance = (val - 1) / 13;
+  const hiChance = (13 - val + 1) / 13;
+  const loChance = val / 13;
   document.getElementById('hilo-hi-btn').textContent = '\u25B2 Higher (' + Math.round(hiChance * 100) + '%)';
   document.getElementById('hilo-lo-btn').textContent = '\u25BC Lower (' + Math.round(loChance * 100) + '%)';
 }
@@ -3275,6 +3563,7 @@ const TOWER_CONFIG = {
   expert: { cols: 3, traps: 2, floors: 8 }
 };
 function setTowerDiff(diff) {
+  if (towerState && towerState.active) return;
   towerDiff = diff;
   ['easy','medium','hard','expert'].forEach(d => {
     document.getElementById('tower-' + d).classList.toggle('active', d === diff);
@@ -3336,8 +3625,8 @@ async function startTower() {
   const seedAfter = { ...seedBefore, serverSeed: pfState.serverSeed };
   await rotateServerSeed(); savePFState();
 
-  towerState = { bet, diff: towerDiff, traps, currentFloor: 0, active: true, seedData: seedAfter, config: cfg };
   initTowerGrid();
+  towerState = { bet, diff: towerDiff, traps, currentFloor: 0, active: true, seedData: seedAfter, config: cfg };
   // Unlock floor 0
   document.querySelectorAll('.tower-cell[data-floor="0"]').forEach(cell => {
     cell.classList.remove('locked');
@@ -3476,6 +3765,8 @@ function onWalletConnected() {
   closeWalletModal();
   saveState();
   processReferralOnConnect(walletState.paymentAddress);
+  updateFaucetButton();
+  updateFaucetDisplay();
 }
 
 function getXverseProvider() {
@@ -3663,38 +3954,16 @@ function openReferralModal() {
 
 function closeReferralModal() { document.getElementById('referral-modal').classList.remove('show'); }
 
-async function shareReferralOnX() {
+function shareReferralOnX() {
   if (!walletState.connected) return;
   const code = walletState.paymentAddress.slice(0, 8);
   const link = 'https://spunk.bet?ref=' + code;
   const text = 'Free crypto casino on Bitcoin \uD83C\uDFB0\n\nNo KYC, provably fair. Claim 10k free tokens \u2192 ' + link;
-  const card = generateWinCard({ referralOnly: true });
-  const blob = await new Promise(r => card.toBlob(r, 'image/png'));
-  const file = new File([blob], 'spunkbet-referral.png', { type: 'image/png' });
-
-  try {
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ text, files: [file] });
-      return;
-    }
-  } catch(e) {}
-
-  try {
-    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-    showToast('Share card copied! Paste it into your tweet (Ctrl+V)');
-  } catch(e) {
-    const a = document.createElement('a');
-    a.href = card.toDataURL('image/png');
-    a.download = 'spunkbet-referral.png';
-    a.click();
-    showToast('Share card saved! Attach it to your tweet.');
-  }
-
-  const url = 'https://x.com/intent/tweet?text=' + encodeURIComponent(text);
-  window.open(url, '_blank', 'width=550,height=420');
+  window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+  shareBonus();
 }
 
-async function shareFirst100() {
+function shareFirst100() {
   if (!walletState.connected) {
     document.getElementById('wallet-modal').classList.add('show');
     document.getElementById('wallet-install-hint').style.display = 'none';
@@ -3706,30 +3975,8 @@ async function shareFirst100() {
   const link = 'https://spunk.bet?ref=' + code;
   const remaining = document.getElementById('first100-count')?.textContent || '?';
   const text = 'Only ' + remaining + ' spots left for 2x bonus rewards on Spunk.Bet \uD83C\uDFB0\n\nFree Bitcoin casino, no KYC. Claim yours \u2192 ' + link;
-  const card = generateWinCard({ referralOnly: true });
-  const blob = await new Promise(r => card.toBlob(r, 'image/png'));
-  const file = new File([blob], 'spunkbet-share.png', { type: 'image/png' });
-
-  try {
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ text, files: [file] });
-      return;
-    }
-  } catch(e) {}
-
-  try {
-    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-    showToast('Share card copied! Paste it into your tweet (Ctrl+V)');
-  } catch(e) {
-    const a = document.createElement('a');
-    a.href = card.toDataURL('image/png');
-    a.download = 'spunkbet-share.png';
-    a.click();
-    showToast('Share card saved! Attach it to your tweet.');
-  }
-
-  const url = 'https://x.com/intent/tweet?text=' + encodeURIComponent(text);
-  window.open(url, '_blank', 'width=550,height=420');
+  window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+  shareBonus();
 }
 
 function copyReferralLink() {
@@ -3999,10 +4246,13 @@ function renderLimboHistory() {
 }
 
 // ===== KENO ANIMATED DRAW =====
+let kenoPlaying = false;
 async function playKenoAnimated() {
+  if (kenoPlaying) return;
   if (kenoSelected.size === 0) { showToast('Pick at least 1 number'); return; }
   const bet = getBet('keno-bet');
   if (bet <= 0 || bet > balance) return;
+  kenoPlaying = true;
   balance -= bet;
   updateBalance();
 
@@ -4095,14 +4345,307 @@ async function playKenoAnimated() {
     addHistory('Keno', bet, 'lose', -bet, seedAfter);
   }
   updateBalance(); saveState();
+  kenoPlaying = false;
+}
+
+// ===== SHARE-TO-EARN BONUS SYSTEM =====
+function shareBonus() {
+  let shares = {};
+  try { shares = JSON.parse(localStorage.getItem('spunkbet_shares') || '{}'); } catch(e) {}
+  const today = new Date().toDateString();
+  if (!shares[today]) shares[today] = 0;
+  if (shares[today] >= 3) return; // Max 3 bonuses per 24h
+  shares[today]++;
+  // Clean old entries
+  Object.keys(shares).forEach(k => { if (k !== today) delete shares[k]; });
+  localStorage.setItem('spunkbet_shares', JSON.stringify(shares));
+  balance += 2500;
+  updateBalance();
+  saveState();
+  showToast('Shared! <span class="toast-amount">+2,500 SPUNK\u2022BET</span> bonus (' + shares[today] + '/3 today)');
+}
+
+// ===== WIN STREAK TRACKER =====
+let winStreak = parseInt(localStorage.getItem('spunkbet_streak') || '0');
+
+function updateStreakBadge() {
+  const badge = document.getElementById('streak-badge');
+  const countEl = document.getElementById('streak-count');
+  if (!badge) return;
+  if (winStreak >= 3) {
+    badge.classList.add('show');
+    countEl.textContent = winStreak;
+  } else {
+    badge.classList.remove('show');
+  }
+}
+
+function checkStreakMilestone() {
+  const milestones = [5, 10, 25, 50];
+  if (milestones.includes(winStreak)) {
+    const bonus = winStreak * 100;
+    balance += bonus;
+    updateBalance();
+    saveState();
+    showToast('\uD83D\uDD25 ' + winStreak + ' Win Streak! <span class="toast-amount">+' + bonus.toLocaleString() + ' SPUNK\u2022BET</span> bonus! <button class="toast-share-btn" onclick="shareStreakOnX()">Share</button>');
+  }
+}
+
+async function shareStreakOnX() {
+  const refCode = walletState.connected ? walletState.paymentAddress.slice(0, 8) : '';
+  const link = refCode ? 'https://spunk.bet?ref=' + refCode : 'https://spunk.bet';
+  const text = '\uD83D\uDD25 ' + winStreak + ' Win Streak on Spunk.Bet!\n\nFree crypto casino, no KYC. Try to beat my streak \u2192 ' + link;
+  const url = 'https://x.com/intent/tweet?text=' + encodeURIComponent(text);
+  window.open(url, '_blank', 'width=550,height=420');
+  shareBonus();
+}
+
+// ===== BIG WIN OVERLAY =====
+function showBigWinOverlay(amount, multi, game) {
+  const overlay = document.getElementById('bigwin-overlay');
+  document.getElementById('bigwin-amount').textContent = '+' + Math.abs(amount).toLocaleString() + ' SPUNK\u2022BET';
+  document.getElementById('bigwin-multi').textContent = multi + ' on ' + game;
+  const emojis = ['\uD83C\uDF89', '\uD83C\uDFB0', '\uD83D\uDCB0', '\uD83D\uDD25', '\uD83D\uDE80'];
+  document.getElementById('bigwin-emoji').textContent = emojis[Math.floor(Math.random() * emojis.length)];
+  overlay.classList.add('show');
+  spawnConfetti();
+}
+
+function closeBigWin() {
+  document.getElementById('bigwin-overlay').classList.remove('show');
+}
+
+async function shareBigWinOnX() {
+  closeBigWin();
+  await shareWinOnX();
+}
+
+function spawnConfetti() {
+  const colors = ['#ff5f1f', '#22c55e', '#eab308', '#a855f7', '#3b82f6', '#ec4899'];
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-particle';
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.top = '-10px';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    p.style.width = (4 + Math.random() * 8) + 'px';
+    p.style.height = (4 + Math.random() * 8) + 'px';
+    p.style.animationDelay = (Math.random() * 1) + 's';
+    p.style.animationDuration = (2 + Math.random() * 2) + 's';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 5000);
+  }
+}
+
+// ===== LIVE WINS TICKER =====
+function updateLiveTicker(game, bet, result, amount) {
+  if (result !== 'win') return;
+  const wrap = document.getElementById('live-ticker-wrap');
+  const inner = document.getElementById('live-ticker-inner');
+  if (!wrap || !inner) return;
+  wrap.style.display = '';
+  const multi = bet > 0 ? ((amount + bet) / bet).toFixed(1) + 'x' : '';
+  const addr = walletState.connected ? walletState.paymentAddress.slice(0, 6) + '...' + walletState.paymentAddress.slice(-4) : 'Player';
+  const item = '<span class="ticker-item">' + addr + ' won <span class="ticker-win">+' + Math.abs(amount).toLocaleString() + '</span> on <span class="ticker-game">' + game + '</span> (' + multi + ')</span>';
+  // Duplicate for seamless scroll
+  inner.innerHTML = inner.innerHTML.replace(/<span class="ticker-item">.*?<\/span>/g, m => m).slice(0, 3000);
+  inner.innerHTML = item + inner.innerHTML;
+  // Keep duplicated for infinite scroll
+  const items = inner.querySelectorAll('.ticker-item');
+  if (items.length > 20) {
+    for (let i = 20; i < items.length; i++) items[i].remove();
+  }
+  // Duplicate content for seamless loop
+  const uniqueHTML = inner.innerHTML;
+  inner.innerHTML = uniqueHTML + uniqueHTML;
+}
+
+function initLiveTicker() {
+  // Populate with recent wins from history
+  const wins = history.filter(h => h.result === 'win').slice(0, 8);
+  if (wins.length === 0) return;
+  const wrap = document.getElementById('live-ticker-wrap');
+  const inner = document.getElementById('live-ticker-inner');
+  if (!wrap || !inner) return;
+  wrap.style.display = '';
+  let html = '';
+  wins.forEach(w => {
+    const multi = w.bet > 0 ? ((w.amount + w.bet) / w.bet).toFixed(1) + 'x' : '';
+    html += '<span class="ticker-item">Player won <span class="ticker-win">+' + Math.abs(w.amount).toLocaleString() + '</span> on <span class="ticker-game">' + w.game + '</span> (' + multi + ')</span>';
+  });
+  inner.innerHTML = html + html; // Duplicate for seamless scroll
+}
+
+// ===== CUMULATIVE STATS & MILESTONES =====
+let cumulativeStats = {};
+
+function loadCumulativeStats() {
+  try { cumulativeStats = JSON.parse(localStorage.getItem('spunkbet_stats') || '{}'); } catch(e) {}
+  if (!cumulativeStats.total_wagered) cumulativeStats = { total_wagered: 0, total_won: 0, games_played: 0, biggest_win: 0, biggest_multi: 0, milestones_hit: [] };
+}
+
+function saveCumulativeStats() {
+  localStorage.setItem('spunkbet_stats', JSON.stringify(cumulativeStats));
+}
+
+function updateCumulativeStats(game, bet, result, amount, multi) {
+  cumulativeStats.total_wagered += bet;
+  cumulativeStats.games_played++;
+  if (result === 'win') {
+    cumulativeStats.total_won += amount;
+    if (amount > cumulativeStats.biggest_win) cumulativeStats.biggest_win = amount;
+    if (multi > cumulativeStats.biggest_multi) cumulativeStats.biggest_multi = multi;
+  }
+  saveCumulativeStats();
+  checkMilestones();
+}
+
+function checkMilestones() {
+  const milestones = [
+    { id: 'first_win', check: () => cumulativeStats.total_won > 0, msg: 'First win!', bonus: 500 },
+    { id: 'bets_100', check: () => cumulativeStats.games_played >= 100, msg: '100 bets placed!', bonus: 1000 },
+    { id: 'bets_1000', check: () => cumulativeStats.games_played >= 1000, msg: '1,000 bets placed!', bonus: 2500 },
+    { id: 'wagered_10k', check: () => cumulativeStats.total_wagered >= 10000, msg: '10K total wagered!', bonus: 1000 },
+    { id: 'wagered_100k', check: () => cumulativeStats.total_wagered >= 100000, msg: '100K total wagered!', bonus: 2500 },
+    { id: 'wagered_1m', check: () => cumulativeStats.total_wagered >= 1000000, msg: '1M total wagered!', bonus: 5000 },
+  ];
+  const hit = cumulativeStats.milestones_hit || [];
+  milestones.forEach(m => {
+    if (!hit.includes(m.id) && m.check()) {
+      hit.push(m.id);
+      cumulativeStats.milestones_hit = hit;
+      saveCumulativeStats();
+      balance += m.bonus;
+      updateBalance();
+      saveState();
+      showToast('\uD83C\uDFC6 Milestone: ' + m.msg + ' <span class="toast-amount">+' + m.bonus.toLocaleString() + ' SPUNK\u2022BET</span>');
+    }
+  });
+}
+
+// ===== DAILY BONUS WHEEL =====
+function canDailySpin() {
+  const last = localStorage.getItem('spunkbet_daily_spin');
+  if (!last) return true;
+  return Date.now() - parseInt(last) > 24 * 60 * 60 * 1000;
+}
+
+function updateDailySpinButton() {
+  const btn = document.getElementById('daily-spin-btn');
+  if (!btn) return;
+  if (canDailySpin()) {
+    btn.disabled = false;
+    btn.textContent = 'Spin Now';
+  } else {
+    btn.disabled = true;
+    const last = parseInt(localStorage.getItem('spunkbet_daily_spin'));
+    const next = last + 24 * 60 * 60 * 1000;
+    const remaining = next - Date.now();
+    const hours = Math.floor(remaining / (60 * 60 * 1000));
+    const mins = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+    btn.textContent = 'Spin again in ' + hours + 'h ' + mins + 'm';
+  }
+}
+
+function openDailySpin() {
+  if (!canDailySpin()) return;
+  document.getElementById('daily-spin-modal').classList.add('show');
+  document.getElementById('daily-spin-result').style.display = 'none';
+  document.getElementById('daily-spin-bonus').style.display = 'none';
+  document.getElementById('daily-spin-share-btn').style.display = 'none';
+  document.getElementById('daily-spin-display').textContent = '\uD83C\uDFA1';
+  document.getElementById('daily-spin-display').style.cursor = 'pointer';
+}
+
+function closeDailySpin() {
+  document.getElementById('daily-spin-modal').classList.remove('show');
+}
+
+let dailySpinPrize = 0;
+function executeDailySpin() {
+  if (!canDailySpin()) return;
+  const display = document.getElementById('daily-spin-display');
+  if (display.style.cursor !== 'pointer') return;
+  display.style.cursor = 'default';
+  const prizes = [500, 1000, 1000, 2500, 2500, 2500, 5000, 5000, 1000, 500];
+  const idx = Math.floor(Math.random() * prizes.length);
+  dailySpinPrize = prizes[idx];
+  // Animate
+  let spins = 0;
+  const emojis = ['\uD83C\uDFA1', '\u2728', '\uD83C\uDFB0', '\uD83D\uDCB0', '\uD83D\uDD25'];
+  const spinInterval = setInterval(() => {
+    display.textContent = emojis[spins % emojis.length];
+    spins++;
+    if (spins > 15) {
+      clearInterval(spinInterval);
+      display.textContent = '\uD83C\uDF89';
+      balance += dailySpinPrize;
+      updateBalance();
+      saveState();
+      localStorage.setItem('spunkbet_daily_spin', Date.now().toString());
+      updateDailySpinButton();
+      document.getElementById('daily-spin-result').textContent = '+' + dailySpinPrize.toLocaleString() + ' SPUNK\u2022BET!';
+      document.getElementById('daily-spin-result').style.display = '';
+      document.getElementById('daily-spin-bonus').style.display = '';
+      document.getElementById('daily-spin-share-btn').style.display = '';
+    }
+  }, 120);
+}
+
+function shareDailySpinOnX() {
+  const btn = document.getElementById('daily-spin-share-btn');
+  if (btn.disabled) return;
+  btn.disabled = true;
+  const refCode = walletState.connected ? walletState.paymentAddress.slice(0, 8) : '';
+  const link = refCode ? 'https://spunk.bet?ref=' + refCode : 'https://spunk.bet';
+  balance += dailySpinPrize;
+  updateBalance();
+  saveState();
+  showToast('2x bonus! <span class="toast-amount">+' + dailySpinPrize.toLocaleString() + ' SPUNK\u2022BET</span> extra!');
+  const text = 'Just spun +' + (dailySpinPrize * 2).toLocaleString() + ' SPUNK\u2022BET on the daily wheel! \uD83C\uDFA1\n\nFree crypto casino \u2192 ' + link;
+  window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+  closeDailySpin();
+}
+
+// ===== TIP SPUNK =====
+const TIP_WALLET = 'bc1q05ay5x4lwjl8pphy83j8wg08nwq2jdvnlw8ekl';
+function openTipModal() { document.getElementById('tip-modal').classList.add('active'); }
+function closeTipModal() { document.getElementById('tip-modal').classList.remove('active'); }
+function copyTipAddr() {
+  navigator.clipboard.writeText(TIP_WALLET).then(() => showToast('Address copied!')).catch(() => {});
+}
+
+// ===== PRIZE SHOWCASE SHARING =====
+async function sharePrizeOnX(prizeName) {
+  const refCode = walletState.connected ? walletState.paymentAddress.slice(0, 8) : '';
+  const link = refCode ? 'https://spunk.bet?ref=' + refCode : 'https://spunk.bet';
+  let text;
+  if (prizeName) {
+    text = 'Win a ' + prizeName + ' ordinal on @SpunkArt13\'s casino! \uD83C\uDFC6\n\nFree to play, prizes are real \u2192 ' + link;
+  } else {
+    text = 'Ordinal prizes up for grabs on Spunk.Bet! \uD83C\uDFC6\n\nFree crypto casino on Bitcoin. No KYC \u2192 ' + link;
+  }
+  const url = 'https://x.com/intent/tweet?text=' + encodeURIComponent(text);
+  window.open(url, '_blank', 'width=550,height=420');
+  shareBonus();
 }
 
 // ===== INIT =====
 captureReferral();
 loadState();
+loadCumulativeStats();
 updateDiceSlider();
 initProvablyFair();
 initAutobetPanels();
+updateStreakBadge();
+updateDailySpinButton();
+initLiveTicker();
+setInterval(updateDailySpinButton, 60000);
+
+// Close big win overlay on backdrop click
+document.getElementById('bigwin-overlay').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeBigWin(); });
+document.getElementById('daily-spin-modal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeDailySpin(); });
 </script>
 </body>
 </html>
