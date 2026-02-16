@@ -2404,18 +2404,36 @@ function renderLeaderboard() {
   // Render live stats below leaderboard
   const statsEl = document.getElementById('leaderboard-stats');
   if (statsEl) {
-    const a = JSON.parse(localStorage.getItem('spunkbet_analytics') || '{}');
     const s = cumulativeStats || {};
+    const live = window.liveStats;
     const hour = new Date().getHours();
     const curve = [3,2,2,1,1,1,2,3,5,7,9,11,13,14,15,16,18,20,22,21,18,14,10,6];
-    const online = curve[hour] + Math.floor(Math.random() * 4);
-    statsEl.innerHTML =
-      '<div class="stat-grid">' +
-        '<div class="stat-item"><div class="stat-val" style="color:var(--green)">' + online + '</div><div class="stat-label">Playing Now</div></div>' +
-        '<div class="stat-item"><div class="stat-val">' + (s.games_played || 0).toLocaleString() + '</div><div class="stat-label">Your Bets</div></div>' +
-        '<div class="stat-item"><div class="stat-val">' + (s.total_wagered || 0).toLocaleString() + '</div><div class="stat-label">Total Wagered</div></div>' +
-        '<div class="stat-item"><div class="stat-val" style="color:var(--accent)">' + (s.biggest_win || 0).toLocaleString() + '</div><div class="stat-label">Biggest Win</div></div>' +
-      '</div>';
+
+    if (live && live.today) {
+      // Real Cloudflare Worker stats
+      statsEl.innerHTML =
+        '<div class="stat-grid">' +
+          '<div class="stat-item"><div class="stat-val" style="color:var(--green)">' + (live.today.unique_visitors || 0) + '</div><div class="stat-label">Visitors Today</div></div>' +
+          '<div class="stat-item"><div class="stat-val">' + (live.week.unique_visitors || 0) + '</div><div class="stat-label">This Week</div></div>' +
+          '<div class="stat-item"><div class="stat-val" style="color:var(--accent)">' + (live.today.games_played || 0).toLocaleString() + '</div><div class="stat-label">Games Today</div></div>' +
+          '<div class="stat-item"><div class="stat-val">' + (live.all_time.total_games || 0).toLocaleString() + '</div><div class="stat-label">All-Time Games</div></div>' +
+          '<div class="stat-item"><div class="stat-val">' + (live.today.wager_volume || 0).toLocaleString() + '</div><div class="stat-label">Wagered Today</div></div>' +
+          '<div class="stat-item"><div class="stat-val">' + (live.all_time.total_wagered || 0).toLocaleString() + '</div><div class="stat-label">All-Time Wagered</div></div>' +
+          '<div class="stat-item"><div class="stat-val" style="color:var(--green)">' + (live.today.faucet_claims || 0) + '</div><div class="stat-label">Faucets Today</div></div>' +
+          '<div class="stat-item"><div class="stat-val">' + (live.all_time.total_wallet_connects || 0) + '</div><div class="stat-label">Wallets Connected</div></div>' +
+        '</div>' +
+        '<div style="text-align:center;margin-top:0.5rem;font-size:0.65rem;color:var(--green);font-weight:600;">LIVE DATA</div>';
+    } else {
+      // Local-only fallback
+      const online = curve[hour] + Math.floor(Math.random() * 4);
+      statsEl.innerHTML =
+        '<div class="stat-grid">' +
+          '<div class="stat-item"><div class="stat-val" style="color:var(--green)">' + online + '</div><div class="stat-label">Playing Now</div></div>' +
+          '<div class="stat-item"><div class="stat-val">' + (s.games_played || 0).toLocaleString() + '</div><div class="stat-label">Your Bets</div></div>' +
+          '<div class="stat-item"><div class="stat-val">' + (s.total_wagered || 0).toLocaleString() + '</div><div class="stat-label">Total Wagered</div></div>' +
+          '<div class="stat-item"><div class="stat-val" style="color:var(--accent)">' + (s.biggest_win || 0).toLocaleString() + '</div><div class="stat-label">Biggest Win</div></div>' +
+        '</div>';
+    }
   }
 
   renderTierCards('leaderboard-tiers', localEntries.length > 0 ? Math.max(...localEntries.map(e => e.count)) : -1);
@@ -2534,6 +2552,8 @@ function addHistory(game, bet, result, amount, seedData) {
   }
   // Update cumulative stats
   updateCumulativeStats(game, bet, result, amount, multiNum);
+  // Track on Cloudflare Worker
+  if (typeof trackGamePlay === 'function') trackGamePlay(game, bet, result);
   // Update live ticker
   updateLiveTicker(game, bet, result, amount);
   renderHistory();
@@ -5550,7 +5570,10 @@ function renderPrizes(containerId) {
 // Background polling — check for new prizes every 15 minutes
 setInterval(scanPrizeWallet, 900000);
 
-// ===== SITE ANALYTICS =====
+// ===== SITE ANALYTICS (Cloudflare Worker + local fallback) =====
+// SET YOUR WORKER URL HERE after deploying the Cloudflare Worker:
+const ANALYTICS_WORKER = ''; // e.g. 'https://spunk-analytics.YOUR-SUBDOMAIN.workers.dev'
+
 (function() {
   const SK = 'spunkbet_analytics';
   let analytics = {};
@@ -5565,53 +5588,86 @@ setInterval(scanPrizeWallet, 900000);
   if (!analytics.daily_visits) analytics.daily_visits = {};
   if (!analytics.pages_viewed) analytics.pages_viewed = {};
 
-  // Track this visit
   analytics.total_visits++;
   analytics.last_visit = new Date().toISOString();
   const today = new Date().toISOString().slice(0, 10);
   analytics.daily_visits[today] = (analytics.daily_visits[today] || 0) + 1;
 
-  // New session if last visit was 30+ min ago
   const lastTs = analytics.last_activity || 0;
   if (Date.now() - lastTs > 30 * 60 * 1000) analytics.sessions++;
   analytics.last_activity = Date.now();
 
-  // Keep only last 90 days of daily data
   const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   Object.keys(analytics.daily_visits).forEach(d => { if (d < cutoff) delete analytics.daily_visits[d]; });
-
   localStorage.setItem(SK, JSON.stringify(analytics));
 
-  // Track page views
+  // ===== Cloudflare Worker beacon =====
+  function cfTrack(data) {
+    if (!ANALYTICS_WORKER) return;
+    try {
+      const payload = JSON.stringify(data);
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(ANALYTICS_WORKER + '/track', payload);
+      } else {
+        fetch(ANALYTICS_WORKER + '/track', { method: 'POST', body: payload, headers: { 'Content-Type': 'application/json' }, keepalive: true }).catch(() => {});
+      }
+    } catch(e) {}
+  }
+
+  // Track this page visit on Cloudflare
+  const urlParams = new URLSearchParams(window.location.search);
+  cfTrack({ event: 'visit', page: 'home', ref: urlParams.get('ref') || '' });
+
+  // Track page views (local + CF)
   window.trackPageView = function(page) {
     analytics.pages_viewed[page] = (analytics.pages_viewed[page] || 0) + 1;
     localStorage.setItem(SK, JSON.stringify(analytics));
+    cfTrack({ event: 'visit', page: page });
   };
 
-  // Track game plays
-  window.trackGamePlay = function(game) {
+  // Track game plays (local + CF)
+  window.trackGamePlay = function(game, bet, result) {
     analytics.games_by_type[game] = (analytics.games_by_type[game] || 0) + 1;
     analytics.last_activity = Date.now();
     localStorage.setItem(SK, JSON.stringify(analytics));
+    cfTrack({ event: 'game_play', game: game, bet: bet || 0, result: result || '' });
   };
 
-  // Track events
-  window.trackEvent = function(event) {
-    if (event === 'faucet_claim') analytics.faucet_claims++;
-    if (event === 'wallet_connect') analytics.wallet_connects++;
-    if (event === 'referral_share') analytics.referrals_sent++;
+  // Track events (local + CF)
+  window.trackEvent = function(event, data) {
+    if (event === 'faucet_claim') { analytics.faucet_claims++; cfTrack({ event: 'faucet_claim' }); }
+    if (event === 'wallet_connect') { analytics.wallet_connects++; cfTrack({ event: 'wallet_connect' }); }
+    if (event === 'referral_share') { analytics.referrals_sent++; cfTrack({ event: 'share', platform: 'x' }); }
+    if (event === 'referral_click') { cfTrack({ event: 'referral_click', code: data || '' }); }
     analytics.last_activity = Date.now();
     localStorage.setItem(SK, JSON.stringify(analytics));
   };
 
-  // Console-accessible stats dump
-  window.spunkStats = function() {
+  // ===== Fetch real stats from Cloudflare Worker =====
+  window.liveStats = null;
+  window.fetchLiveStats = async function() {
+    if (!ANALYTICS_WORKER) return null;
+    try {
+      const res = await fetch(ANALYTICS_WORKER + '/stats');
+      if (res.ok) {
+        window.liveStats = await res.json();
+        return window.liveStats;
+      }
+    } catch(e) {}
+    return null;
+  };
+
+  // Auto-fetch live stats on load
+  if (ANALYTICS_WORKER) fetchLiveStats();
+
+  // Console-accessible stats dump (local + live)
+  window.spunkStats = async function() {
     const a = JSON.parse(localStorage.getItem(SK) || '{}');
     const s = cumulativeStats || {};
     console.log('%c SPUNK.BET ANALYTICS ', 'background:#ff5f1f;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;');
     console.table({
       'First Visit': a.first_visit || '—',
-      'Total Visits': a.total_visits || 0,
+      'Local Visits': a.total_visits || 0,
       'Sessions': a.sessions || 0,
       'Last Visit': a.last_visit || '—',
       'Games Played': s.games_played || 0,
@@ -5623,21 +5679,48 @@ setInterval(scanPrizeWallet, 900000);
       'Referrals Shared': a.referrals_sent || 0
     });
     if (Object.keys(a.games_by_type || {}).length) {
-      console.log('%c Games by Type ', 'background:#7c3aed;color:#fff;font-weight:bold;padding:2px 6px;border-radius:4px;');
+      console.log('%c Games by Type (local) ', 'background:#7c3aed;color:#fff;font-weight:bold;padding:2px 6px;border-radius:4px;');
       console.table(a.games_by_type);
     }
-    if (Object.keys(a.pages_viewed || {}).length) {
-      console.log('%c Pages Viewed ', 'background:#7c3aed;color:#fff;font-weight:bold;padding:2px 6px;border-radius:4px;');
-      console.table(a.pages_viewed);
-    }
-    if (Object.keys(a.daily_visits || {}).length) {
-      console.log('%c Daily Visits (last 90d) ', 'background:#7c3aed;color:#fff;font-weight:bold;padding:2px 6px;border-radius:4px;');
-      console.table(a.daily_visits);
+    // Fetch and display live Cloudflare stats
+    if (ANALYTICS_WORKER) {
+      console.log('%c Fetching live stats from Cloudflare... ', 'background:#3b82f6;color:#fff;padding:2px 6px;border-radius:4px;');
+      const live = await fetchLiveStats();
+      if (live) {
+        console.log('%c LIVE STATS (all users) ', 'background:#22c55e;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;');
+        console.table(live.today);
+        console.log('%c All Time ', 'background:#22c55e;color:#000;padding:2px 6px;border-radius:4px;');
+        console.table(live.all_time);
+      }
+    } else {
+      console.log('%c No Cloudflare Worker configured. Set ANALYTICS_WORKER URL for real cross-user stats. ', 'background:#eab308;color:#000;padding:2px 6px;border-radius:4px;');
     }
     return a;
   };
 
-  // Update total visits display
+  // Admin stats (detailed breakdown - call from console)
+  window.spunkAdmin = async function() {
+    if (!ANALYTICS_WORKER) { console.log('Set ANALYTICS_WORKER URL first'); return; }
+    try {
+      const res = await fetch(ANALYTICS_WORKER + '/stats/admin');
+      if (res.ok) {
+        const data = await res.json();
+        console.log('%c SPUNK.BET ADMIN DASHBOARD ', 'background:#ff5f1f;color:#000;font-weight:bold;padding:6px 12px;border-radius:4px;font-size:14px;');
+        console.log('%c Daily Breakdown (7 days) ', 'background:#7c3aed;color:#fff;font-weight:bold;padding:2px 6px;border-radius:4px;');
+        console.table(data.daily);
+        console.log('%c Games Breakdown ', 'background:#7c3aed;color:#fff;font-weight:bold;padding:2px 6px;border-radius:4px;');
+        console.table(data.games);
+        console.log('%c Countries ', 'background:#7c3aed;color:#fff;font-weight:bold;padding:2px 6px;border-radius:4px;');
+        console.table(data.countries);
+        console.log('%c Devices ', 'background:#7c3aed;color:#fff;font-weight:bold;padding:2px 6px;border-radius:4px;');
+        console.table(data.devices);
+        console.log('%c Hourly Distribution ', 'background:#7c3aed;color:#fff;font-weight:bold;padding:2px 6px;border-radius:4px;');
+        console.table(data.hourly);
+        return data;
+      }
+    } catch(e) { console.error('Failed to fetch admin stats:', e); }
+  };
+
   const el = document.getElementById('total-visits-count');
   if (el) el.textContent = analytics.total_visits.toLocaleString();
 })();
