@@ -755,6 +755,25 @@
     }
     .stat-val { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.25rem; }
     .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .lb-tabs { display:flex; gap:0; margin-bottom:0.75rem; }
+    .lb-tab { flex:1; padding:0.5rem; border:none; background:var(--surface2); color:var(--muted); font-size:0.8rem; font-weight:600; cursor:pointer; border-bottom:2px solid transparent; }
+    .lb-tab:first-child { border-radius:8px 0 0 0; }
+    .lb-tab:last-child { border-radius:0 8px 0 0; }
+    .lb-tab.active { color:var(--accent); border-bottom-color:var(--accent); background:var(--surface); }
+    .wager-entry { display:flex; align-items:center; gap:0.5rem; padding:0.5rem 0; border-bottom:1px solid var(--border); }
+    .wager-entry:last-child { border-bottom:none; }
+    .wager-rank { min-width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:800; }
+    .wager-rank.wr1 { background:linear-gradient(135deg,#ffd700,#ffb300); color:#000; }
+    .wager-rank.wr2 { background:linear-gradient(135deg,#c0c0c0,#a0a0a0); color:#000; }
+    .wager-rank.wr3 { background:linear-gradient(135deg,#cd7f32,#b06820); color:#000; }
+    .wager-rank.wr4 { background:var(--surface2); color:var(--muted); }
+    .wager-name { flex:1; font-size:0.82rem; font-weight:600; }
+    .wager-amount { font-size:0.8rem; font-weight:700; color:var(--accent); }
+    .wager-prize { font-size:0.7rem; color:var(--green); font-weight:600; }
+    .rank-progress { margin-top:0.75rem; }
+    .rank-bar-bg { background:var(--surface2); border-radius:6px; height:10px; overflow:hidden; margin-top:0.3rem; }
+    .rank-bar-fill { height:100%; border-radius:6px; transition:width 0.5s ease; }
+    .rank-next { font-size:0.75rem; color:var(--muted); margin-top:0.3rem; }
     .leaderboard-card h3 {
       font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem;
       display: flex; align-items: center; gap: 0.4rem;
@@ -917,6 +936,15 @@
     .confetti-particle { position:fixed; width:8px; height:8px; z-index:501; pointer-events:none; animation:confettiFall 2.5s ease-in forwards; }
     @keyframes confettiFall { 0% { opacity:1; transform:translateY(0) rotate(0deg); } 100% { opacity:0; transform:translateY(100vh) rotate(720deg); } }
 
+    /* PLAYER RANK BADGE */
+    .player-rank-badge { display:none; align-items:center; gap:0.3rem; border-radius:8px; padding:0.3rem 0.6rem; font-size:0.7rem; font-weight:800; cursor:pointer; letter-spacing:0.03em; text-transform:uppercase; }
+    .player-rank-badge.show { display:flex; }
+    .player-rank-badge.rank-bronze { background:linear-gradient(135deg,rgba(205,127,50,0.2),rgba(205,127,50,0.1)); border:1px solid rgba(205,127,50,0.4); color:#cd7f32; }
+    .player-rank-badge.rank-silver { background:linear-gradient(135deg,rgba(192,192,192,0.2),rgba(192,192,192,0.1)); border:1px solid rgba(192,192,192,0.4); color:#c0c0c0; }
+    .player-rank-badge.rank-gold { background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,215,0,0.1)); border:1px solid rgba(255,215,0,0.4); color:#ffd700; }
+    .player-rank-badge.rank-platinum { background:linear-gradient(135deg,rgba(168,85,247,0.2),rgba(59,130,246,0.15)); border:1px solid rgba(168,85,247,0.5); color:#a78bfa; animation:platGlow 2s ease-in-out infinite; }
+    @keyframes platGlow { 0%,100% { box-shadow:0 0 4px rgba(168,85,247,0.2); } 50% { box-shadow:0 0 14px rgba(168,85,247,0.4); } }
+
     /* WIN STREAK BADGE */
     .streak-badge { display:none; align-items:center; gap:0.3rem; background:linear-gradient(135deg,rgba(255,95,31,0.15),rgba(245,158,11,0.15)); border:1px solid rgba(255,95,31,0.3); border-radius:8px; padding:0.3rem 0.6rem; font-size:0.75rem; font-weight:700; color:var(--accent); cursor:pointer; animation:streakGlow 2s ease-in-out infinite; }
     .streak-badge.show { display:flex; }
@@ -1050,6 +1078,7 @@
     <span></span><span></span><span></span>
   </button>
   <div class="nav-right">
+    <div class="player-rank-badge" id="player-rank-badge" onclick="showPage('leaderboard-page')"></div>
     <div class="streak-badge" id="streak-badge" onclick="shareStreakOnX()">&#128293; <span id="streak-count">0</span> Streak</div>
     <div class="balance-display"><span id="balance-display">0</span> SPUNK•BET</div>
     <button class="tip-spunk-btn tip-nav" onclick="openTipModal()">🧡 Tip</button>
@@ -1788,18 +1817,46 @@
 <!-- LEADERBOARD PAGE -->
 <div id="leaderboard-page" class="page">
   <div class="game-container">
-    <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:0.25rem;">Leaderboard & Stats</h2>
-    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;">Live community stats and top referrers</p>
+    <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:0.25rem;">Leaderboard & Ranks</h2>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">Wager more to rank up. Top players win daily & weekly SPUNK prizes automatically.</p>
+
+    <!-- Your Rank Card -->
+    <div class="leaderboard-card" style="margin-bottom:1rem;border-color:var(--accent);box-shadow:0 0 20px rgba(255,95,31,0.08);">
+      <h3>Your Rank</h3>
+      <div id="player-rank-card"></div>
+    </div>
+
+    <!-- Live Stats -->
     <div class="leaderboard-card" style="margin-bottom:1rem;">
       <h3>Live Stats</h3>
       <div id="leaderboard-stats"></div>
     </div>
+
+    <!-- Wager Leaderboard (Daily / Weekly) -->
+    <div class="leaderboard-card" style="margin-bottom:1rem;">
+      <h3>Wager Leaderboard</h3>
+      <div class="lb-tabs">
+        <button class="lb-tab active" onclick="switchLBTab('daily',this)">Daily</button>
+        <button class="lb-tab" onclick="switchLBTab('weekly',this)">Weekly</button>
+        <button class="lb-tab" onclick="switchLBTab('alltime',this)">All Time</button>
+      </div>
+      <div id="wager-leaderboard"></div>
+      <div id="wager-prizes" style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border);"></div>
+    </div>
+
+    <!-- Rank Tiers -->
+    <div class="leaderboard-card" style="margin-bottom:1rem;">
+      <h3>Rank Tiers</h3>
+      <div id="rank-tiers"></div>
+    </div>
+
+    <!-- Referral Leaderboard -->
     <div class="leaderboard-card">
       <h3>Top Referrers</h3>
       <div id="leaderboard-list"></div>
     </div>
     <div class="leaderboard-card" style="margin-top:1rem;">
-      <h3>Tier Rewards</h3>
+      <h3>Referral Tier Rewards</h3>
       <div class="tiers-grid" id="leaderboard-tiers"></div>
     </div>
   </div>
@@ -2362,6 +2419,11 @@ function renderLeaderboard() {
   }
 
   renderTierCards('leaderboard-tiers', localEntries.length > 0 ? Math.max(...localEntries.map(e => e.count)) : -1);
+
+  // Also render rank-related sections
+  renderPlayerRankCard();
+  renderWagerLeaderboard();
+  renderRankTiers();
 }
 
 function renderTierCards(containerId, activeCount) {
@@ -4834,6 +4896,8 @@ function updateCumulativeStats(game, bet, result, amount, multi) {
   }
   saveCumulativeStats();
   checkMilestones();
+  trackWagerLB(bet);
+  updatePlayerRankBadge();
 }
 
 function checkMilestones() {
@@ -4857,6 +4921,255 @@ function checkMilestones() {
       showToast('\uD83C\uDFC6 Milestone: ' + m.msg + ' <span class="toast-amount">+' + m.bonus.toLocaleString() + ' SPUNK\u2022BET</span>');
     }
   });
+}
+
+// ===== PLAYER RANK SYSTEM =====
+const PLAYER_RANKS = [
+  { name: 'Unranked', min: 0, icon: '', css: '', color: '#71717a' },
+  { name: 'Bronze', min: 5000, icon: '\uD83E\uDD49', css: 'rank-bronze', color: '#cd7f32' },
+  { name: 'Silver', min: 50000, icon: '\uD83E\uDD48', css: 'rank-silver', color: '#c0c0c0' },
+  { name: 'Gold', min: 250000, icon: '\uD83E\uDD47', css: 'rank-gold', color: '#ffd700' },
+  { name: 'Platinum', min: 1000000, icon: '\uD83D\uDC8E', css: 'rank-platinum', color: '#a78bfa' },
+];
+
+function getPlayerRank(totalWagered) {
+  let rank = PLAYER_RANKS[0];
+  for (let i = PLAYER_RANKS.length - 1; i >= 0; i--) {
+    if (totalWagered >= PLAYER_RANKS[i].min) { rank = PLAYER_RANKS[i]; break; }
+  }
+  return rank;
+}
+
+function getNextRank(totalWagered) {
+  for (const r of PLAYER_RANKS) {
+    if (totalWagered < r.min) return r;
+  }
+  return null;
+}
+
+function updatePlayerRankBadge() {
+  const badge = document.getElementById('player-rank-badge');
+  if (!badge) return;
+  const wagered = cumulativeStats.total_wagered || 0;
+  const rank = getPlayerRank(wagered);
+  if (rank.css) {
+    badge.className = 'player-rank-badge show ' + rank.css;
+    badge.textContent = rank.icon + ' ' + rank.name;
+  } else {
+    badge.className = 'player-rank-badge';
+  }
+}
+
+function renderPlayerRankCard() {
+  const el = document.getElementById('player-rank-card');
+  if (!el) return;
+  const wagered = cumulativeStats.total_wagered || 0;
+  const rank = getPlayerRank(wagered);
+  const next = getNextRank(wagered);
+  const games = cumulativeStats.games_played || 0;
+
+  let progressHTML = '';
+  if (next) {
+    const pct = Math.min(100, Math.floor((wagered / next.min) * 100));
+    progressHTML = '<div class="rank-progress">' +
+      '<div style="display:flex;justify-content:space-between;font-size:0.8rem;">' +
+        '<span style="color:' + rank.color + ';font-weight:700;">' + (rank.css ? rank.icon + ' ' + rank.name : 'Unranked') + '</span>' +
+        '<span style="color:' + next.color + ';font-weight:700;">' + next.icon + ' ' + next.name + '</span>' +
+      '</div>' +
+      '<div class="rank-bar-bg"><div class="rank-bar-fill" style="width:' + pct + '%;background:linear-gradient(90deg,' + rank.color + ',' + next.color + ');"></div></div>' +
+      '<div class="rank-next">Wager <strong style="color:var(--accent)">' + (next.min - wagered).toLocaleString() + '</strong> more SPUNK to reach ' + next.name + '</div>' +
+    '</div>';
+  } else {
+    progressHTML = '<div class="rank-progress"><div style="color:var(--purple);font-weight:700;font-size:0.9rem;">' + rank.icon + ' MAX RANK: ' + rank.name + '!</div></div>';
+  }
+
+  el.innerHTML =
+    '<div style="text-align:center;margin-bottom:0.5rem;">' +
+      '<div style="font-size:2.5rem;">' + (rank.icon || '\uD83C\uDFAE') + '</div>' +
+      '<div style="font-size:1.1rem;font-weight:800;color:' + rank.color + ';">' + rank.name + '</div>' +
+      '<div style="font-size:0.8rem;color:var(--muted);">' + wagered.toLocaleString() + ' wagered &middot; ' + games.toLocaleString() + ' bets</div>' +
+    '</div>' +
+    progressHTML;
+}
+
+// ===== WAGER LEADERBOARD (Daily/Weekly/All-Time) =====
+let currentLBTab = 'daily';
+const LB_KEY = 'spunkbet_wager_lb';
+const DAILY_PRIZE_KEY = 'spunkbet_daily_prize';
+const WEEKLY_PRIZE_KEY = 'spunkbet_weekly_prize';
+
+// Daily prizes: top 3 get SPUNK
+const DAILY_PRIZES = [10000, 5000, 2500];
+const WEEKLY_PRIZES = [50000, 25000, 10000, 5000, 2500];
+
+function loadWagerLB() {
+  try { return JSON.parse(localStorage.getItem(LB_KEY) || '{}'); } catch(e) { return {}; }
+}
+
+function saveWagerLB(data) {
+  localStorage.setItem(LB_KEY, JSON.stringify(data));
+}
+
+function trackWagerLB(bet) {
+  const data = loadWagerLB();
+  const today = new Date().toISOString().slice(0, 10);
+  const weekStart = getWeekStart();
+
+  if (!data.daily) data.daily = {};
+  if (!data.weekly) data.weekly = {};
+  if (!data.alltime) data.alltime = 0;
+  if (!data.daily_date) data.daily_date = today;
+  if (!data.weekly_date) data.weekly_date = weekStart;
+
+  // Reset daily if new day
+  if (data.daily_date !== today) {
+    checkDailyPrize(data);
+    data.daily = {};
+    data.daily_date = today;
+  }
+
+  // Reset weekly if new week
+  if (data.weekly_date !== weekStart) {
+    checkWeeklyPrize(data);
+    data.weekly = {};
+    data.weekly_date = weekStart;
+  }
+
+  const playerName = walletState.connected ? walletState.paymentAddress.slice(0, 6) : 'You';
+  data.daily[playerName] = (data.daily[playerName] || 0) + bet;
+  data.weekly[playerName] = (data.weekly[playerName] || 0) + bet;
+  data.alltime = (data.alltime || 0) + bet;
+
+  saveWagerLB(data);
+}
+
+function getWeekStart() {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(d.setDate(diff)).toISOString().slice(0, 10);
+}
+
+function checkDailyPrize(data) {
+  const lastPrize = localStorage.getItem(DAILY_PRIZE_KEY);
+  if (lastPrize === data.daily_date) return;
+
+  const myName = walletState.connected ? walletState.paymentAddress.slice(0, 6) : 'You';
+  const entries = generateLBEntries('daily', data);
+  const myPos = entries.findIndex(e => e.isLocal);
+
+  if (myPos >= 0 && myPos < DAILY_PRIZES.length) {
+    const prize = DAILY_PRIZES[myPos];
+    balance += prize;
+    updateBalance(); saveState();
+    showToast('\uD83C\uDFC6 Daily Rank #' + (myPos + 1) + '! <span class="toast-amount">+' + prize.toLocaleString() + ' SPUNK\u2022BET</span>');
+  }
+  localStorage.setItem(DAILY_PRIZE_KEY, data.daily_date);
+}
+
+function checkWeeklyPrize(data) {
+  const lastPrize = localStorage.getItem(WEEKLY_PRIZE_KEY);
+  if (lastPrize === data.weekly_date) return;
+
+  const entries = generateLBEntries('weekly', data);
+  const myPos = entries.findIndex(e => e.isLocal);
+
+  if (myPos >= 0 && myPos < WEEKLY_PRIZES.length) {
+    const prize = WEEKLY_PRIZES[myPos];
+    balance += prize;
+    updateBalance(); saveState();
+    showToast('\uD83C\uDFC6 Weekly Rank #' + (myPos + 1) + '! <span class="toast-amount">+' + prize.toLocaleString() + ' SPUNK\u2022BET</span>');
+  }
+  localStorage.setItem(WEEKLY_PRIZE_KEY, data.weekly_date);
+}
+
+function generateLBEntries(period, dataOverride) {
+  const data = dataOverride || loadWagerLB();
+  const dayNum = Math.floor(Date.now() / 86400000);
+  function seededRand(seed) { let x = Math.sin(seed) * 10000; return x - Math.floor(x); }
+
+  // Simulated community players
+  const simNames = ['Degen_7x', 'Whale_m4', 'Grinder_f9', 'Lucky_r2', 'RuneKing', 'BTC_ape', 'Satoshi_d3', 'Flipper_w7', 'Hodler_e6', 'Chad_t1'];
+  const periodSeed = period === 'daily' ? dayNum : period === 'weekly' ? Math.floor(dayNum / 7) : 0;
+
+  const simEntries = simNames.map((name, i) => {
+    let base;
+    if (period === 'daily') base = Math.floor(seededRand(periodSeed + i * 97) * 80000) + 5000;
+    else if (period === 'weekly') base = Math.floor(seededRand(periodSeed + i * 137) * 400000) + 30000;
+    else base = Math.floor(seededRand(i * 211) * 2000000) + 100000;
+    return { name, wagered: base, isLocal: false };
+  });
+
+  // Local player data
+  const localWager = period === 'daily' ? (data.daily ? Object.values(data.daily).reduce((a, b) => a + b, 0) : 0)
+    : period === 'weekly' ? (data.weekly ? Object.values(data.weekly).reduce((a, b) => a + b, 0) : 0)
+    : (data.alltime || 0);
+
+  if (localWager > 0) {
+    const myName = walletState.connected ? walletState.paymentAddress.slice(0, 6) + '...' : 'You';
+    simEntries.push({ name: myName, wagered: localWager, isLocal: true });
+  }
+
+  return simEntries.sort((a, b) => b.wagered - a.wagered).slice(0, 10);
+}
+
+function switchLBTab(tab, btn) {
+  currentLBTab = tab;
+  document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderWagerLeaderboard();
+}
+
+function renderWagerLeaderboard() {
+  const el = document.getElementById('wager-leaderboard');
+  const prizesEl = document.getElementById('wager-prizes');
+  if (!el) return;
+
+  const entries = generateLBEntries(currentLBTab);
+  const prizes = currentLBTab === 'weekly' ? WEEKLY_PRIZES : DAILY_PRIZES;
+  const periodLabel = currentLBTab === 'daily' ? 'Today' : currentLBTab === 'weekly' ? 'This Week' : 'All Time';
+
+  el.innerHTML = entries.map((e, i) => {
+    const rankClass = i < 3 ? 'wr' + (i + 1) : 'wr4';
+    const rank = getPlayerRank(e.wagered);
+    const youTag = e.isLocal ? ' <span style="color:var(--accent);font-size:0.65rem;">(You)</span>' : '';
+    const prizeTag = i < prizes.length && currentLBTab !== 'alltime' ? '<div class="wager-prize">+' + prizes[i].toLocaleString() + ' SPUNK</div>' : '';
+    return '<div class="wager-entry">' +
+      '<div class="wager-rank ' + rankClass + '">' + (i + 1) + '</div>' +
+      '<div class="wager-name">' + (rank.icon ? rank.icon + ' ' : '') + e.name + youTag + '</div>' +
+      '<div style="text-align:right;">' +
+        '<div class="wager-amount">' + e.wagered.toLocaleString() + '</div>' +
+        prizeTag +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  if (prizesEl && currentLBTab !== 'alltime') {
+    prizesEl.innerHTML = '<div style="font-size:0.8rem;color:var(--muted);text-align:center;">' +
+      '<strong style="color:var(--green);">' + periodLabel + ' Prizes:</strong> ' +
+      prizes.map((p, i) => '#' + (i + 1) + ': <span style="color:var(--accent);font-weight:700;">' + p.toLocaleString() + '</span>').join(' &middot; ') +
+      '<div style="font-size:0.7rem;margin-top:0.3rem;">Prizes auto-awarded at reset. Wager more to climb!</div>' +
+    '</div>';
+  } else if (prizesEl) {
+    prizesEl.innerHTML = '';
+  }
+}
+
+function renderRankTiers() {
+  const el = document.getElementById('rank-tiers');
+  if (!el) return;
+  const wagered = cumulativeStats.total_wagered || 0;
+  el.innerHTML = PLAYER_RANKS.slice(1).map(r => {
+    const isActive = wagered >= r.min;
+    return '<div style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0;border-bottom:1px solid var(--border);">' +
+      '<div style="font-size:1.5rem;">' + r.icon + '</div>' +
+      '<div style="flex:1;">' +
+        '<div style="font-weight:700;color:' + r.color + ';font-size:0.9rem;">' + r.name + (isActive ? ' <span style="color:var(--green);font-size:0.7rem;">UNLOCKED</span>' : '') + '</div>' +
+        '<div style="font-size:0.75rem;color:var(--muted);">Wager ' + r.min.toLocaleString() + '+ SPUNK total</div>' +
+      '</div>' +
+      '<div style="font-size:0.75rem;font-weight:600;color:' + (isActive ? 'var(--green)' : 'var(--muted)') + ';">' + (isActive ? 'Active' : r.min.toLocaleString()) + '</div>' +
+    '</div>';
+  }).join('');
 }
 
 // ===== DAILY BONUS WHEEL =====
@@ -5292,11 +5605,14 @@ updateDiceSlider();
 initProvablyFair();
 initAutobetPanels();
 updateStreakBadge();
+updatePlayerRankBadge();
 updateDailySpinButton();
 initLiveTicker();
 scanPrizeWallet();
 renderCommunityHistory();
 setInterval(updateDailySpinButton, 60000);
+// Auto-check daily/weekly prize resets every 5 minutes
+setInterval(() => { const d = loadWagerLB(); trackWagerLB(0); }, 300000);
 
 // Close big win overlay on backdrop click
 document.getElementById('bigwin-overlay').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeBigWin(); });
