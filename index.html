@@ -415,6 +415,17 @@
     }
     .keno-pick-btn:hover, .keno-pick-btn.active { border-color: var(--accent); color: var(--accent); }
 
+    /* KENO PAYOUT TABLE */
+    .keno-payout-table { width:100%; margin-top:1rem; border-collapse:collapse; font-size:0.75rem; }
+    .keno-payout-table th { color:var(--muted); font-weight:600; padding:0.4rem 0.3rem; text-align:center; border-bottom:1px solid var(--border); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; }
+    .keno-payout-table td { padding:0.35rem 0.3rem; text-align:center; border-bottom:1px solid rgba(34,34,34,0.5); color:var(--text); font-weight:600; }
+    .keno-payout-table td.payout-zero { color:var(--muted); opacity:0.4; }
+    .keno-payout-table td.payout-win { color:var(--green); }
+    .keno-payout-table td.payout-big { color:var(--accent); font-weight:800; }
+    .keno-payout-table tr:hover td { background:rgba(255,255,255,0.02); }
+    .keno-payout-wrap { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1rem; margin-top:1rem; }
+    .keno-payout-wrap h4 { font-size:0.8rem; font-weight:700; color:var(--muted); margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.04em; }
+
     /* WHEEL */
     .wheel-container { position: relative; width: 320px; height: 320px; margin: 0.75rem auto; }
     .wheel-canvas { width: 100%; height: 100%; }
@@ -976,7 +987,7 @@
 <!-- HOME -->
 <div id="home" class="page active">
   <section class="hero">
-    <div class="hero-rune">SPUNK•BET RUNE</div>
+    <div class="hero-flash hero-flash-pulse" onclick="document.getElementById('faucet-btn').scrollIntoView({behavior:'smooth'});document.getElementById('faucet-btn').click();" style="cursor:pointer;">10,000 FREE SPUNK•BET — Claim Now</div>
     <h1>Play. Bet. <span>Win.</span></h1>
     <p>Provably fair casino games powered by the SPUNK•BET rune on Bitcoin. No accounts, no KYC. Connect and play.</p>
     <div class="shield-icon">Provably Fair</div>
@@ -1005,10 +1016,6 @@
         <div class="label">Spots Left</div>
       </div>
     </div>
-  </div>
-
-  <div style="max-width:1100px; margin:0 auto; padding:0 2rem 1rem; text-align:center;">
-    <div class="hero-flash hero-flash-pulse" onclick="document.getElementById('faucet-btn').scrollIntoView({behavior:'smooth'});document.getElementById('faucet-btn').click();" style="cursor:pointer;">10,000 FREE SPUNK•BET — Claim Now</div>
   </div>
 
   <div class="originals-header">
@@ -1332,6 +1339,10 @@
     <div style="display:flex;gap:0.5rem;">
       <button class="btn btn-outline" style="flex:1; padding:0.75rem;" onclick="initKenoGrid()">Clear</button>
       <button class="btn" style="flex:1; padding:0.75rem;" onclick="playKenoAnimated()">Play Keno</button>
+    </div>
+    <div class="keno-payout-wrap">
+      <h4>Payouts</h4>
+      <div id="keno-payout-table-container"></div>
     </div>
   </div>
 </div>
@@ -2038,7 +2049,7 @@ function openGame(id) {
   if (id === 'dice') updateDiceSlider();
   if (id === 'mines') initMinesGrid();
   if (id === 'limbo') updateLimboDisplay();
-  if (id === 'keno') initKenoGrid();
+  if (id === 'keno') { initKenoGrid(); renderKenoPayoutTable(); }
   if (id === 'wheel') { drawWheel(); }
   if (id === 'plinko') { drawPlinkoBoard(plinkoRows, [], undefined); }
   if (id === 'tower') initTowerGrid();
@@ -2465,6 +2476,8 @@ function initKenoGrid() {
   kenoSelected.clear();
   const grid = document.getElementById('keno-grid');
   grid.innerHTML = '';
+  const drawnArea = document.getElementById('keno-drawn-area');
+  if (drawnArea) drawnArea.innerHTML = '';
   for (let i = 1; i <= 40; i++) {
     const cell = document.createElement('div');
     cell.className = 'keno-cell';
@@ -2487,6 +2500,7 @@ function toggleKenoCell(num, cell) {
   }
   document.getElementById('keno-selected-count').textContent = kenoSelected.size;
   document.getElementById('keno-hits-needed').textContent = Math.max(1, Math.ceil(kenoSelected.size * 0.3));
+  renderKenoPayoutTable();
 }
 function kenoAutoSelect(count) {
   initKenoGrid();
@@ -2504,6 +2518,7 @@ function kenoAutoSelect(count) {
   document.getElementById('keno-hits-needed').textContent = Math.max(1, Math.ceil(count * 0.3));
   document.querySelectorAll('.keno-pick-btn').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
+  renderKenoPayoutTable();
 }
 function getKenoMultiplier(picks, hits) {
   const table = {
@@ -2514,6 +2529,23 @@ function getKenoMultiplier(picks, hits) {
     10: [0, 0, 0, 0, 1, 2, 5, 20, 80, 300, 1000]
   };
   return (table[picks] && table[picks][hits]) || 0;
+}
+function renderKenoPayoutTable() {
+  const container = document.getElementById('keno-payout-table-container');
+  if (!container) return;
+  const picks = kenoSelected.size || 5;
+  const table = { 1:[0,3.6], 2:[0,1.5,5.1], 3:[0,0,2.2,20], 4:[0,0,1.5,5,50], 5:[0,0,0,2,10,100], 6:[0,0,0,1.5,4,20,200], 7:[0,0,0,1,2.5,8,50,400], 8:[0,0,0,0,2,5,20,100,500], 9:[0,0,0,0,1.5,3,10,50,200,800], 10:[0,0,0,0,1,2,5,20,80,300,1000] };
+  const multis = table[picks] || table[5];
+  let html = '<table class="keno-payout-table"><thead><tr><th>Hits</th><th>Multiplier</th><th>Payout</th></tr></thead><tbody>';
+  const bet = parseInt(document.getElementById('keno-bet').value) || 100;
+  for (let i = 0; i <= picks; i++) {
+    const m = multis[i] || 0;
+    const payout = Math.floor(bet * m);
+    const cls = m >= 50 ? 'payout-big' : m > 0 ? 'payout-win' : 'payout-zero';
+    html += '<tr><td>' + i + '/' + picks + '</td><td class="' + cls + '">' + (m > 0 ? m + 'x' : '-') + '</td><td class="' + cls + '">' + (m > 0 ? payout.toLocaleString() : '-') + '</td></tr>';
+  }
+  html += '</tbody></table>';
+  container.innerHTML = html;
 }
 async function playKeno() {
   if (kenoSelected.size === 0) { showToast('Pick at least 1 number'); return; }
