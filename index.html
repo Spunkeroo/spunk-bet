@@ -2664,29 +2664,41 @@ function generateWinCard(options) {
   c.width = 1200; c.height = 628;
   const ctx = c.getContext('2d');
 
-  // Background
-  ctx.fillStyle = '#0a0a0a';
+  // Background — matches site #0d0d0d
+  ctx.fillStyle = '#0d0d0d';
   ctx.fillRect(0, 0, 1200, 628);
 
-  // Subtle grid pattern
-  ctx.strokeStyle = 'rgba(255,255,255,0.02)';
-  ctx.lineWidth = 1;
-  for (let i = 0; i < 1200; i += 40) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 628); ctx.stroke(); }
-  for (let i = 0; i < 628; i += 40) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(1200, i); ctx.stroke(); }
+  // Orange ambient glow
+  const glow1 = ctx.createRadialGradient(200, 300, 0, 200, 300, 500);
+  glow1.addColorStop(0, 'rgba(255,95,31,0.12)'); glow1.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glow1; ctx.fillRect(0, 0, 1200, 628);
 
-  // Top accent bar
+  // Purple ambient glow
+  const glow2 = ctx.createRadialGradient(900, 100, 0, 900, 100, 400);
+  glow2.addColorStop(0, 'rgba(168,85,247,0.08)'); glow2.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glow2; ctx.fillRect(0, 0, 1200, 628);
+
+  // Subtle grid pattern
+  ctx.strokeStyle = 'rgba(255,255,255,0.018)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 1200; i += 48) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 628); ctx.stroke(); }
+  for (let i = 0; i < 628; i += 48) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(1200, i); ctx.stroke(); }
+
+  // Top accent bar — orange to purple gradient
   const grad = ctx.createLinearGradient(0, 0, 1200, 0);
   grad.addColorStop(0, '#ff5f1f');
-  grad.addColorStop(1, '#ff8c00');
+  grad.addColorStop(0.6, '#ff8c00');
+  grad.addColorStop(1, '#a855f7');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 1200, 5);
 
-  // Logo
+  // Logo — SPUNK·BET uppercase with middle dot
   ctx.font = 'bold 38px -apple-system, system-ui, sans-serif';
   ctx.fillStyle = '#fff';
-  ctx.fillText('spunk', 60, 70);
+  ctx.fillText('SPUNK', 60, 70);
   ctx.fillStyle = '#ff5f1f';
-  ctx.fillText('.bet', 60 + ctx.measureText('spunk').width, 70);
+  const _lw = ctx.measureText('SPUNK').width;
+  ctx.fillText('\u00B7BET', 60 + _lw, 70);
 
   if (isReferral) {
     // Referral card
@@ -2756,11 +2768,16 @@ function generateWinCard(options) {
     ctx.fillText('Free daily runes \u00B7 Real ordinal prizes \u00B7 Free daily wheel spin', 60, 430);
   }
 
-  // Bottom bar with referral
-  ctx.fillStyle = '#111';
+  // Bottom bar with referral — brand-consistent
+  ctx.fillStyle = '#111111';
   ctx.fillRect(0, 540, 1200, 88);
-  ctx.fillStyle = 'rgba(255,95,31,0.08)';
-  ctx.fillRect(0, 540, 1200, 88);
+  const _bg = ctx.createLinearGradient(0, 540, 1200, 540);
+  _bg.addColorStop(0, 'rgba(255,95,31,0.06)'); _bg.addColorStop(1, 'rgba(168,85,247,0.06)');
+  ctx.fillStyle = _bg; ctx.fillRect(0, 540, 1200, 88);
+  // Accent line
+  const _bl = ctx.createLinearGradient(0, 0, 1200, 0);
+  _bl.addColorStop(0, '#ff5f1f'); _bl.addColorStop(1, '#a855f7');
+  ctx.fillStyle = _bl; ctx.fillRect(0, 540, 1200, 2);
 
   ctx.font = 'bold 26px -apple-system, system-ui, sans-serif';
   ctx.fillStyle = '#fff';
@@ -5336,7 +5353,7 @@ const KNOWN_PRIZES = [
     contentType: 'image/webp', contentLength: '63 KB',
     contentURI: 'https://ordinals.com/content/0a363cdd84ca2d49a9b55d20f82af5d82c781444f8d64caa09b95136e3306412i0',
     contentPreviewURI: 'https://ordinals.com/content/0a363cdd84ca2d49a9b55d20f82af5d82c781444f8d64caa09b95136e3306412i0',
-    collectionName: 'SpunkArt Collection', collection: 'spunkart',
+    collectionName: 'Bitcoin Ordinal', collection: '',
     timestamp: '2026-02-09', satRarity: 'common',
   },
   {
@@ -5346,7 +5363,7 @@ const KNOWN_PRIZES = [
     contentType: 'image/svg+xml', contentLength: '4 KB',
     contentURI: 'https://ordinals.com/content/d7244525a36a312105aa2c9db78778b98ec659b30b4e6063d7b9a9dfd47dc2b7i0',
     contentPreviewURI: 'https://ordinals.com/content/d7244525a36a312105aa2c9db78778b98ec659b30b4e6063d7b9a9dfd47dc2b7i0',
-    collectionName: 'SpunkArt Collection', collection: 'spunkart',
+    collectionName: 'Bitcoin Ordinal', collection: '',
     timestamp: '2026-02-13', satRarity: 'common',
   },
   {
@@ -5356,7 +5373,7 @@ const KNOWN_PRIZES = [
     contentType: 'image/webp', contentLength: '61 KB',
     contentURI: 'https://ordinals.com/content/65e06f5b9ccbd0202268e5f3d4d778e77c0a10af5ab1dbe55f7210f9121884adi0',
     contentPreviewURI: 'https://ordinals.com/content/65e06f5b9ccbd0202268e5f3d4d778e77c0a10af5ab1dbe55f7210f9121884adi0',
-    collectionName: 'SpunkArt Collection', collection: 'spunkart',
+    collectionName: 'Bitcoin Ordinal', collection: '',
     timestamp: '2026-02-09', satRarity: 'common',
   },
   {
@@ -5366,7 +5383,8 @@ const KNOWN_PRIZES = [
     contentType: 'image/svg+xml', contentLength: '1 KB',
     contentURI: 'https://ordinals.com/content/c6e9ad7454cf9bb8b1d75ec9df13229dee1e18f16a5fd57b6549de87e8cce4abi5',
     contentPreviewURI: 'https://ordinals.com/content/c6e9ad7454cf9bb8b1d75ec9df13229dee1e18f16a5fd57b6549de87e8cce4abi5',
-    collectionName: 'SpunkArt Collection', collection: 'spunkart',
+    collectionName: 'Bitcoin Ordinal', collection: '',
+    parentInscription: 'b4f14fa186f236e29065aba52ffa756ade40ee67e5d4bbe44400cbc5d5c70e6di0',
     timestamp: '2026-02-08', satRarity: 'common',
   }
 ];
@@ -5385,9 +5403,45 @@ function enrichWithKnown(list) {
   return list.map(item => {
     const id = item.id || item.inscriptionId || '';
     const known = KNOWN_PRIZES.find(k => k.id === id);
-    if (known) return { ...known, ...item, collectionName: known.collectionName, collection: known.collection, inscriptionNumber: known.inscriptionNumber, number: known.number, contentType: known.contentType };
+    if (known) {
+      const merged = { ...known, ...item, inscriptionNumber: known.inscriptionNumber, number: known.number, contentType: known.contentType };
+      // Use API collection data if available, otherwise use known fallback
+      if (item.collectionName && item.collectionName !== 'Bitcoin Ordinal') {
+        merged.collectionName = item.collectionName;
+        merged.collection = item.collection || item.collectionSymbol || '';
+      } else {
+        merged.collectionName = known.collectionName;
+        merged.collection = known.collection;
+      }
+      if (known.parentInscription) merged.parentInscription = known.parentInscription;
+      return merged;
+    }
     return item;
   });
+}
+
+// Try to fetch real collection data from ME API for each ordinal
+async function fetchCollectionData(list) {
+  const updated = [...list];
+  for (let i = 0; i < updated.length; i++) {
+    const item = updated[i];
+    if (item.collection && item.collectionName !== 'Bitcoin Ordinal') continue; // Already has collection
+    const id = item.id || item.inscriptionId || '';
+    if (!id) continue;
+    try {
+      const res = await fetch('https://api-mainnet.magiceden.dev/v2/ord/btc/tokens/' + id);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.collectionName) {
+          updated[i] = { ...item, collectionName: data.collectionName, collection: data.collectionSymbol || data.collection || '' };
+        }
+        if (data.meta && data.meta.name) {
+          updated[i].metaName = data.meta.name;
+        }
+      }
+    } catch(e) {}
+  }
+  return updated;
 }
 
 async function scanPrizeWallet() {
@@ -5469,6 +5523,17 @@ async function scanPrizeWallet() {
   // Enrich all items with known metadata (collection names, numbers, etc.)
   list = enrichWithKnown(list);
 
+  // Try to fetch real collection data from ME API (non-blocking)
+  fetchCollectionData(list).then(updated => {
+    const changed = updated.some((u, i) => u.collectionName !== list[i].collectionName);
+    if (changed) {
+      prizeOrdinals = updated;
+      localStorage.setItem('spunkbet_prizes', JSON.stringify(updated));
+      renderPrizes('prize-grid');
+      renderPrizes('wallet-prize-grid');
+    }
+  }).catch(() => {});
+
   // Update if we got data
   const hash = JSON.stringify(list.map(t => t.id || t.inscriptionId || ''));
   if (list.length > 0) {
@@ -5537,10 +5602,13 @@ function renderPrizes(containerId) {
       imgHtml = '<div class="prize-img-bg ' + bg + '"></div><span style="position:relative;z-index:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.5));animation:prizeFloat 3s ease-in-out infinite;animation-delay:' + (i * 0.5) + 's;">🏆</span>';
     }
 
-    const title = collectionName !== 'Bitcoin Ordinal' ? collectionName : 'Inscription #' + num;
+    const metaName = ord.metaName || '';
+    const hasRealCollection = collection && collectionName !== 'Bitcoin Ordinal';
+    const title = hasRealCollection ? collectionName : (metaName || 'Inscription #' + num);
+    const parentId = ord.parentInscription || '';
 
-    // Collection badge color
-    const collBadge = collection ? '<span style="display:inline-block;background:linear-gradient(90deg,var(--accent),var(--purple));color:#fff;font-size:0.55rem;font-weight:700;padding:0.15rem 0.4rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.2rem;">' + collectionName + '</span>' : '';
+    // Collection badge — only show for real named collections, not generic ordinals
+    const collBadge = hasRealCollection ? '<span style="display:inline-block;background:linear-gradient(90deg,var(--accent),var(--purple));color:#fff;font-size:0.55rem;font-weight:700;padding:0.15rem 0.4rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.2rem;">' + collectionName + '</span>' : '';
 
     // Extended details for wallet page
     let detailsHtml = '';
@@ -5550,6 +5618,7 @@ function renderPrizes(containerId) {
           '<div>Inscription <span style="color:var(--text);font-weight:600;">#' + num + '</span></div>' +
           '<div>Type: <span style="color:var(--text);">' + contentType + '</span>' + (contentLength ? ' &middot; ' + contentLength : '') + '</div>' +
           (timestamp ? '<div>Inscribed: <span style="color:var(--text);">' + timestamp + '</span></div>' : '') +
+          (parentId ? '<div>Parent: <a href="https://ordinals.com/inscription/' + parentId + '" target="_blank" style="color:var(--purple);text-decoration:none;">#' + parentId.slice(0,8) + '... ↗</a></div>' : '') +
           '<div style="margin-top:0.25rem;"><a href="' + ordLink + '" target="_blank" style="color:var(--accent);text-decoration:none;font-size:0.6rem;">View on ordinals.com ↗</a></div>' +
         '</div>';
     }
