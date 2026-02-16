@@ -35,6 +35,22 @@ export default {
       if (request.method === 'GET' && url.pathname === '/stats/admin') {
         return await handleAdminStats(request, env);
       }
+      // Tournament endpoints
+      if (request.method === 'POST' && url.pathname === '/tournament/action') {
+        return await handleTournamentAction(request, env);
+      }
+      if (request.method === 'GET' && url.pathname === '/tournament/leaderboard') {
+        return await handleTournamentLeaderboard(request, env);
+      }
+      if (request.method === 'GET' && url.pathname === '/tournament/info') {
+        return await handleTournamentInfo(env);
+      }
+      if (request.method === 'GET' && url.pathname === '/tournament/me') {
+        return await handleTournamentMe(request, env);
+      }
+      if (request.method === 'POST' && url.pathname === '/tournament/referral') {
+        return await handleTournamentReferral(request, env);
+      }
       return json({ error: 'Not found' }, 404);
     } catch (e) {
       return json({ error: 'Internal error' }, 500);
@@ -271,6 +287,176 @@ async function handleAdminStats(request, env) {
     devices,
     hourly,
     timestamp: new Date().toISOString(),
+  });
+}
+
+// ===== TOURNAMENT CONFIG =====
+const TOURNAMENT = {
+  id: 'spunkwars-1',
+  name: 'SPUNK WARS',
+  endTime: 1771551180, // Thu Feb 19 2026 7:33 PM Central (UTC-6) = Feb 20 01:33 UTC
+  prize: {
+    type: 'ordinal',
+    inscriptionId: 'c6e9ad7454cf9bb8b1d75ec9df13229dee1e18f16a5fd57b6549de87e8cce4abi5',
+    collection: 'Puppet Corp',
+    imageUrl: 'https://ordinals.com/content/c6e9ad7454cf9bb8b1d75ec9df13229dee1e18f16a5fd57b6549de87e8cce4abi5',
+  },
+  points: { referral: 50, share: 10, game_win: 3, faucet_claim: 1 },
+};
+
+// ===== TOURNAMENT HANDLERS =====
+async function handleTournamentAction(request, env) {
+  const body = await request.json().catch(() => ({}));
+  const { wallet, action } = body;
+  if (!wallet || !action) return json({ error: 'Missing wallet or action' }, 400);
+  if (Date.now() / 1000 > TOURNAMENT.endTime) return json({ error: 'Tournament ended', ended: true }, 400);
+
+  const points = TOURNAMENT.points[action];
+  if (!points) return json({ error: 'Invalid action' }, 400);
+
+  const KV = env.ANALYTICS;
+  const tKey = `t:${TOURNAMENT.id}:${wallet}`;
+
+  // Get or create player record
+  const raw = await KV.get(tKey);
+  const player = raw ? JSON.parse(raw) : { wallet, score: 0, referrals: 0, shares: 0, wins: 0, faucets: 0, joined: Date.now() };
+
+  player.score += points;
+  if (action === 'referral') player.referrals++;
+  if (action === 'share') player.shares++;
+  if (action === 'game_win') player.wins++;
+  if (action === 'faucet_claim') player.faucets++;
+
+  await KV.put(tKey, JSON.stringify(player), { expirationTtl: 30 * 86400 });
+
+  // Track in global player list
+  const listKey = `t:${TOURNAMENT.id}:players`;
+  const playerList = await getSet(KV, listKey);
+  if (!playerList.has(wallet)) {
+    playerList.add(wallet);
+    await KV.put(listKey, JSON.stringify([...playerList]), { expirationTtl: 30 * 86400 });
+  }
+
+  return json({ ok: true, score: player.score, action, points_earned: points });
+}
+
+async function handleTournamentReferral(request, env) {
+  const body = await request.json().catch(() => ({}));
+  const { referrer, referred } = body;
+  if (!referrer || !referred) return json({ error: 'Missing referrer or referred wallet' }, 400);
+  if (referrer === referred) return json({ error: 'Cannot refer yourself' }, 400);
+  if (Date.now() / 1000 > TOURNAMENT.endTime) return json({ error: 'Tournament ended', ended: true }, 400);
+
+  const KV = env.ANALYTICS;
+
+  // Check if this referred wallet was already counted
+  const refSetKey = `t:${TOURNAMENT.id}:refs:${referrer}`;
+  const refSet = await getSet(KV, refSetKey);
+  if (refSet.has(referred)) return json({ ok: true, already_counted: true });
+
+  refSet.add(referred);
+  await KV.put(refSetKey, JSON.stringify([...refSet]), { expirationTtl: 30 * 86400 });
+
+  // Award points to referrer
+  const tKey = `t:${TOURNAMENT.id}:${referrer}`;
+  const raw = await KV.get(tKey);
+  const player = raw ? JSON.parse(raw) : { wallet: referrer, score: 0, referrals: 0, shares: 0, wins: 0, faucets: 0, joined: Date.now() };
+  player.score += TOURNAMENT.points.referral;
+  player.referrals++;
+  await KV.put(tKey, JSON.stringify(player), { expirationTtl: 30 * 86400 });
+
+  // Add referrer to player list
+  const listKey = `t:${TOURNAMENT.id}:players`;
+  const playerList = await getSet(KV, listKey);
+  if (!playerList.has(referrer)) {
+    playerList.add(referrer);
+    await KV.put(listKey, JSON.stringify([...playerList]), { expirationTtl: 30 * 86400 });
+  }
+
+  return json({ ok: true, referrer_score: player.score, points_earned: TOURNAMENT.points.referral });
+}
+
+async function handleTournamentLeaderboard(request, env) {
+  const KV = env.ANALYTICS;
+  const listKey = `t:${TOURNAMENT.id}:players`;
+  const playerList = await getSet(KV, listKey);
+
+  const players = [];
+  for (const wallet of playerList) {
+    const raw = await KV.get(`t:${TOURNAMENT.id}:${wallet}`);
+    if (raw) players.push(JSON.parse(raw));
+  }
+
+  players.sort((a, b) => b.score - a.score);
+  const top10 = players.slice(0, 10).map((p, i) => ({
+    rank: i + 1,
+    wallet: p.wallet.slice(0, 8) + '...' + p.wallet.slice(-4),
+    walletFull: p.wallet,
+    score: p.score,
+    referrals: p.referrals,
+    shares: p.shares,
+    wins: p.wins,
+  }));
+
+  // Check specific wallet if requested
+  const urlParams = new URL(request.url).searchParams;
+  const myWallet = urlParams.get('wallet');
+  let myRank = null;
+  if (myWallet) {
+    const idx = players.findIndex(p => p.wallet === myWallet);
+    if (idx >= 0) {
+      myRank = { rank: idx + 1, score: players[idx].score, referrals: players[idx].referrals, shares: players[idx].shares, wins: players[idx].wins };
+    }
+  }
+
+  const ended = Date.now() / 1000 > TOURNAMENT.endTime;
+
+  return json({
+    tournament: TOURNAMENT.id,
+    total_players: players.length,
+    leaderboard: top10,
+    my_rank: myRank,
+    ended,
+    winner: ended && top10.length > 0 ? top10[0] : null,
+  });
+}
+
+async function handleTournamentMe(request, env) {
+  const wallet = new URL(request.url).searchParams.get('wallet');
+  if (!wallet) return json({ error: 'Missing wallet param' }, 400);
+
+  const KV = env.ANALYTICS;
+  const raw = await KV.get(`t:${TOURNAMENT.id}:${wallet}`);
+  if (!raw) return json({ score: 0, referrals: 0, shares: 0, wins: 0, faucets: 0, rank: null });
+
+  const player = JSON.parse(raw);
+
+  // Get rank
+  const playerList = await getSet(KV, `t:${TOURNAMENT.id}:players`);
+  const allPlayers = [];
+  for (const w of playerList) {
+    const r = await KV.get(`t:${TOURNAMENT.id}:${w}`);
+    if (r) allPlayers.push(JSON.parse(r));
+  }
+  allPlayers.sort((a, b) => b.score - a.score);
+  const rank = allPlayers.findIndex(p => p.wallet === wallet) + 1;
+
+  return json({ ...player, rank, total_players: allPlayers.length });
+}
+
+async function handleTournamentInfo(env) {
+  const KV = env.ANALYTICS;
+  const playerList = await getSet(KV, `t:${TOURNAMENT.id}:players`);
+  const ended = Date.now() / 1000 > TOURNAMENT.endTime;
+
+  return json({
+    id: TOURNAMENT.id,
+    name: TOURNAMENT.name,
+    endTime: TOURNAMENT.endTime,
+    ended,
+    prize: TOURNAMENT.prize,
+    points: TOURNAMENT.points,
+    total_players: playerList.size,
   });
 }
 

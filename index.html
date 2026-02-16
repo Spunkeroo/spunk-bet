@@ -1167,6 +1167,154 @@
       .dice-mode-toggle { gap: 0.25rem; }
       .dice-mode-btn { padding: 0.4rem 1rem; font-size: 0.75rem; }
     }
+
+    /* ===== TOURNAMENT BANNER ===== */
+    @keyframes tournamentGlow {
+      0%, 100% { box-shadow: 0 0 20px rgba(255,95,31,0.3), 0 0 60px rgba(168,85,247,0.15); }
+      50% { box-shadow: 0 0 30px rgba(255,95,31,0.5), 0 0 80px rgba(168,85,247,0.3); }
+    }
+    @keyframes prizeFloat {
+      0%, 100% { transform: translateY(0) rotate(-2deg); }
+      50% { transform: translateY(-8px) rotate(2deg); }
+    }
+    @keyframes prizePulse {
+      0%, 100% { filter: brightness(1) drop-shadow(0 0 8px rgba(255,95,31,0.4)); }
+      50% { filter: brightness(1.2) drop-shadow(0 0 20px rgba(255,95,31,0.8)); }
+    }
+    @keyframes flashBorder {
+      0%, 100% { border-color: var(--accent); }
+      50% { border-color: var(--purple); }
+    }
+    @keyframes countdownPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .tournament-banner {
+      max-width: 1100px; margin: 0 auto; padding: 1rem 1.5rem;
+    }
+    .tournament-inner {
+      position: relative; overflow: hidden;
+      background: linear-gradient(135deg, #0d0d0d 0%, #1a0a2e 50%, #0d0d0d 100%);
+      border: 2px solid var(--accent);
+      border-radius: 16px; padding: 1.5rem;
+      animation: tournamentGlow 3s ease-in-out infinite, flashBorder 2s ease-in-out infinite;
+      display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; justify-content: center;
+    }
+    .tournament-inner::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 30% 50%, rgba(255,95,31,0.08) 0%, transparent 60%),
+                  radial-gradient(ellipse at 70% 50%, rgba(168,85,247,0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .tournament-prize-img {
+      width: 120px; height: 120px; border-radius: 12px; border: 2px solid var(--accent);
+      animation: prizeFloat 3s ease-in-out infinite, prizePulse 2s ease-in-out infinite;
+      object-fit: cover; flex-shrink: 0;
+      background: #111;
+    }
+    .tournament-info { flex: 1; min-width: 200px; position: relative; z-index: 1; }
+    .tournament-title {
+      font-size: 1.4rem; font-weight: 900; letter-spacing: 0.05em;
+      background: linear-gradient(90deg, var(--accent), var(--purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin: 0 0 0.25rem;
+    }
+    .tournament-subtitle {
+      font-size: 0.8rem; color: var(--muted); margin: 0 0 0.75rem; line-height: 1.4;
+    }
+    .tournament-subtitle b { color: #fff; }
+    .tournament-countdown {
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+    }
+    .tournament-countdown .cd-unit {
+      background: linear-gradient(135deg, rgba(255,95,31,0.15), rgba(168,85,247,0.15));
+      border: 1px solid rgba(255,95,31,0.3); border-radius: 8px;
+      padding: 0.4rem 0.6rem; text-align: center; min-width: 52px;
+      animation: countdownPulse 2s ease-in-out infinite;
+    }
+    .tournament-countdown .cd-num {
+      display: block; font-size: 1.3rem; font-weight: 900; color: #fff;
+      font-variant-numeric: tabular-nums;
+    }
+    .tournament-countdown .cd-label {
+      display: block; font-size: 0.55rem; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .tournament-scores {
+      display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem;
+    }
+    .tournament-scores .ts-pill {
+      font-size: 0.6rem; padding: 0.2rem 0.5rem; border-radius: 20px;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      color: var(--muted);
+    }
+    .tournament-scores .ts-pill b { color: var(--accent); }
+    .tournament-cta {
+      display: flex; flex-direction: column; gap: 0.5rem; align-items: center;
+      flex-shrink: 0; position: relative; z-index: 1;
+    }
+    .tournament-cta-btn {
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      color: #fff; border: none; border-radius: 8px; padding: 0.7rem 1.5rem;
+      font-weight: 800; font-size: 0.85rem; cursor: pointer; letter-spacing: 0.03em;
+      transition: transform 0.2s, box-shadow 0.2s; text-transform: uppercase;
+    }
+    .tournament-cta-btn:hover { transform: scale(1.05); box-shadow: 0 4px 20px rgba(255,95,31,0.4); }
+    .tournament-players {
+      font-size: 0.65rem; color: var(--muted);
+    }
+    .tournament-players b { color: var(--green); }
+
+    /* Leaderboard section */
+    .tournament-lb {
+      max-width: 1100px; margin: 0 auto; padding: 0 1.5rem 1rem;
+    }
+    .tournament-lb-inner {
+      background: linear-gradient(135deg, #111, #1a1a2e);
+      border: 1px solid #2a2a3e; border-radius: 12px; padding: 1rem 1.5rem;
+    }
+    .tournament-lb-title {
+      font-size: 0.85rem; font-weight: 800; color: var(--accent);
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.75rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .tournament-lb-title span { flex: 1; height: 1px; background: linear-gradient(90deg, var(--accent), transparent); }
+    .tournament-lb-row {
+      display: flex; align-items: center; padding: 0.5rem 0.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04); gap: 0.75rem;
+      font-size: 0.8rem;
+    }
+    .tournament-lb-row:last-child { border-bottom: none; }
+    .tournament-lb-row.top1 { background: linear-gradient(90deg, rgba(255,95,31,0.1), transparent); }
+    .tournament-lb-rank {
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; font-weight: 900; font-size: 0.75rem; flex-shrink: 0;
+    }
+    .tournament-lb-rank.gold { background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; }
+    .tournament-lb-rank.silver { background: linear-gradient(135deg, #94a3b8, #64748b); color: #000; }
+    .tournament-lb-rank.bronze { background: linear-gradient(135deg, #c2884d, #a0522d); color: #000; }
+    .tournament-lb-rank.normal { background: rgba(255,255,255,0.06); color: var(--muted); }
+    .tournament-lb-wallet { flex: 1; color: #ccc; font-family: monospace; font-size: 0.75rem; }
+    .tournament-lb-score { font-weight: 800; color: var(--accent); min-width: 50px; text-align: right; }
+    .tournament-lb-breakdown { font-size: 0.6rem; color: var(--muted); min-width: 120px; text-align: right; }
+    .tournament-my-rank {
+      margin-top: 0.75rem; padding: 0.75rem; border-radius: 8px;
+      background: linear-gradient(90deg, rgba(255,95,31,0.08), rgba(168,85,247,0.08));
+      border: 1px solid rgba(255,95,31,0.2); display: flex; align-items: center; gap: 0.75rem;
+      font-size: 0.8rem;
+    }
+    .tournament-my-rank .my-label { color: var(--muted); font-size: 0.7rem; }
+    .tournament-my-rank .my-score { font-weight: 900; color: var(--accent); font-size: 1.1rem; }
+    .tournament-my-rank .my-rank-num { font-weight: 900; color: var(--green); font-size: 1.1rem; }
+
+    @media (max-width: 700px) {
+      .tournament-inner { flex-direction: column; text-align: center; padding: 1.2rem; }
+      .tournament-prize-img { width: 100px; height: 100px; }
+      .tournament-title { font-size: 1.1rem; }
+      .tournament-countdown { justify-content: center; }
+      .tournament-scores { justify-content: center; }
+      .tournament-lb-breakdown { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -1298,6 +1446,58 @@
       <div class="hero-flash hero-flash-pulse" onclick="claimFaucet()" style="cursor:pointer;margin:0;">FREE SPUNK•BET — Play Instantly</div>
     </div>
   </section>
+
+  <!-- TOURNAMENT BANNER -->
+  <div class="tournament-banner" id="tournament-banner">
+    <div class="tournament-inner">
+      <img class="tournament-prize-img" id="tournament-prize-img"
+        src="https://ordinals.com/content/c6e9ad7454cf9bb8b1d75ec9df13229dee1e18f16a5fd57b6549de87e8cce4abi5"
+        alt="Puppet Corp Ordinal Prize"
+        onclick="window.open('https://ordinals.com/inscription/c6e9ad7454cf9bb8b1d75ec9df13229dee1e18f16a5fd57b6549de87e8cce4abi5','_blank')"
+        style="cursor:pointer;"
+        onerror="this.style.background='linear-gradient(135deg,var(--accent),var(--purple))';this.style.display='flex';this.alt='PRIZE';">
+      <div class="tournament-info">
+        <div class="tournament-title">SPUNK WARS</div>
+        <div class="tournament-subtitle">
+          Win a <b>Puppet Corp</b> Bitcoin Ordinal. Play. Share. Refer. <b>Top scorer wins.</b>
+        </div>
+        <div class="tournament-countdown" id="tournament-countdown">
+          <div class="cd-unit"><span class="cd-num" id="cd-days">0</span><span class="cd-label">Days</span></div>
+          <div class="cd-unit"><span class="cd-num" id="cd-hours">0</span><span class="cd-label">Hours</span></div>
+          <div class="cd-unit"><span class="cd-num" id="cd-mins">0</span><span class="cd-label">Mins</span></div>
+          <div class="cd-unit"><span class="cd-num" id="cd-secs">0</span><span class="cd-label">Secs</span></div>
+        </div>
+        <div class="tournament-scores">
+          <span class="ts-pill"><b>+50</b> Referral</span>
+          <span class="ts-pill"><b>+10</b> X Share</span>
+          <span class="ts-pill"><b>+3</b> Game Win</span>
+          <span class="ts-pill"><b>+1</b> Faucet</span>
+        </div>
+      </div>
+      <div class="tournament-cta">
+        <button class="tournament-cta-btn" onclick="handleWalletClick()">PLAY TO WIN</button>
+        <button class="tournament-cta-btn" style="background:linear-gradient(135deg,#1a1a2e,#2a1a3e);border:1px solid var(--purple);font-size:0.75rem;padding:0.5rem 1.2rem;" onclick="tournamentShareOnX()">SHARE ON X (+10 PTS)</button>
+        <div class="tournament-players"><b id="tournament-player-count">0</b> players competing</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOURNAMENT LEADERBOARD -->
+  <div class="tournament-lb" id="tournament-lb">
+    <div class="tournament-lb-inner">
+      <div class="tournament-lb-title">LEADERBOARD <span></span></div>
+      <div id="tournament-lb-rows">
+        <div style="text-align:center;padding:1rem;color:var(--muted);font-size:0.8rem;">Connect wallet &amp; play to appear on the leaderboard</div>
+      </div>
+      <div id="tournament-my-rank" style="display:none;" class="tournament-my-rank">
+        <span class="my-label">YOUR RANK</span>
+        <span class="my-rank-num" id="my-rank-num">—</span>
+        <span style="flex:1;"></span>
+        <span class="my-label">SCORE</span>
+        <span class="my-score" id="my-score-num">0</span>
+      </div>
+    </div>
+  </div>
 
   <!-- Visitor Counter -->
   <div style="display:flex;justify-content:center;gap:1.5rem;padding:0.5rem 1rem;font-size:0.7rem;color:var(--muted);">
@@ -5547,7 +5747,7 @@ const KNOWN_PRIZES = [
     contentType: 'image/svg+xml', contentLength: '1 KB',
     contentURI: 'https://ordinals.com/content/c6e9ad7454cf9bb8b1d75ec9df13229dee1e18f16a5fd57b6549de87e8cce4abi5',
     contentPreviewURI: 'https://ordinals.com/content/c6e9ad7454cf9bb8b1d75ec9df13229dee1e18f16a5fd57b6549de87e8cce4abi5',
-    collectionName: 'Bitcoin Ordinal', collection: '',
+    collectionName: 'Puppet Corp', collection: 'puppet_corp',
     parentInscription: 'b4f14fa186f236e29065aba52ffa756ade40ee67e5d4bbe44400cbc5d5c70e6di0',
     timestamp: '2026-02-08', satRarity: 'common',
   }
@@ -6232,6 +6432,183 @@ document.getElementById('daily-spin-modal').addEventListener('click', (e) => { i
   setTimeout(runSiteAudit, 5000);
   // Run every 30 minutes
   setInterval(runSiteAudit, AUDIT_INTERVAL);
+})();
+
+// ===== TOURNAMENT SYSTEM =====
+(function() {
+  const T_END = 1771551180; // Thu Feb 19 2026 7:33 PM Central = Feb 20 01:33 UTC
+  const T_WORKER = ANALYTICS_WORKER;
+
+  // --- Countdown Timer ---
+  function updateCountdown() {
+    const now = Math.floor(Date.now() / 1000);
+    const diff = Math.max(0, T_END - now);
+    if (diff === 0) {
+      document.getElementById('cd-days').textContent = '0';
+      document.getElementById('cd-hours').textContent = '0';
+      document.getElementById('cd-mins').textContent = '0';
+      document.getElementById('cd-secs').textContent = '0';
+      const banner = document.getElementById('tournament-banner');
+      if (banner) {
+        const title = banner.querySelector('.tournament-title');
+        if (title) title.textContent = 'SPUNK WARS — ENDED';
+        const btn = banner.querySelector('.tournament-cta-btn');
+        if (btn) { btn.textContent = 'WINNER ANNOUNCED'; btn.onclick = null; }
+      }
+      return;
+    }
+    const d = Math.floor(diff / 86400);
+    const h = Math.floor((diff % 86400) / 3600);
+    const m = Math.floor((diff % 3600) / 60);
+    const s = diff % 60;
+    document.getElementById('cd-days').textContent = d;
+    document.getElementById('cd-hours').textContent = h;
+    document.getElementById('cd-mins').textContent = String(m).padStart(2, '0');
+    document.getElementById('cd-secs').textContent = String(s).padStart(2, '0');
+  }
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+
+  // --- Get connected wallet ---
+  function getWallet() {
+    return walletState.paymentAddress || walletState.ordinalsAddress || null;
+  }
+
+  // --- Send tournament action to CF Worker ---
+  async function tournamentAction(action) {
+    const wallet = getWallet();
+    if (!wallet || !T_WORKER) return;
+    try {
+      await fetch(T_WORKER + '/tournament/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wallet, action })
+      });
+    } catch(e) {}
+  }
+
+  // --- Send referral to CF Worker ---
+  async function tournamentReferral(referrerWallet, referredWallet) {
+    if (!T_WORKER || !referrerWallet || !referredWallet) return;
+    try {
+      await fetch(T_WORKER + '/tournament/referral', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ referrer: referrerWallet, referred: referredWallet })
+      });
+    } catch(e) {}
+  }
+
+  // --- Load leaderboard ---
+  async function loadLeaderboard() {
+    if (!T_WORKER) return;
+    try {
+      const wallet = getWallet();
+      const url = T_WORKER + '/tournament/leaderboard' + (wallet ? '?wallet=' + encodeURIComponent(wallet) : '');
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      // Update player count
+      const countEl = document.getElementById('tournament-player-count');
+      if (countEl) countEl.textContent = data.total_players || 0;
+
+      // Update leaderboard rows
+      const rowsEl = document.getElementById('tournament-lb-rows');
+      if (rowsEl && data.leaderboard && data.leaderboard.length > 0) {
+        rowsEl.innerHTML = data.leaderboard.map(function(p) {
+          const rankClass = p.rank === 1 ? 'gold' : p.rank === 2 ? 'silver' : p.rank === 3 ? 'bronze' : 'normal';
+          const isTop1 = p.rank === 1 ? ' top1' : '';
+          return '<div class="tournament-lb-row' + isTop1 + '">' +
+            '<div class="tournament-lb-rank ' + rankClass + '">' + p.rank + '</div>' +
+            '<div class="tournament-lb-wallet">' + p.wallet + '</div>' +
+            '<div class="tournament-lb-breakdown">' + p.referrals + ' refs · ' + p.shares + ' shares · ' + p.wins + ' wins</div>' +
+            '<div class="tournament-lb-score">' + p.score + ' pts</div>' +
+          '</div>';
+        }).join('');
+      } else if (rowsEl && (!data.leaderboard || data.leaderboard.length === 0)) {
+        rowsEl.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);font-size:0.8rem;">No players yet — be the first to compete!</div>';
+      }
+
+      // Update my rank
+      const myRankEl = document.getElementById('tournament-my-rank');
+      if (myRankEl && data.my_rank) {
+        myRankEl.style.display = 'flex';
+        document.getElementById('my-rank-num').textContent = '#' + data.my_rank.rank;
+        document.getElementById('my-score-num').textContent = data.my_rank.score + ' pts';
+      } else if (myRankEl && wallet) {
+        myRankEl.style.display = 'flex';
+        document.getElementById('my-rank-num').textContent = '—';
+        document.getElementById('my-score-num').textContent = '0 pts';
+      }
+
+      // If ended, show winner
+      if (data.ended && data.winner) {
+        const title = document.querySelector('.tournament-title');
+        if (title) title.innerHTML = 'SPUNK WARS — WINNER: <span style="color:#22c55e;">' + data.winner.wallet + '</span>';
+      }
+    } catch(e) {}
+  }
+
+  // --- Hook into game wins ---
+  const origTrackGamePlay = window.trackGamePlay;
+  window.trackGamePlay = function(game, bet, result) {
+    if (origTrackGamePlay) origTrackGamePlay(game, bet, result);
+    if (result === 'win') tournamentAction('game_win');
+  };
+
+  // --- Hook into faucet claims ---
+  const origTrackEvent = window.trackEvent;
+  window.trackEvent = function(event, data) {
+    if (origTrackEvent) origTrackEvent(event, data);
+    if (event === 'faucet_claim') tournamentAction('faucet_claim');
+    if (event === 'referral_share') tournamentAction('share');
+  };
+
+  // --- Hook into referrals (when someone connects via ref link) ---
+  const origOnWalletConnected = window.onWalletConnected || onWalletConnected;
+  const _origConnectHook = onWalletConnected;
+  const origCaptureReferral = window.captureReferral;
+
+  // Check for referral on wallet connect
+  window._checkTournamentReferral = function() {
+    const ref = localStorage.getItem('spunkbet_referrer');
+    const myWallet = getWallet();
+    if (ref && myWallet && ref !== myWallet) {
+      // ref could be a wallet address or referral code - send as referrer
+      tournamentReferral(ref, myWallet);
+    }
+  };
+
+  // Call on wallet connect
+  const _walletConnectInterval = setInterval(function() {
+    if (walletState.connected && getWallet()) {
+      window._checkTournamentReferral();
+      clearInterval(_walletConnectInterval);
+    }
+  }, 2000);
+
+  // --- Share on X for tournament points ---
+  window.tournamentShareOnX = function() {
+    const wallet = getWallet();
+    const refCode = wallet ? wallet.slice(0, 8) : '';
+    const text = encodeURIComponent(
+      "I'm competing in SPUNK WARS on @SpunkArt13! \u{1F3B0}\n\n" +
+      "Win a Puppet Corp Bitcoin Ordinal \u{1F3C6}\n" +
+      "Play. Share. Refer. Top scorer wins.\n\n" +
+      "Free to play \u{1F449} https://spunk.bet" + (refCode ? "?ref=" + refCode : "")
+    );
+    window.open('https://x.com/intent/tweet?text=' + text, '_blank');
+    tournamentAction('share');
+  };
+
+  // --- Init ---
+  loadLeaderboard();
+  // Refresh leaderboard every 60 seconds
+  setInterval(loadLeaderboard, 60000);
+
+  // Expose for console
+  window.tournamentLB = loadLeaderboard;
 })();
 </script>
 </body>
