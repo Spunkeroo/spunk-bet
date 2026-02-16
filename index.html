@@ -2881,9 +2881,12 @@ function getMinesMulti(revealed, mineCount) {
   return multi * 0.98;
 }
 
+let minesStarting = false;
 async function startMines() {
+  if (minesStarting || (minesState && minesState.active)) return;
   const bet = getBet('mines-bet');
   if (bet > balance || bet <= 0) return;
+  minesStarting = true;
   const mineCount = parseInt(document.getElementById('mines-count').textContent);
   balance -= bet;
   updateBalance();
@@ -2902,11 +2905,12 @@ async function startMines() {
     available.splice(idx, 1);
   }
 
-  const seedAfter = { ...seedBefore, serverSeed: pfState.serverSeed, nonce: pfState.nonce - 1 };
+  const seedAfter = { ...seedBefore, serverSeed: pfState.serverSeed };
   await rotateServerSeed();
   savePFState();
 
   minesState = { bet, mineCount, mines: positions, revealed: 0, active: true, seedData: seedAfter };
+  minesStarting = false;
   document.getElementById('mines-start-btn').style.display = 'none';
   document.getElementById('mines-cashout-btn').style.display = '';
   showGameSeed('mines-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
@@ -2967,9 +2971,12 @@ function cashoutMines() {
 // ===== CRASH =====
 let crashState = null;
 
+let crashStarting = false;
 async function startCrash() {
+  if (crashStarting || (crashState && crashState.active)) return;
   const bet = getBet('crash-bet');
   if (bet > balance || bet <= 0) return;
+  crashStarting = true;
   balance -= bet;
   updateBalance();
   saveState();
@@ -2982,6 +2989,7 @@ async function startCrash() {
 
   const crashAt = Math.max(1, (0.97 / (1 - rand)));
   crashState = { bet, crashAt, multi: 1.00, active: true, cashed: false, startTime: Date.now(), seedData: seedAfter };
+  crashStarting = false;
   document.getElementById('crash-start-btn').style.display = 'none';
   document.getElementById('crash-cashout-btn').style.display = '';
   document.getElementById('crash-result').className = 'result';
@@ -3691,6 +3699,7 @@ async function guessHiLo(guess) {
       addHistory('HiLo', hiloState.bet, 'lose', -hiloState.bet, seedAfter);
       document.getElementById('hilo-cashout-btn').style.display = 'none';
       document.getElementById('hilo-start-btn').style.display = '';
+      rotateServerSeed().then(() => savePFState());
     }
   }, 300);
 }
@@ -3707,6 +3716,7 @@ function cashoutHiLo() {
   document.getElementById('hilo-cashout-btn').style.display = 'none';
   document.getElementById('hilo-start-btn').style.display = '';
   updateBalance(); saveState();
+  rotateServerSeed().then(() => savePFState());
 }
 
 // ===== RUNE TOWER =====
@@ -3757,9 +3767,12 @@ function initTowerGrid() {
   document.getElementById('tower-cashout-btn').style.display = 'none';
   towerState = null;
 }
+let towerStarting = false;
 async function startTower() {
+  if (towerStarting || (towerState && towerState.active)) return;
   const bet = getBet('tower-bet');
   if (bet <= 0 || bet > balance) return;
+  towerStarting = true;
   balance -= bet; updateBalance(); saveState();
 
   const cfg = TOWER_CONFIG[towerDiff];
@@ -3783,6 +3796,7 @@ async function startTower() {
 
   initTowerGrid();
   towerState = { bet, diff: towerDiff, traps, currentFloor: 0, active: true, seedData: seedAfter, config: cfg };
+  towerStarting = false;
   // Unlock floor 0
   document.querySelectorAll('.tower-cell[data-floor="0"]').forEach(cell => {
     cell.classList.remove('locked');
