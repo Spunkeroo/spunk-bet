@@ -133,7 +133,19 @@ if [ "$HTTPS_CHECK" -lt 1 ]; then
   log_err "HTTPS redirect missing from index.html"
 fi
 
-# --- 9. GAME INTEGRITY CHECKS (via external Node script) ---
+# --- 9. Prize wallet API check ---
+PRIZE_WALLET="bc1p27l6s82w5dek9yffjtlyj58ue2sndxm6zszpcz9zcwqpd4v86n9s5l37xm"
+PRIZE_RESULT=$(curl -s --max-time 10 "https://api.hiro.so/ordinals/v1/inscriptions?address=${PRIZE_WALLET}&limit=1" 2>/dev/null)
+PRIZE_TOTAL=$(echo "$PRIZE_RESULT" | node -e "try{const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));console.log(d.total||0)}catch(e){console.log(-1)}" 2>/dev/null)
+if [ "$PRIZE_TOTAL" = "-1" ]; then
+  log "Prize wallet API: unreachable (will retry next cycle)"
+elif [ "$PRIZE_TOTAL" = "0" ]; then
+  log "Prize wallet: 0 ordinals — wallet empty, prizes need restocking"
+else
+  log "Prize wallet: $PRIZE_TOTAL ordinal(s) available for prizes"
+fi
+
+# --- 10. GAME INTEGRITY CHECKS (via external Node script) ---
 GAME_RESULT=$(node "$REPO/audit-games.js" 2>&1)
 
 GAME_ERRORS=$(echo "$GAME_RESULT" | node -e "try{const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));console.log(d.errors.length)}catch(e){console.log(-1)}" 2>/dev/null)
@@ -169,7 +181,7 @@ if [ "$GAME_FIXES" -gt 0 ] 2>/dev/null; then
   FIXED=$((FIXED + GAME_FIXES))
 fi
 
-# --- 10. Auto-commit fixes if any were made ---
+# --- 11. Auto-commit fixes if any were made ---
 cd "$REPO"
 if [ "$FIXED" -gt 0 ]; then
   CHANGES=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
@@ -183,7 +195,7 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
   fi
 fi
 
-# --- 11. Summary ---
+# --- 12. Summary ---
 log "AUDIT COMPLETE: $ERRORS error(s), $FIXED fix(es)"
 log "========== AUDIT END ============"
 log ""

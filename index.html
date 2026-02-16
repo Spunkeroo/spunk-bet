@@ -4733,27 +4733,78 @@ async function sharePrizeOnX(prizeName) {
 const PRIZE_WALLET = 'bc1p27l6s82w5dek9yffjtlyj58ue2sndxm6zszpcz9zcwqpd4v86n9s5l37xm';
 let prizeOrdinals = [];
 let prizeLastHash = '';
+let prizeScanRetries = 0;
+
+// Load cached prizes from localStorage so they show instantly
+try {
+  const cached = JSON.parse(localStorage.getItem('spunkbet_prizes') || '[]');
+  if (cached.length > 0) {
+    prizeOrdinals = cached;
+    prizeLastHash = JSON.stringify(cached.map(t => t.id || t.inscriptionId || ''));
+  }
+} catch(e) {}
 
 async function scanPrizeWallet() {
+  let list = [];
+  let source = '';
+
+  // Try Magic Eden API first
   try {
     const res = await fetch('https://api-mainnet.magiceden.dev/v2/ord/btc/tokens?ownerAddress=' + PRIZE_WALLET + '&limit=50');
-    if (!res.ok) throw new Error('ME ' + res.status);
-    const data = await res.json();
-    const tokens = data.tokens || data || [];
-    const list = Array.isArray(tokens) ? tokens : [];
-    // Only re-render if data changed
-    const hash = JSON.stringify(list.map(t => t.id || t.inscriptionId || ''));
-    if (hash === prizeLastHash && prizeOrdinals.length > 0) return;
-    prizeLastHash = hash;
-    prizeOrdinals = list;
-    renderPrizes('prize-grid');
-    renderPrizes('wallet-prize-grid');
-  } catch(e) {
-    console.warn('Prize scan:', e.message);
-    // Only render empty state if we never loaded anything
+    if (res.ok) {
+      const data = await res.json();
+      const tokens = data.tokens || data || [];
+      list = Array.isArray(tokens) ? tokens : [];
+      source = 'ME';
+    }
+  } catch(e) {}
+
+  // Fallback to Hiro API if Magic Eden failed or returned empty
+  if (list.length === 0) {
+    try {
+      const res = await fetch('https://api.hiro.so/ordinals/v1/inscriptions?address=' + PRIZE_WALLET + '&limit=50');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.results && data.results.length > 0) {
+          list = data.results.map(r => ({
+            id: r.id,
+            inscriptionId: r.id,
+            inscriptionNumber: r.number,
+            number: r.number,
+            contentType: r.content_type || '',
+            contentURI: 'https://ordinals.com/content/' + r.id,
+            contentPreviewURI: r.content_type && r.content_type.startsWith('image') ? 'https://ordinals.com/content/' + r.id : null,
+            collectionName: 'Bitcoin Ordinal',
+          }));
+          source = 'Hiro';
+        }
+      }
+    } catch(e) {}
+  }
+
+  // Update if we got data
+  const hash = JSON.stringify(list.map(t => t.id || t.inscriptionId || ''));
+  if (list.length > 0) {
+    if (hash !== prizeLastHash) {
+      prizeLastHash = hash;
+      prizeOrdinals = list;
+      localStorage.setItem('spunkbet_prizes', JSON.stringify(list));
+      renderPrizes('prize-grid');
+      renderPrizes('wallet-prize-grid');
+    }
+    prizeScanRetries = 0;
+  } else {
+    // Both APIs returned empty or failed
+    prizeScanRetries++;
+    // Only show empty state if we truly have no cached data
     if (prizeOrdinals.length === 0) {
       renderPrizes('prize-grid');
       renderPrizes('wallet-prize-grid');
+    }
+    // Retry sooner if we're getting rate limited (exponential backoff up to 5 min)
+    if (prizeScanRetries <= 3) {
+      const retryMs = Math.min(prizeScanRetries * 60000, 300000);
+      setTimeout(scanPrizeWallet, retryMs);
     }
   }
 }
@@ -4764,10 +4815,11 @@ function renderPrizes(containerId) {
 
   if (prizeOrdinals.length === 0) {
     container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem 1rem;">' +
-      '<div style="font-size:3rem;margin-bottom:0.75rem;opacity:0.3;">🏆</div>' +
-      '<p style="color:var(--text);font-weight:700;margin-bottom:0.3rem;">Prizes coming soon!</p>' +
-      '<p style="color:var(--muted);font-size:0.8rem;">Ordinals will appear here automatically when sent to the prize wallet.</p>' +
-      '<p style="color:var(--muted);font-size:0.7rem;margin-top:0.5rem;font-family:monospace;opacity:0.5;">' + PRIZE_WALLET.slice(0,12) + '...' + PRIZE_WALLET.slice(-6) + '</p>' +
+      '<div style="font-size:3rem;margin-bottom:0.75rem;">🏆</div>' +
+      '<p style="color:var(--text);font-weight:700;margin-bottom:0.3rem;">Ordinal prizes loading...</p>' +
+      '<p style="color:var(--muted);font-size:0.8rem;">Real Bitcoin ordinals appear here automatically. Play free, win real prizes!</p>' +
+      '<p style="color:var(--muted);font-size:0.75rem;margin-top:0.5rem;">Fast. Fair. Free. <span style="color:var(--accent);">Scan every 15 min.</span></p>' +
+      '<p style="margin-top:0.5rem;"><a href="https://mempool.space/address/' + PRIZE_WALLET + '" target="_blank" style="color:var(--accent);font-size:0.65rem;font-family:monospace;text-decoration:none;opacity:0.6;">' + PRIZE_WALLET.slice(0,16) + '...' + PRIZE_WALLET.slice(-6) + ' ↗</a></p>' +
       '</div>';
     return;
   }
