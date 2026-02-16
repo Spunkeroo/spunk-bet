@@ -613,6 +613,7 @@
     .tip-spunk-btn:hover { box-shadow:0 0 30px rgba(192,38,211,0.9),0 0 60px rgba(168,85,247,0.5); transform:scale(1.1); }
     .tip-spunk-btn .tip-icon { font-size:1.2rem; animation:tipPulse 1.5s ease-in-out infinite; }
     @keyframes tipPulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.3); } }
+    .tip-spunk-btn.tip-nav { padding:0.45rem 1rem; font-size:0.85rem; white-space:nowrap; }
     .tip-modal-overlay { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); justify-content:center; align-items:center; }
     .tip-modal-overlay.active { display:flex; }
     .tip-modal { background:var(--card); border:2px solid #7c3aed; border-radius:1rem; padding:2rem; max-width:400px; width:90%; text-align:center; box-shadow:0 0 40px rgba(168,85,247,0.3); }
@@ -1026,6 +1027,7 @@
   <div class="nav-right">
     <div class="streak-badge" id="streak-badge" onclick="shareStreakOnX()">&#128293; <span id="streak-count">0</span> Streak</div>
     <div class="balance-display"><span id="balance-display">0</span> SPUNK•BET</div>
+    <button class="tip-spunk-btn tip-nav" onclick="openTipModal()">💜 Tip</button>
     <button class="share-btn" id="share-btn" onclick="openReferralModal()">Share &amp; Earn</button>
     <button class="wallet-btn" id="wallet-btn" onclick="handleWalletClick()">Connect Wallet</button>
   </div>
@@ -1039,6 +1041,7 @@
   <button onclick="showPage('wallets-page'); toggleMobileMenu()">Wallets</button>
   <button onclick="showPage('fair-page'); toggleMobileMenu()">Provably Fair</button>
   <button onclick="openReferralModal(); toggleMobileMenu()" id="mobile-share-btn" style="display:none;">Share &amp; Earn</button>
+  <button class="tip-spunk-btn" style="margin:0.5rem auto;width:80%;" onclick="openTipModal(); toggleMobileMenu()">💜 Tip Spunk</button>
 </div>
 
 <!-- Welcome Toast -->
