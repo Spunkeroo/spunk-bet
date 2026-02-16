@@ -5745,14 +5745,17 @@ function renderPrizes(containerId) {
         '</div>';
     }
 
-    return '<div class="prize-card" onclick="sharePrizeOnX(\'' + title.replace(/'/g, '') + '\')">' +
+    return '<div class="prize-card" onclick="window.open(\'' + ordLink + '\',\'_blank\')" style="cursor:pointer;">' +
       '<div class="prize-img">' + imgHtml + '<span class="prize-badge win-this">WIN THIS</span></div>' +
       '<div class="prize-info">' +
         collBadge +
         '<h4>' + title + '</h4>' +
         '<p style="font-size:0.6rem;color:var(--muted);font-family:monospace;">#' + num + ' &middot; ' + shortId + '</p>' +
         detailsHtml +
-        '<div class="prize-share-hint">Tap to share on X</div>' +
+        '<div style="display:flex;gap:0.4rem;margin-top:0.3rem;flex-wrap:wrap;">' +
+          '<span class="prize-share-hint" style="flex:1;">View on ordinals.com</span>' +
+          '<span class="prize-share-hint" style="color:var(--accent);cursor:pointer;flex:0;" onclick="event.stopPropagation();sharePrizeOnX(\'' + title.replace(/'/g, '') + '\')">Share on X</span>' +
+        '</div>' +
       '</div>' +
       '</div>';
   }).join('');
@@ -5784,7 +5787,8 @@ function renderPrizeStrip() {
       imgHtml = '<img src="' + imgUrl + '" alt="Prize #' + num + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.style.background=\'linear-gradient(135deg,var(--surface2),var(--surface))\';this.parentElement.innerHTML+=\'<span style=font-size:1.5rem;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)>&#127942;</span>\'">';
     }
 
-    return '<div onclick="document.getElementById(\'prize-grid\').scrollIntoView({behavior:\'smooth\'})" style="' +
+    const ordLink = 'https://ordinals.com/inscription/' + id;
+    return '<div onclick="window.open(\'' + ordLink + '\',\'_blank\')" style="' +
       'min-width:90px;width:90px;height:90px;border-radius:12px;overflow:hidden;position:relative;cursor:pointer;' +
       'border:2px solid var(--border);transition:all 0.25s;flex-shrink:0;' +
       'box-shadow:0 0 0 0 rgba(255,95,31,0);' +
