@@ -1450,12 +1450,9 @@
   <!-- TOURNAMENT BANNER -->
   <div class="tournament-banner" id="tournament-banner">
     <div class="tournament-inner">
-      <img class="tournament-prize-img" id="tournament-prize-img"
-        src="https://ordinals.com/content/c6e9ad7454cf9bb8b1d75ec9df13229dee1e18f16a5fd57b6549de87e8cce4abi5"
-        alt="Puppet Corp Ordinal Prize"
-        onclick="window.open('https://ordinals.com/inscription/c6e9ad7454cf9bb8b1d75ec9df13229dee1e18f16a5fd57b6549de87e8cce4abi5','_blank')"
-        style="cursor:pointer;"
-        onerror="this.style.background='linear-gradient(135deg,var(--accent),var(--purple))';this.style.display='flex';this.alt='PRIZE';">
+      <div style="width:120px;height:120px;border-radius:12px;border:2px solid var(--accent);overflow:hidden;flex-shrink:0;cursor:pointer;animation:prizeFloat 3s ease-in-out infinite, prizePulse 2s ease-in-out infinite;background:#111;" onclick="window.open('https://ordinals.com/inscription/c6e9ad7454cf9bb8b1d75ec9df13229dee1e18f16a5fd57b6549de87e8cce4abi5','_blank')">
+        <iframe src="https://ordinals.com/content/c6e9ad7454cf9bb8b1d75ec9df13229dee1e18f16a5fd57b6549de87e8cce4abi5" style="width:120px;height:120px;border:none;pointer-events:none;display:block;" sandbox="allow-scripts allow-same-origin" loading="eager" title="Puppet Corp Ordinal Prize"></iframe>
+      </div>
       <div class="tournament-info">
         <div class="tournament-title">SPUNK WARS</div>
         <div class="tournament-subtitle">
@@ -5963,7 +5960,7 @@ function renderPrizes(containerId) {
     let imgHtml;
     if (isSVG) {
       // For SVGs, use an iframe to render properly
-      imgHtml = '<iframe src="' + imgUrl + '" style="width:100%;height:100%;border:none;position:relative;z-index:1;border-radius:12px 12px 0 0;pointer-events:none;" loading="lazy" sandbox="allow-scripts"></iframe>';
+      imgHtml = '<iframe src="' + imgUrl + '" style="width:100%;height:100%;border:none;position:relative;z-index:1;border-radius:12px 12px 0 0;pointer-events:none;" loading="lazy" sandbox="allow-scripts allow-same-origin"></iframe>';
     } else if (isImage || ord.contentPreviewURI) {
       imgHtml = '<img src="' + imgUrl + '" alt="' + collectionName + ' #' + num + '" style="width:100%;height:100%;object-fit:cover;position:relative;z-index:1;border-radius:12px 12px 0 0;" loading="lazy" onerror="this.parentElement.innerHTML=\'<div class=prize-img-bg ' + bg + '></div><span style=position:relative;z-index:1;font-size:2rem;>🏆</span>\'">';
     } else {
@@ -6028,7 +6025,7 @@ function renderPrizeStrip() {
 
     let imgHtml;
     if (isSVG) {
-      imgHtml = '<iframe src="' + imgUrl + '" style="width:100%;height:100%;border:none;border-radius:10px;pointer-events:none;" loading="lazy" sandbox="allow-scripts"></iframe>';
+      imgHtml = '<iframe src="' + imgUrl + '" style="width:100%;height:100%;border:none;border-radius:10px;pointer-events:none;" loading="lazy" sandbox="allow-scripts allow-same-origin"></iframe>';
     } else {
       imgHtml = '<img src="' + imgUrl + '" alt="Prize #' + num + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.style.background=\'linear-gradient(135deg,var(--surface2),var(--surface))\';this.parentElement.innerHTML+=\'<span style=font-size:1.5rem;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)>&#127942;</span>\'">';
     }
