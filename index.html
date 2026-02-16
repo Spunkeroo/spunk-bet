@@ -1280,7 +1280,7 @@
     </div>
     <div class="prize-cta" style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
       <button class="prize-cta-btn" onclick="sharePrizeOnX()"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> Share Prizes &amp; Tag Friends</button>
-      <a href="https://magiceden.io/ordinals/wallet/bc1p27l6s82w5dek9yffjtlyj58ue2sndxm6zszpcz9zcwqpd4v86n9s5l37xm" target="_blank" class="prize-cta-btn" style="background:linear-gradient(90deg,#7c3aed,#a855f7);text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;">🔍 Verify on Magic Eden</a>
+      <a href="https://magiceden.us/ordinals/wallet/bc1p27l6s82w5dek9yffjtlyj58ue2sndxm6zszpcz9zcwqpd4v86n9s5l37xm" target="_blank" class="prize-cta-btn" style="background:linear-gradient(90deg,#7c3aed,#a855f7);text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;">🔍 Verify on Magic Eden</a>
     </div>
   </div>
 </div>
@@ -2127,7 +2127,15 @@ function getFaucetAmount() {
 }
 
 function claimFaucet() {
-  if (!canClaimFaucet()) return;
+  if (!canClaimFaucet()) {
+    const lastClaim = parseInt(localStorage.getItem('spunkbet_faucet_time'));
+    const nextClaim = lastClaim + 24 * 60 * 60 * 1000;
+    const remaining = nextClaim - Date.now();
+    const hours = Math.floor(remaining / (60 * 60 * 1000));
+    const mins = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+    showToast('Faucet resets in <span class="toast-amount">' + hours + 'h ' + mins + 'm</span>. Come back soon!');
+    return;
+  }
   if (typeof trackEvent === 'function') trackEvent('faucet_claim');
   const amount = getFaucetAmount();
   balance += amount;
@@ -4646,7 +4654,15 @@ function updateDailySpinButton() {
 }
 
 function openDailySpin() {
-  if (!canDailySpin()) return;
+  if (!canDailySpin()) {
+    const last = parseInt(localStorage.getItem('spunkbet_daily_spin'));
+    const next = last + 24 * 60 * 60 * 1000;
+    const remaining = next - Date.now();
+    const hours = Math.floor(remaining / (60 * 60 * 1000));
+    const mins = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+    showToast('Daily spin resets in <span class="toast-amount">' + hours + 'h ' + mins + 'm</span>. Come back tomorrow!');
+    return;
+  }
   document.getElementById('daily-spin-modal').classList.add('show');
   document.getElementById('daily-spin-result').style.display = 'none';
   document.getElementById('daily-spin-bonus').style.display = 'none';
@@ -4749,7 +4765,7 @@ async function scanPrizeWallet() {
 
   // Try Magic Eden API first
   try {
-    const res = await fetch('https://api-mainnet.magiceden.dev/v2/ord/btc/tokens?ownerAddress=' + PRIZE_WALLET + '&limit=50');
+    const res = await fetch('https://api-mainnet.magiceden.dev/v2/ord/btc/tokens?ownerAddress=' + PRIZE_WALLET + '&showAll=true&limit=50');
     if (res.ok) {
       const data = await res.json();
       const tokens = data.tokens || data || [];
@@ -4758,7 +4774,7 @@ async function scanPrizeWallet() {
     }
   } catch(e) {}
 
-  // Fallback to Hiro API if Magic Eden failed or returned empty
+  // Fallback to Hiro API
   if (list.length === 0) {
     try {
       const res = await fetch('https://api.hiro.so/ordinals/v1/inscriptions?address=' + PRIZE_WALLET + '&limit=50');
@@ -4781,6 +4797,30 @@ async function scanPrizeWallet() {
     } catch(e) {}
   }
 
+  // Fallback to Ordinals.com API
+  if (list.length === 0) {
+    try {
+      const res = await fetch('https://ordinals.com/api/address/' + PRIZE_WALLET + '/inscriptions');
+      if (res.ok) {
+        const data = await res.json();
+        const items = Array.isArray(data) ? data : (data.inscriptions || []);
+        if (items.length > 0) {
+          list = items.map(r => ({
+            id: r.id || r.inscription_id || r,
+            inscriptionId: r.id || r.inscription_id || r,
+            inscriptionNumber: r.number || r.inscription_number || '?',
+            number: r.number || r.inscription_number || '?',
+            contentType: r.content_type || 'image/png',
+            contentURI: 'https://ordinals.com/content/' + (r.id || r.inscription_id || r),
+            contentPreviewURI: 'https://ordinals.com/content/' + (r.id || r.inscription_id || r),
+            collectionName: r.collection || 'Bitcoin Ordinal',
+          }));
+          source = 'Ordinals.com';
+        }
+      }
+    } catch(e) {}
+  }
+
   // Update if we got data
   const hash = JSON.stringify(list.map(t => t.id || t.inscriptionId || ''));
   if (list.length > 0) {
@@ -4793,15 +4833,12 @@ async function scanPrizeWallet() {
     }
     prizeScanRetries = 0;
   } else {
-    // Both APIs returned empty or failed
     prizeScanRetries++;
-    // Only show empty state if we truly have no cached data
-    if (prizeOrdinals.length === 0) {
-      renderPrizes('prize-grid');
-      renderPrizes('wallet-prize-grid');
-    }
-    // Retry sooner if we're getting rate limited (exponential backoff up to 5 min)
-    if (prizeScanRetries <= 3) {
+    // Always render so the empty state shows properly (not stuck on "Scanning...")
+    renderPrizes('prize-grid');
+    renderPrizes('wallet-prize-grid');
+    // Retry with exponential backoff up to 5 min
+    if (prizeScanRetries <= 5) {
       const retryMs = Math.min(prizeScanRetries * 60000, 300000);
       setTimeout(scanPrizeWallet, retryMs);
     }
@@ -4815,10 +4852,11 @@ function renderPrizes(containerId) {
   if (prizeOrdinals.length === 0) {
     container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem 1rem;">' +
       '<div style="font-size:3rem;margin-bottom:0.75rem;">🏆</div>' +
-      '<p style="color:var(--text);font-weight:700;margin-bottom:0.3rem;">Ordinal prizes loading...</p>' +
-      '<p style="color:var(--muted);font-size:0.8rem;">Real Bitcoin ordinals appear here automatically. Play free, win real prizes!</p>' +
-      '<p style="color:var(--muted);font-size:0.75rem;margin-top:0.5rem;">Fast. Fair. Free. <span style="color:var(--accent);">Scan every 15 min.</span></p>' +
-      '<p style="margin-top:0.5rem;"><a href="https://mempool.space/address/' + PRIZE_WALLET + '" target="_blank" style="color:var(--accent);font-size:0.65rem;font-family:monospace;text-decoration:none;opacity:0.6;">' + PRIZE_WALLET.slice(0,16) + '...' + PRIZE_WALLET.slice(-6) + ' ↗</a></p>' +
+      '<p style="color:var(--text);font-weight:700;margin-bottom:0.3rem;">Prize Pool Restocking!</p>' +
+      '<p style="color:var(--muted);font-size:0.8rem;">New ordinal prizes are being added soon. Send ordinals to the prize wallet to contribute!</p>' +
+      '<p style="color:var(--muted);font-size:0.75rem;margin-top:0.5rem;">Fast. Fair. Free. <span style="color:var(--accent);">Auto-scan every 15 min.</span></p>' +
+      '<p style="margin-top:0.5rem;"><a href="https://magiceden.us/ordinals/wallet/' + PRIZE_WALLET + '" target="_blank" style="color:var(--accent);font-size:0.65rem;font-family:monospace;text-decoration:none;opacity:0.6;">View on Magic Eden ↗</a></p>' +
+      '<p style="margin-top:0.3rem;"><a href="https://mempool.space/address/' + PRIZE_WALLET + '" target="_blank" style="color:var(--muted);font-size:0.6rem;font-family:monospace;text-decoration:none;opacity:0.5;">' + PRIZE_WALLET.slice(0,16) + '...' + PRIZE_WALLET.slice(-6) + ' ↗</a></p>' +
       '</div>';
     return;
   }
