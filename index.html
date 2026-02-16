@@ -69,12 +69,13 @@
     }
     .balance-display span { color: var(--accent); }
     .btn {
-      background: var(--accent); color: #fff; border: none; padding: 0.5rem 1.2rem;
-      border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
+      background: var(--accent); color: #fff; border: none; padding: 0.6rem 1.4rem;
+      border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: all 0.15s;
+      letter-spacing: 0.01em;
     }
-    .btn:hover { opacity: 0.9; }
-    .btn:active { transform: scale(0.97); }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn:active { transform: scale(0.97) translateY(0); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
     .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
     .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
     .btn-outline:hover { border-color: var(--accent); }
@@ -164,60 +165,103 @@
     /* GAME CARDS */
     .game-grid {
       max-width: 1100px; margin: 0 auto; padding: 0 2rem 4rem;
-      display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem;
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem;
     }
     .game-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-      padding: 1.25rem; cursor: pointer; transition: all 0.25s; position: relative; overflow: hidden;
+      border: 1px solid transparent; border-radius: 18px;
+      padding: 1.75rem 1.25rem; cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden;
       display: flex; flex-direction: column; align-items: center; text-align: center;
-      min-height: 160px; justify-content: center;
+      min-height: 200px; justify-content: center;
     }
     .game-card::before {
-      content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity 0.25s;
-      border-radius: 14px;
+      content: ''; position: absolute; inset: 0; opacity: 1; transition: opacity 0.3s;
+      border-radius: 18px; z-index: 0;
     }
-    .game-card:hover { border-color: var(--accent); transform: translateY(-4px);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    .game-card::after {
+      content: ''; position: absolute; inset: 0; border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.04); z-index: 0;
     }
-    .game-card:hover::before { opacity: 1; }
-    .game-card-icon { font-size: 2.8rem; margin-bottom: 0.6rem; position: relative; z-index: 1;
-      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+    .game-card:hover { transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06);
     }
-    .game-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.2rem; position: relative; z-index: 1; }
+    .game-card:hover::after { border-color: rgba(255,255,255,0.1); }
+    .game-card-icon {
+      font-size: 3.5rem; margin-bottom: 0.75rem; position: relative; z-index: 1;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+      transition: transform 0.3s ease;
+    }
+    .game-card:hover .game-card-icon { transform: scale(1.12); }
+    .game-card h3 {
+      font-size: 1.05rem; font-weight: 700; margin-bottom: 0.4rem; position: relative; z-index: 1;
+      letter-spacing: -0.01em;
+    }
     .game-card p { color: var(--muted); font-size: 0.72rem; line-height: 1.4; position: relative; z-index: 1; display: none; }
-    .game-card-edge {
-      position: absolute; top: 0.6rem; right: 0.6rem;
-      font-size: 0.65rem; color: var(--accent); background: rgba(0,0,0,0.5);
-      padding: 0.15rem 0.45rem; border-radius: 6px; font-weight: 600; z-index: 1;
-      backdrop-filter: blur(4px);
+    .game-card-desc {
+      display: block !important; font-size: 0.75rem !important; color: rgba(228,228,231,0.45) !important;
+      margin: 0; position: relative; z-index: 1; font-weight: 500;
     }
-    /* Card color themes */
-    .game-card.card-orange::before { background: linear-gradient(135deg, rgba(255,95,31,0.12), rgba(255,95,31,0.03)); }
-    .game-card.card-blue::before { background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(59,130,246,0.03)); }
-    .game-card.card-green::before { background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(34,197,94,0.03)); }
-    .game-card.card-purple::before { background: linear-gradient(135deg, rgba(168,85,247,0.12), rgba(168,85,247,0.03)); }
-    .game-card.card-yellow::before { background: linear-gradient(135deg, rgba(234,179,8,0.12), rgba(234,179,8,0.03)); }
-    .game-card.card-red::before { background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(239,68,68,0.03)); }
-    .game-card.card-cyan::before { background: linear-gradient(135deg, rgba(6,182,212,0.12), rgba(6,182,212,0.03)); }
-    .game-card.card-pink::before { background: linear-gradient(135deg, rgba(236,72,153,0.12), rgba(236,72,153,0.03)); }
-    .game-card.card-gold::before { background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(245,158,11,0.03)); }
-    .game-card.card-teal::before { background: linear-gradient(135deg, rgba(20,184,166,0.12), rgba(20,184,166,0.03)); }
+    .game-card-edge {
+      position: absolute; bottom: 0.75rem; left: 50%; transform: translateX(-50%);
+      font-size: 0.75rem; font-weight: 800; z-index: 1;
+      padding: 0.25rem 0.75rem; border-radius: 20px;
+      letter-spacing: 0.02em;
+      background: rgba(0,0,0,0.45); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    /* Card color themes - always visible gradients */
+    .game-card.card-orange { background: linear-gradient(160deg, #1a1008 0%, #261a0a 40%, #12121a 100%); }
+    .game-card.card-orange::before { background: radial-gradient(ellipse at 50% 20%, rgba(255,95,31,0.15) 0%, transparent 70%); }
+    .game-card.card-orange .game-card-edge { color: #ff8c55; }
+    .game-card.card-blue { background: linear-gradient(160deg, #0a1020 0%, #0c1530 40%, #12121a 100%); }
+    .game-card.card-blue::before { background: radial-gradient(ellipse at 50% 20%, rgba(59,130,246,0.15) 0%, transparent 70%); }
+    .game-card.card-blue .game-card-edge { color: #6da3f7; }
+    .game-card.card-green { background: linear-gradient(160deg, #081a0c 0%, #0a2010 40%, #12121a 100%); }
+    .game-card.card-green::before { background: radial-gradient(ellipse at 50% 20%, rgba(34,197,94,0.15) 0%, transparent 70%); }
+    .game-card.card-green .game-card-edge { color: #4ade80; }
+    .game-card.card-purple { background: linear-gradient(160deg, #150a20 0%, #1a0c2a 40%, #12121a 100%); }
+    .game-card.card-purple::before { background: radial-gradient(ellipse at 50% 20%, rgba(168,85,247,0.15) 0%, transparent 70%); }
+    .game-card.card-purple .game-card-edge { color: #c084fc; }
+    .game-card.card-yellow { background: linear-gradient(160deg, #1a1508 0%, #201a0a 40%, #12121a 100%); }
+    .game-card.card-yellow::before { background: radial-gradient(ellipse at 50% 20%, rgba(234,179,8,0.15) 0%, transparent 70%); }
+    .game-card.card-yellow .game-card-edge { color: #facc15; }
+    .game-card.card-red { background: linear-gradient(160deg, #1a0a0a 0%, #250c0c 40%, #12121a 100%); }
+    .game-card.card-red::before { background: radial-gradient(ellipse at 50% 20%, rgba(239,68,68,0.15) 0%, transparent 70%); }
+    .game-card.card-red .game-card-edge { color: #f87171; }
+    .game-card.card-cyan { background: linear-gradient(160deg, #081518 0%, #0a1c20 40%, #12121a 100%); }
+    .game-card.card-cyan::before { background: radial-gradient(ellipse at 50% 20%, rgba(6,182,212,0.15) 0%, transparent 70%); }
+    .game-card.card-cyan .game-card-edge { color: #22d3ee; }
+    .game-card.card-pink { background: linear-gradient(160deg, #1a0a14 0%, #250c1a 40%, #12121a 100%); }
+    .game-card.card-pink::before { background: radial-gradient(ellipse at 50% 20%, rgba(236,72,153,0.15) 0%, transparent 70%); }
+    .game-card.card-pink .game-card-edge { color: #f472b6; }
+    .game-card.card-gold { background: linear-gradient(160deg, #1a140a 0%, #201a0c 40%, #12121a 100%); }
+    .game-card.card-gold::before { background: radial-gradient(ellipse at 50% 20%, rgba(245,158,11,0.15) 0%, transparent 70%); }
+    .game-card.card-gold .game-card-edge { color: #fbbf24; }
+    .game-card.card-teal { background: linear-gradient(160deg, #081512 0%, #0a1c18 40%, #12121a 100%); }
+    .game-card.card-teal::before { background: radial-gradient(ellipse at 50% 20%, rgba(20,184,166,0.15) 0%, transparent 70%); }
+    .game-card.card-teal .game-card-edge { color: #2dd4bf; }
 
     /* GAME CONTAINER */
     .game-container {
-      max-width: 560px; margin: 0 auto; padding: 2rem;
+      max-width: 680px; margin: 0 auto; padding: 2rem;
     }
     .game-back {
-      color: var(--muted); font-size: 0.85rem; cursor: pointer; margin-bottom: 1.5rem;
+      color: var(--muted); font-size: 0.85rem; cursor: pointer; margin-bottom: 1rem;
       display: inline-flex; align-items: center; gap: 0.3rem; border: none; background: none;
       transition: color 0.2s;
     }
     .game-back:hover { color: var(--text); }
-    .game-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; }
+    .game-title { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
+    .game-payout-badge {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 0.4rem 0.9rem; margin-bottom: 1.5rem; font-size: 0.85rem;
+    }
+    .game-payout-badge .payout-label { color: var(--muted); font-weight: 500; }
+    .game-payout-badge .payout-value { color: var(--green); font-weight: 800; font-size: 1rem; }
 
     /* BET CONTROLS */
     .bet-controls {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
       padding: 1.25rem; margin-bottom: 1rem;
     }
     .bet-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
@@ -225,31 +269,40 @@
     .bet-label { font-size: 0.8rem; color: var(--muted); min-width: 70px; }
     .bet-input {
       flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
-      padding: 0.5rem 0.75rem; color: var(--text); font-size: 0.9rem; font-weight: 600;
+      padding: 0.6rem 0.85rem; color: var(--text); font-size: 0.95rem; font-weight: 600;
       outline: none; transition: border-color 0.2s;
     }
     .bet-input:focus { border-color: var(--accent); }
-    .bet-quick { display: flex; gap: 0.25rem; }
+    .bet-quick { display: flex; gap: 0.3rem; }
     .bet-quick button {
-      background: var(--border); border: none; color: var(--muted); padding: 0.3rem 0.5rem;
-      border-radius: 6px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      background: var(--border); border: none; color: var(--muted); padding: 0.35rem 0.6rem;
+      border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
     }
     .bet-quick button:hover { color: var(--text); background: var(--accent-glow); }
 
     /* GAME AREA */
     .game-area {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-      padding: 2rem; text-align: center; margin-bottom: 1rem; min-height: 200px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 2.5rem; text-align: center; margin-bottom: 1rem; min-height: 280px;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
 
     /* RESULT */
     .result {
-      padding: 0.75rem 1rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem;
+      padding: 1rem 1.25rem; border-radius: 12px; font-weight: 700; font-size: 1rem;
       text-align: center; margin-bottom: 1rem; display: none;
     }
-    .result.win { display: block; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: var(--green); }
-    .result.lose { display: block; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--red); }
+    .result.win {
+      display: block; background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.25); color: var(--green);
+      box-shadow: 0 0 20px rgba(34,197,94,0.05);
+    }
+    .result.lose {
+      display: block; background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.25); color: var(--red);
+      box-shadow: 0 0 20px rgba(239,68,68,0.05);
+    }
+    .result .payout-amount { font-size: 1.2rem; font-weight: 800; display: block; margin-top: 0.15rem; }
 
     /* PROVABLY FAIR SEED DISPLAY */
     .seed-display {
@@ -261,8 +314,8 @@
 
     /* COIN FLIP */
     .coin {
-      width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center;
-      justify-content: center; font-size: 3rem; font-weight: 800; margin: 1rem 0;
+      width: 150px; height: 150px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 3.5rem; font-weight: 800; margin: 1.5rem 0;
       border: 3px solid var(--border); background: var(--surface2); transition: all 0.3s;
     }
     .coin.flipping { animation: coinflip 0.6s ease-in-out; }
@@ -285,9 +338,9 @@
     /* DICE */
     .dice-display { display: flex; gap: 1rem; margin: 1rem 0; }
     .die {
-      width: 80px; height: 80px; background: var(--surface2); border: 2px solid var(--border);
-      border-radius: 12px; display: flex; align-items: center; justify-content: center;
-      font-size: 2rem; font-weight: 800; transition: all 0.3s;
+      width: 100px; height: 100px; background: var(--surface2); border: 2px solid var(--border);
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem; font-weight: 800; transition: all 0.3s;
     }
     .die.rolling { animation: shake 0.4s ease-in-out; }
     @keyframes shake {
@@ -315,13 +368,13 @@
 
     /* MINES */
     .mines-grid {
-      display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
-      width: 280px; margin: 0.5rem 0;
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
+      width: 340px; margin: 0.75rem 0;
     }
     .mine-cell {
-      width: 52px; height: 52px; background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 8px; display: flex; align-items: center; justify-content: center;
-      font-size: 1.2rem; cursor: pointer; transition: all 0.15s; user-select: none;
+      width: 62px; height: 62px; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; cursor: pointer; transition: all 0.15s; user-select: none;
     }
     .mine-cell:hover:not(.revealed) { border-color: var(--accent); background: var(--accent-glow2); }
     .mine-cell.revealed.safe { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); color: var(--green); }
@@ -339,8 +392,8 @@
 
     /* CRASH */
     .crash-graph {
-      width: 100%; height: 200px; background: var(--bg); border-radius: 10px;
-      border: 1px solid var(--border); position: relative; overflow: hidden; margin: 0.5rem 0;
+      width: 100%; height: 260px; background: var(--bg); border-radius: 12px;
+      border: 1px solid var(--border); position: relative; overflow: hidden; margin: 0.75rem 0;
     }
     .crash-canvas { width: 100%; height: 100%; }
     .crash-multi {
@@ -354,8 +407,8 @@
 
     /* LIMBO */
     .limbo-display {
-      font-size: 4rem; font-weight: 800; letter-spacing: -0.03em;
-      margin: 1rem 0; transition: color 0.3s;
+      font-size: 5rem; font-weight: 800; letter-spacing: -0.03em;
+      margin: 1.5rem 0; transition: color 0.3s;
     }
     .limbo-display.win { color: var(--green); }
     .limbo-display.lose { color: var(--red); }
@@ -399,7 +452,7 @@
     .keno-pick-btn:hover, .keno-pick-btn.active { border-color: var(--accent); color: var(--accent); }
 
     /* WHEEL */
-    .wheel-container { position: relative; width: 280px; height: 280px; margin: 0.5rem auto; }
+    .wheel-container { position: relative; width: 320px; height: 320px; margin: 0.75rem auto; }
     .wheel-canvas { width: 100%; height: 100%; }
     .wheel-pointer {
       position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
@@ -430,12 +483,12 @@
     /* HILO */
     .hilo-cards { display: flex; gap: 1rem; align-items: center; justify-content: center; margin: 1rem 0; }
     .hilo-card {
-      width: 90px; height: 130px; background: var(--surface2); border: 2px solid var(--border);
-      border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      width: 110px; height: 160px; background: var(--surface2); border: 2px solid var(--border);
+      border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center;
       font-weight: 800; transition: all 0.3s; position: relative;
     }
-    .hilo-card .card-rank { font-size: 1.8rem; }
-    .hilo-card .card-suit { font-size: 1.2rem; margin-top: 0.1rem; }
+    .hilo-card .card-rank { font-size: 2.2rem; }
+    .hilo-card .card-suit { font-size: 1.5rem; margin-top: 0.15rem; }
     .hilo-card.red .card-rank, .hilo-card.red .card-suit { color: var(--red); }
     .hilo-card.black .card-rank, .hilo-card.black .card-suit { color: var(--text); }
     .hilo-card.next { border-style: dashed; border-color: var(--muted); }
@@ -463,9 +516,9 @@
     .tower-floor.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
     .tower-floor.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
     .tower-cell {
-      height: 44px; background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 6px; display: flex; align-items: center; justify-content: center;
-      font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
+      height: 52px; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
       user-select: none;
     }
     .tower-cell:hover:not(.revealed) { border-color: var(--accent); background: var(--accent-glow2); }
@@ -755,12 +808,16 @@
       .nav-center { display: none; }
       .hamburger { display: flex; }
       .game-container { padding: 1.5rem 1rem; }
-      .game-grid { padding: 0 1rem 3rem; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
-      .game-card { min-height: 130px; padding: 1rem; }
-      .game-card-icon { font-size: 2.2rem; }
+      .game-grid { padding: 0 1rem 3rem; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+      .game-card { min-height: 155px; padding: 1.25rem 1rem; border-radius: 14px; }
+      .game-card-icon { font-size: 2.6rem; }
+      .game-card h3 { font-size: 0.9rem; }
+      .game-card-edge { font-size: 0.65rem; padding: 0.2rem 0.55rem; }
       .hero { padding: 3rem 1.5rem 2rem; }
-      .mine-cell { width: 44px; height: 44px; font-size: 1rem; }
-      .mines-grid { width: 240px; gap: 4px; }
+      .mine-cell { width: 52px; height: 52px; font-size: 1.1rem; }
+      .mines-grid { width: 290px; gap: 5px; }
+      .coin { width: 120px; height: 120px; font-size: 2.8rem; }
+      .die { width: 80px; height: 80px; font-size: 2rem; }
       .first100-card { flex-direction: column; text-align: center; }
       .faucet-card { flex-direction: column; text-align: center; }
       .tiers-grid { grid-template-columns: repeat(2, 1fr); }
@@ -768,9 +825,14 @@
       .share-btn { display: none !important; }
       .balance-display { font-size: 0.75rem; padding: 0.3rem 0.5rem; }
       .keno-grid { grid-template-columns: repeat(5, 1fr); }
-      .hilo-card { width: 75px; height: 110px; }
-      .wheel-container { width: 240px; height: 240px; }
+      .hilo-card { width: 85px; height: 125px; }
+      .hilo-card .card-rank { font-size: 1.6rem; }
+      .wheel-container { width: 260px; height: 260px; }
       .originals-header { padding: 0 1rem 0.75rem; }
+      .game-title { font-size: 1.4rem; }
+      .game-area { padding: 1.75rem; min-height: 240px; }
+      .limbo-display { font-size: 3.5rem; }
+      .crash-graph { height: 200px; }
     }
   </style>
 </head>
@@ -932,51 +994,61 @@
       <div class="game-card-edge">1.98x</div>
       <div class="game-card-icon">&#x1FA99;</div>
       <h3>Coin Flip</h3>
+      <p class="game-card-desc">50/50 classic</p>
     </div>
     <div class="game-card card-blue" onclick="openGame('dice')">
-      <div class="game-card-edge">1.01-99x</div>
+      <div class="game-card-edge">up to 99x</div>
       <div class="game-card-icon">&#127922;</div>
       <h3>Dice</h3>
+      <p class="game-card-desc">Roll under target</p>
     </div>
     <div class="game-card card-red" onclick="openGame('mines')">
-      <div class="game-card-edge">24x</div>
+      <div class="game-card-edge">24.75x</div>
       <div class="game-card-icon">&#128163;</div>
       <h3>Mines</h3>
+      <p class="game-card-desc">Avoid the bombs</p>
     </div>
     <div class="game-card card-green" onclick="openGame('crash')">
       <div class="game-card-edge">&#8734;x</div>
       <div class="game-card-icon">&#128200;</div>
       <h3>Crash</h3>
+      <p class="game-card-desc">Cash out in time</p>
     </div>
     <div class="game-card card-purple" onclick="openGame('limbo')">
       <div class="game-card-edge">&#8734;x</div>
       <div class="game-card-icon">&#127756;</div>
       <h3>Limbo</h3>
+      <p class="game-card-desc">Beat the target</p>
     </div>
     <div class="game-card card-cyan" onclick="openGame('keno')">
-      <div class="game-card-edge">100x</div>
+      <div class="game-card-edge">1,000x</div>
       <div class="game-card-icon">&#127183;</div>
       <h3>Keno</h3>
+      <p class="game-card-desc">Pick your numbers</p>
     </div>
     <div class="game-card card-yellow" onclick="openGame('wheel')">
       <div class="game-card-edge">50x</div>
       <div class="game-card-icon">&#127905;</div>
       <h3>Wheel</h3>
+      <p class="game-card-desc">Spin to win</p>
     </div>
     <div class="game-card card-pink" onclick="openGame('plinko')">
-      <div class="game-card-edge">1000x</div>
+      <div class="game-card-edge">1,000x</div>
       <div class="game-card-icon">&#9899;</div>
       <h3>Plinko</h3>
+      <p class="game-card-desc">Drop the ball</p>
     </div>
     <div class="game-card card-teal" onclick="openGame('hilo')">
       <div class="game-card-edge">&#8734;x</div>
       <div class="game-card-icon">&#127136;</div>
       <h3>HiLo</h3>
+      <p class="game-card-desc">Higher or lower</p>
     </div>
     <div class="game-card card-gold" onclick="openGame('tower')">
       <div class="game-card-edge">500x</div>
       <div class="game-card-icon">&#127960;</div>
       <h3>Rune Tower</h3>
+      <p class="game-card-desc">Climb the tower</p>
     </div>
   </div>
 </div>
@@ -986,6 +1058,7 @@
   <div class="game-container">
     <button class="game-back" onclick="showPage('home')">&larr; Back to games</button>
     <div class="game-title">&#x1FA99; Coin Flip</div>
+    <div class="game-payout-badge"><span class="payout-label">Max Payout</span><span class="payout-value">1.98x</span></div>
     <div class="bet-controls">
       <div class="bet-row">
         <span class="bet-label">Bet (SPUNK•BET)</span>
@@ -1007,7 +1080,6 @@
     <div id="cf-result" class="result"></div>
     <div class="game-area">
       <div class="coin" id="cf-coin">?</div>
-      <div style="margin-top:0.5rem; font-size:0.8rem; color:var(--muted)">Payout: 1.98x</div>
       <div class="seed-display" id="cf-seed" onclick="copySeed('cf-seed')" title="Click to copy seed hash"></div>
     </div>
     <button class="btn" style="width:100%; padding:0.75rem;" onclick="flipCoin()">Flip Coin</button>
@@ -1019,6 +1091,7 @@
   <div class="game-container">
     <button class="game-back" onclick="showPage('home')">&larr; Back to games</button>
     <div class="game-title">&#127922; Dice</div>
+    <div class="game-payout-badge"><span class="payout-label">Max Payout</span><span class="payout-value" id="dice-payout-badge">2.00x</span></div>
     <div class="bet-controls">
       <div class="bet-row">
         <span class="bet-label">Bet (SPUNK•BET)</span>
@@ -1052,6 +1125,7 @@
   <div class="game-container">
     <button class="game-back" onclick="showPage('home')">&larr; Back to games</button>
     <div class="game-title">&#128163; Mines</div>
+    <div class="game-payout-badge"><span class="payout-label">Max Payout</span><span class="payout-value">24.75x</span></div>
     <div class="bet-controls">
       <div class="bet-row">
         <span class="bet-label">Bet (SPUNK•BET)</span>
@@ -1093,6 +1167,7 @@
   <div class="game-container">
     <button class="game-back" onclick="showPage('home')">&larr; Back to games</button>
     <div class="game-title">&#128200; Crash</div>
+    <div class="game-payout-badge"><span class="payout-label">Max Payout</span><span class="payout-value">Unlimited</span></div>
     <div class="bet-controls">
       <div class="bet-row">
         <span class="bet-label">Bet (SPUNK•BET)</span>
@@ -1123,6 +1198,7 @@
   <div class="game-container">
     <button class="game-back" onclick="showPage('home')">&larr; Back to games</button>
     <div class="game-title">&#127756; Limbo</div>
+    <div class="game-payout-badge"><span class="payout-label">Max Payout</span><span class="payout-value">Unlimited</span></div>
     <div class="bet-controls">
       <div class="bet-row">
         <span class="bet-label">Bet (SPUNK•BET)</span>
@@ -1160,6 +1236,7 @@
   <div class="game-container">
     <button class="game-back" onclick="showPage('home')">&larr; Back to games</button>
     <div class="game-title">&#127183; Keno</div>
+    <div class="game-payout-badge"><span class="payout-label">Max Payout</span><span class="payout-value">1,000x</span></div>
     <div class="bet-controls">
       <div class="bet-row">
         <span class="bet-label">Bet (SPUNK•BET)</span>
@@ -1199,6 +1276,7 @@
   <div class="game-container">
     <button class="game-back" onclick="showPage('home')">&larr; Back to games</button>
     <div class="game-title">&#127905; Wheel</div>
+    <div class="game-payout-badge"><span class="payout-label">Max Payout</span><span class="payout-value">50x</span></div>
     <div class="bet-controls">
       <div class="bet-row">
         <span class="bet-label">Bet (SPUNK•BET)</span>
@@ -1237,6 +1315,7 @@
   <div class="game-container">
     <button class="game-back" onclick="showPage('home')">&larr; Back to games</button>
     <div class="game-title">&#9899; Plinko</div>
+    <div class="game-payout-badge"><span class="payout-label">Max Payout</span><span class="payout-value">1,000x</span></div>
     <div class="bet-controls">
       <div class="bet-row">
         <span class="bet-label">Bet (SPUNK•BET)</span>
@@ -1281,6 +1360,7 @@
   <div class="game-container">
     <button class="game-back" onclick="showPage('home')">&larr; Back to games</button>
     <div class="game-title">&#127136; HiLo</div>
+    <div class="game-payout-badge"><span class="payout-label">Max Payout</span><span class="payout-value">Unlimited</span></div>
     <div class="bet-controls">
       <div class="bet-row">
         <span class="bet-label">Bet (SPUNK•BET)</span>
@@ -1325,6 +1405,7 @@
   <div class="game-container">
     <button class="game-back" onclick="showPage('home')">&larr; Back to games</button>
     <div class="game-title">&#127960; Rune Tower</div>
+    <div class="game-payout-badge"><span class="payout-label">Max Payout</span><span class="payout-value">500x</span></div>
     <div class="bet-controls">
       <div class="bet-row">
         <span class="bet-label">Bet (SPUNK•BET)</span>
@@ -1988,6 +2069,8 @@ function updateDiceSlider() {
   document.getElementById('dice-chance').textContent = chance + '%';
   const payout = chance > 0 ? (98 / chance).toFixed(2) : '0.00';
   document.getElementById('dice-payout').textContent = payout + 'x';
+  const badge = document.getElementById('dice-payout-badge');
+  if (badge) badge.textContent = payout + 'x';
 }
 
 async function rollDice() {
