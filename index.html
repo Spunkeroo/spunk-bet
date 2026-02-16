@@ -2066,7 +2066,7 @@ function openGame(id) {
   if (id === 'limbo') updateLimboDisplay();
   if (id === 'keno') { initKenoGrid(); renderKenoPayoutTable(); }
   if (id === 'wheel') { drawWheel(); }
-  if (id === 'plinko') { drawPlinkoBoard(plinkoRows, [], undefined); }
+  if (id === 'plinko') { drawPlinkoBoard(plinkoRows); }
   if (id === 'tower') initTowerGrid();
 }
 
@@ -2869,6 +2869,8 @@ async function spinWheel() {
 let plinkoRisk = 'low';
 let plinkoRows = 12;
 let plinkoDropping = false;
+let plinkoBalls = []; // active balls: { path, step, finalSlot, bet, multi, seedAfter, done }
+let plinkoAnimRunning = false;
 const PLINKO_MULTIS = {
   low:    { 8: [5.6,2.1,1.1,1,0.5,1,1.1,2.1,5.6], 12: [8.9,3,1.4,1.1,1,0.5,0.3,0.5,1,1.1,1.4,3,8.9], 16: [16,9,2,1.4,1.4,1.2,1.1,1,0.5,1,1.1,1.2,1.4,1.4,2,9,16] },
   medium: { 8: [13,3,1.3,0.7,0.4,0.7,1.3,3,13], 12: [24,6,1.7,0.7,0.5,0.2,0.2,0.5,0.7,1.7,6,24], 16: [110,41,10,5,3,1.5,1,0.5,0.3,0.5,1,1.5,3,5,10,41,110] },
@@ -2884,48 +2886,43 @@ function changePlinkoRows(d) {
   plinkoRows = Math.min(16, Math.max(8, plinkoRows + d));
   document.getElementById('plinko-rows').textContent = plinkoRows;
 }
-function drawPlinkoBoard(rows, ballPath, finalSlot) {
+function drawPlinkoBoard(rows) {
   const canvas = document.getElementById('plinko-canvas');
   const ctx = canvas.getContext('2d');
   const w = canvas.width, h = canvas.height;
   ctx.clearRect(0, 0, w, h);
-  // Background
   ctx.fillStyle = '#0d0d0d';
   ctx.fillRect(0, 0, w, h);
   const padTop = 40, padBot = 70;
   const rowH = (h - padTop - padBot) / (rows + 1);
-  // Draw pegs - pyramid style like Winna
+  const spacing = (w * 0.75) / (rows + 2);
+  // Draw pegs
   for (let r = 0; r < rows; r++) {
     const pegsInRow = r + 3;
-    const spacing = (w * 0.75) / (rows + 2);
     const rowWidth = spacing * pegsInRow;
     const startX = (w - rowWidth) / 2 + spacing / 2;
     for (let p = 0; p < pegsInRow; p++) {
       const x = startX + p * spacing;
       const y = padTop + (r + 1) * rowH;
-      // Peg glow
-      ctx.beginPath();
-      ctx.arc(x, y, 6, 0, 2 * Math.PI);
-      ctx.fillStyle = 'rgba(255,255,255,0.03)';
-      ctx.fill();
-      // Peg dot
       ctx.beginPath();
       ctx.arc(x, y, 3, 0, 2 * Math.PI);
       ctx.fillStyle = '#555';
       ctx.fill();
     }
   }
-  // Draw multiplier slots at bottom - Winna colored style
+  // Draw multiplier slots
   const multis = PLINKO_MULTIS[plinkoRisk][rows] || PLINKO_MULTIS[plinkoRisk][12];
   const slotCount = multis.length;
   const slotW = (w * 0.88) / slotCount;
   const slotStartX = (w - slotW * slotCount) / 2;
   const slotY = h - padBot + 8;
   const mid = Math.floor(slotCount / 2);
+  // Collect hit slots from finished balls
+  const hitSlots = new Set();
+  plinkoBalls.forEach(b => { if (b.done) hitSlots.add(b.finalSlot); });
   multis.forEach((m, i) => {
     const x = slotStartX + i * slotW;
-    const isHit = finalSlot === i;
-    // Color based on distance from center (Winna style)
+    const isHit = hitSlots.has(i);
     const dist = Math.abs(i - mid) / mid;
     let color;
     if (plinkoRisk === 'high') {
@@ -2950,41 +2947,88 @@ function drawPlinkoBoard(rows, ballPath, finalSlot) {
     ctx.textAlign = 'center';
     ctx.fillText(m + 'x', x + slotW / 2, slotY + 21);
   });
-  // Draw ball trail
-  if (ballPath && ballPath.length > 1) {
-    for (let i = 1; i < ballPath.length; i++) {
-      const alpha = 0.1 + (i / ballPath.length) * 0.3;
+  // Draw all active balls
+  plinkoBalls.forEach(ball => {
+    const visPath = ball.path.slice(0, Math.min(ball.step + 1, ball.path.length));
+    // Trail (last 3 positions only for speed)
+    const trailStart = Math.max(0, visPath.length - 4);
+    for (let i = trailStart; i < visPath.length - 1; i++) {
+      const alpha = 0.08 + ((i - trailStart) / 4) * 0.2;
       ctx.beginPath();
-      ctx.arc(ballPath[i].x, ballPath[i].y, 4, 0, 2 * Math.PI);
+      ctx.arc(visPath[i].x, visPath[i].y, 4, 0, 2 * Math.PI);
       ctx.fillStyle = `rgba(255,95,31,${alpha})`;
       ctx.fill();
     }
-  }
-  // Draw ball
-  if (ballPath && ballPath.length > 0) {
-    const lastPos = ballPath[ballPath.length - 1];
-    // Ball glow
-    ctx.beginPath();
-    ctx.arc(lastPos.x, lastPos.y, 14, 0, 2 * Math.PI);
-    ctx.fillStyle = 'rgba(255,95,31,0.2)';
-    ctx.fill();
     // Ball
-    ctx.beginPath();
-    ctx.arc(lastPos.x, lastPos.y, 8, 0, 2 * Math.PI);
-    ctx.fillStyle = '#ff5f1f';
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    if (visPath.length > 0) {
+      const pos = visPath[visPath.length - 1];
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, 7, 0, 2 * Math.PI);
+      ctx.fillStyle = '#ff5f1f';
+      ctx.fill();
+    }
+  });
+}
+function startPlinkoAnimLoop() {
+  if (plinkoAnimRunning) return;
+  plinkoAnimRunning = true;
+  const rows = plinkoRows;
+  const turbo = isTurbo('plinko');
+  const stepDelay = turbo ? 30 : 60;
+  let lastStep = 0;
+  function tick(ts) {
+    if (plinkoBalls.length === 0) { plinkoAnimRunning = false; return; }
+    if (ts - lastStep >= stepDelay) {
+      lastStep = ts;
+      let anyActive = false;
+      plinkoBalls.forEach(ball => {
+        if (!ball.done) {
+          ball.step++;
+          if (ball.step >= ball.path.length) {
+            ball.done = true;
+            // Resolve this ball
+            const multi = ball.multi;
+            showGameSeed('plinko-seed', ball.seedAfter.serverSeed, ball.seedAfter.serverSeedHash);
+            if (multi >= 1) {
+              const payout = Math.floor(ball.bet * multi);
+              balance += payout;
+              document.getElementById('plinko-result-text').style.color = 'var(--green)';
+              document.getElementById('plinko-result-text').textContent = multi + 'x! +' + (payout - ball.bet).toLocaleString();
+              showResult('plinko-result', true, multi + 'x! Won +' + (payout - ball.bet).toLocaleString() + ' SPUNK\u2022BET');
+              addHistory('Plinko', ball.bet, 'win', payout - ball.bet, ball.seedAfter);
+            } else {
+              const payout = Math.floor(ball.bet * multi);
+              balance += payout;
+              document.getElementById('plinko-result-text').style.color = 'var(--red)';
+              document.getElementById('plinko-result-text').textContent = multi + 'x \u2212' + (ball.bet - payout).toLocaleString();
+              showResult('plinko-result', false, multi + 'x. Lost ' + (ball.bet - payout).toLocaleString() + ' SPUNK\u2022BET');
+              addHistory('Plinko', ball.bet, 'lose', -(ball.bet - payout), ball.seedAfter);
+            }
+            updateBalance(); saveState();
+            // Remove finished ball after brief flash
+            setTimeout(() => {
+              plinkoBalls = plinkoBalls.filter(b => b !== ball);
+              if (plinkoBalls.length === 0) drawPlinkoBoard(rows);
+            }, 400);
+          } else {
+            anyActive = true;
+          }
+        }
+      });
+    }
+    drawPlinkoBoard(rows);
+    if (plinkoBalls.some(b => !b.done) || plinkoBalls.length > 0) {
+      requestAnimationFrame(tick);
+    } else {
+      plinkoAnimRunning = false;
+    }
   }
+  requestAnimationFrame(tick);
 }
 async function dropPlinko() {
-  if (plinkoDropping) return;
   const bet = getBet('plinko-bet');
   if (bet <= 0 || bet > balance) return;
   balance -= bet; updateBalance();
-  plinkoDropping = true;
-  document.getElementById('plinko-drop-btn').disabled = true;
 
   const rows = plinkoRows;
   const seedBefore = { serverSeedHash: pfState.serverSeedHash, clientSeed: pfState.clientSeed, nonce: pfState.nonce };
@@ -2996,21 +3040,19 @@ async function dropPlinko() {
   const seedAfter = { ...seedBefore, serverSeed: pfState.serverSeed };
   await rotateServerSeed(); savePFState();
 
-  // Calculate path
   const canvas = document.getElementById('plinko-canvas');
   const w = canvas.width, h = canvas.height;
   const padTop = 40, padBot = 70;
   const rowH = (h - padTop - padBot) / (rows + 1);
+  const spacing = (w * 0.75) / (rows + 2);
   let slot = 0;
   const path = [{ x: w / 2, y: 15 }];
   for (let r = 0; r < rows; r++) {
     if (directions[r] === 1) slot++;
     const pegsInRow = r + 3;
-    const spacing = (w * 0.75) / (rows + 2);
     const rowWidth = spacing * pegsInRow;
     const startX = (w - rowWidth) / 2 + spacing / 2;
-    const pegX = startX + slot * spacing;
-    path.push({ x: pegX, y: padTop + (r + 1) * rowH + 8 });
+    path.push({ x: startX + slot * spacing, y: padTop + (r + 1) * rowH + 8 });
   }
   const multis = PLINKO_MULTIS[plinkoRisk][rows] || PLINKO_MULTIS[plinkoRisk][12];
   const slotCount = multis.length;
@@ -3019,39 +3061,8 @@ async function dropPlinko() {
   const finalSlot = Math.min(slot, slotCount - 1);
   path.push({ x: slotStartX + finalSlot * slotW + slotW / 2, y: h - padBot + 24 });
 
-  // Animate
-  let step = 0;
-  function animatePlinko() {
-    step++;
-    const currentPath = path.slice(0, Math.min(step, path.length));
-    drawPlinkoBoard(rows, currentPath, step >= path.length ? finalSlot : undefined);
-    if (step < path.length) {
-      setTimeout(() => requestAnimationFrame(animatePlinko), 120);
-    } else {
-      const multi = multis[finalSlot];
-      showGameSeed('plinko-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
-      if (multi >= 1) {
-        const payout = Math.floor(bet * multi);
-        balance += payout;
-        document.getElementById('plinko-result-text').style.color = 'var(--green)';
-        document.getElementById('plinko-result-text').textContent = multi + 'x! +' + (payout - bet).toLocaleString();
-        showResult('plinko-result', true, 'Landed on ' + multi + 'x! Won +' + (payout - bet).toLocaleString() + ' SPUNK\u2022BET');
-        addHistory('Plinko', bet, 'win', payout - bet, seedAfter);
-      } else {
-        const payout = Math.floor(bet * multi);
-        balance += payout;
-        document.getElementById('plinko-result-text').style.color = 'var(--red)';
-        document.getElementById('plinko-result-text').textContent = multi + 'x - ' + (bet - payout).toLocaleString() + ' lost';
-        showResult('plinko-result', false, 'Landed on ' + multi + 'x. Lost ' + (bet - payout).toLocaleString() + ' SPUNK\u2022BET');
-        addHistory('Plinko', bet, 'lose', -(bet - payout), seedAfter);
-      }
-      updateBalance(); saveState();
-      plinkoDropping = false;
-      document.getElementById('plinko-drop-btn').disabled = false;
-    }
-  }
-  drawPlinkoBoard(rows, [], undefined);
-  requestAnimationFrame(animatePlinko);
+  plinkoBalls.push({ path, step: 0, finalSlot, bet, multi: multis[finalSlot], seedAfter, done: false });
+  startPlinkoAnimLoop();
 }
 
 // ===== HILO =====
