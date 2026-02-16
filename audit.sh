@@ -1,8 +1,8 @@
 #!/bin/bash
 # =============================================================
 # SPUNK.BET SITE AUDIT — Runs every 30 minutes
-# Checks: HTML validity, JS syntax, broken links, site uptime,
-#         file size, and auto-fixes what it can
+# Checks: site uptime, HTML, JS syntax, assets, games integrity,
+#         CSS rules, DOM elements, functions, and auto-fixes
 # =============================================================
 
 REPO="/Users/spunkart/spunk-bet"
@@ -133,7 +133,43 @@ if [ "$HTTPS_CHECK" -lt 1 ]; then
   log_err "HTTPS redirect missing from index.html"
 fi
 
-# --- 9. Auto-commit fixes if any were made ---
+# --- 9. GAME INTEGRITY CHECKS (via external Node script) ---
+GAME_RESULT=$(node "$REPO/audit-games.js" 2>&1)
+
+GAME_ERRORS=$(echo "$GAME_RESULT" | node -e "try{const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));console.log(d.errors.length)}catch(e){console.log(-1)}" 2>/dev/null)
+GAME_FIXES=$(echo "$GAME_RESULT" | node -e "try{const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));console.log(d.fixes.length)}catch(e){console.log(0)}" 2>/dev/null)
+GAMES_CHECKED=$(echo "$GAME_RESULT" | node -e "try{const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));console.log(d.gamesChecked)}catch(e){console.log(0)}" 2>/dev/null)
+FNS_CHECKED=$(echo "$GAME_RESULT" | node -e "try{const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));console.log(d.functionsChecked)}catch(e){console.log(0)}" 2>/dev/null)
+ELS_CHECKED=$(echo "$GAME_RESULT" | node -e "try{const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));console.log(d.elementsChecked)}catch(e){console.log(0)}" 2>/dev/null)
+
+if [ "$GAME_ERRORS" = "-1" ]; then
+  log_err "Game integrity check failed to run"
+  log "Raw output: $GAME_RESULT"
+elif [ "$GAME_ERRORS" = "0" ]; then
+  log "Game integrity: ALL OK ($GAMES_CHECKED games, $FNS_CHECKED functions, $ELS_CHECKED elements)"
+else
+  log_err "Game integrity: $GAME_ERRORS issue(s) found"
+  echo "$GAME_RESULT" | node -e "
+    try {
+      const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
+      d.errors.forEach(e => console.log('GAME_ERR:' + e));
+      d.fixes.forEach(f => console.log('GAME_FIX:' + f));
+    } catch(e) {}
+  " 2>/dev/null | while read -r line; do
+    if echo "$line" | grep -q "^GAME_FIX:"; then
+      log_fix "${line#GAME_FIX:}"
+    else
+      log_err "${line#GAME_ERR:}"
+    fi
+  done
+fi
+
+# Track auto-fixes from game checks
+if [ "$GAME_FIXES" -gt 0 ] 2>/dev/null; then
+  FIXED=$((FIXED + GAME_FIXES))
+fi
+
+# --- 10. Auto-commit fixes if any were made ---
 cd "$REPO"
 if [ "$FIXED" -gt 0 ]; then
   CHANGES=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
@@ -147,7 +183,7 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
   fi
 fi
 
-# --- 10. Summary ---
+# --- 11. Summary ---
 log "AUDIT COMPLETE: $ERRORS error(s), $FIXED fix(es)"
 log "========== AUDIT END ============"
 log ""
