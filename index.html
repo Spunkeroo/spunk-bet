@@ -1414,7 +1414,7 @@
         <span class="bet-label">Mines</span>
         <div class="mines-count-row">
           <button class="mines-count-btn" onclick="changeMines(-1)">-</button>
-          <span id="mines-count" style="font-weight:700;min-width:24px;text-align:center">3</span>
+          <input type="number" id="mines-count" class="bet-input" style="width:50px;text-align:center;padding:0.2rem 0.3rem;font-size:1rem;font-weight:700;" value="3" min="1" max="24" oninput="syncMinesCount()">
           <button class="mines-count-btn" onclick="changeMines(1)">+</button>
         </div>
       </div>
@@ -1652,9 +1652,9 @@
       <div class="bet-row">
         <span class="bet-label">Rows</span>
         <div class="plinko-rows-row">
-          <button class="mines-count-btn" onclick="changePlinkoRows(-2)">-</button>
-          <span id="plinko-rows" style="font-weight:700;min-width:24px;text-align:center">12</span>
-          <button class="mines-count-btn" onclick="changePlinkoRows(2)">+</button>
+          <button class="mines-count-btn" onclick="changePlinkoRows(-1)">-</button>
+          <input type="number" id="plinko-rows" class="bet-input" style="width:50px;text-align:center;padding:0.2rem 0.3rem;font-size:1rem;font-weight:700;" value="12" min="8" max="16" oninput="syncPlinkoRows()">
+          <button class="mines-count-btn" onclick="changePlinkoRows(1)">+</button>
         </div>
       </div>
       <div class="mode-tabs">
@@ -2695,11 +2695,35 @@ function shareWinOnX() {
   const refCode = walletState.connected ? walletState.paymentAddress.slice(0, 8) : '';
   const link = refCode ? 'https://spunk.bet?ref=' + refCode : 'https://spunk.bet';
   const text = getViralTweet(lastWin.game, lastWin.amount.toLocaleString(), lastWin.multi, link);
-  // Auto-download win card image for the user to attach
-  downloadWinCard();
-  window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+  // Try Web Share API first (auto-attaches image on mobile/desktop)
+  try {
+    const canvas = generateWinCard();
+    canvas.toBlob(function(blob) {
+      const file = new File([blob], 'spunkbet-win.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ text: text, files: [file] }).catch(() => {
+          // Fallback to X intent
+          window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+        });
+      } else {
+        // Copy image to clipboard if possible, then open X
+        if (navigator.clipboard && navigator.clipboard.write) {
+          navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(() => {
+            showToast('Win card copied to clipboard! Paste it in your tweet.');
+          }).catch(() => {});
+        } else {
+          downloadWinCard();
+          showToast('Win card saved! Attach it to your tweet.');
+        }
+        window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+      }
+    }, 'image/png');
+  } catch(e) {
+    downloadWinCard();
+    window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+    showToast('Win card saved! Attach it to your tweet.');
+  }
   shareBonus();
-  showToast('\uD83D\uDCF8 Win card saved! Attach it to your tweet for maximum impact.');
 }
 
 // ===== COIN FLIP =====
@@ -2732,7 +2756,7 @@ async function flipCoin() {
   await rotateServerSeed();
   savePFState();
 
-  const cfDelay = isTurbo('coinflip') ? 50 : 650;
+  const cfDelay = isTurbo('coinflip') ? 30 : 400;
   if (isTurbo('coinflip')) { coin.className = 'coin'; }
   setTimeout(() => {
     const result = rand < 0.5 ? 'heads' : 'tails';
@@ -2803,8 +2827,10 @@ async function rollDice() {
   if (diceRolling) return;
   const bet = getBet('dice-bet');
   if (bet > balance || bet <= 0) return;
-  diceRolling = true;
   const target = parseInt(document.getElementById('dice-slider').value);
+  const chance = diceMode === 'under' ? target - 1 : 100 - target;
+  if (chance <= 0) { showToast('Adjust target — 0% win chance!'); return; }
+  diceRolling = true;
   balance -= bet;
   updateBalance();
 
@@ -2841,7 +2867,7 @@ async function rollDice() {
     updateBalance();
     saveState();
     diceRolling = false;
-  }, isTurbo('dice') ? 50 : 450);
+  }, isTurbo('dice') ? 30 : 300);
 }
 
 // ===== MINES =====
@@ -2849,9 +2875,16 @@ let minesState = null;
 
 function changeMines(d) {
   const el = document.getElementById('mines-count');
-  let v = parseInt(el.textContent) + d;
+  let v = parseInt(el.value) + d;
   v = Math.min(24, Math.max(1, v));
-  el.textContent = v;
+  el.value = v;
+}
+function syncMinesCount() {
+  const el = document.getElementById('mines-count');
+  let v = parseInt(el.value);
+  if (isNaN(v)) return;
+  v = Math.min(24, Math.max(1, v));
+  if (document.activeElement !== el) el.value = v;
 }
 
 function initMinesGrid() {
@@ -2887,7 +2920,7 @@ async function startMines() {
   const bet = getBet('mines-bet');
   if (bet > balance || bet <= 0) return;
   minesStarting = true;
-  const mineCount = parseInt(document.getElementById('mines-count').textContent);
+  const mineCount = parseInt(document.getElementById('mines-count').value);
   balance -= bet;
   updateBalance();
   saveState();
@@ -3107,7 +3140,7 @@ async function playLimbo() {
     }
     updateBalance(); saveState();
     limboPlaying = false;
-  }, isTurbo('limbo') ? 50 : 400);
+  }, isTurbo('limbo') ? 30 : 250);
 }
 
 // ===== KENO =====
@@ -3370,9 +3403,9 @@ async function spinWheel() {
   const winIndex = Math.floor(rand * segs.length);
   const segAngle = (2 * Math.PI) / segs.length;
   const targetAngle = -(winIndex * segAngle + segAngle / 2);
-  const spins = Math.round(5 + Math.random() * 3);
+  const spins = Math.round(3 + Math.random() * 2);
   const totalRotation = spins * 2 * Math.PI + targetAngle;
-  const duration = 4000;
+  const duration = 2800;
   const startTime = Date.now();
 
   function animateSpin() {
@@ -3415,9 +3448,39 @@ let plinkoDropping = false;
 let plinkoBalls = []; // active balls: { path, step, finalSlot, bet, multi, seedAfter, done }
 let plinkoAnimRunning = false;
 const PLINKO_MULTIS = {
-  low:    { 8: [5.6,2.1,1.1,1,0.5,1,1.1,2.1,5.6], 12: [8.9,3,1.4,1.1,1,0.5,0.3,0.5,1,1.1,1.4,3,8.9], 16: [16,9,2,1.4,1.4,1.2,1.1,1,0.5,1,1.1,1.2,1.4,1.4,2,9,16] },
-  medium: { 8: [13,3,1.3,0.7,0.4,0.7,1.3,3,13], 12: [24,6,1.7,0.7,0.5,0.2,0.2,0.5,0.7,1.7,6,24], 16: [110,41,10,5,3,1.5,1,0.5,0.3,0.5,1,1.5,3,5,10,41,110] },
-  high:   { 8: [29,4,1.5,0.3,0.2,0.3,1.5,4,29], 12: [170,24,8.1,2,0.7,0.2,0.2,0.7,2,8.1,24,170], 16: [1000,130,26,9,4,2,0.2,0.2,0.2,0.2,0.2,2,4,9,26,130,1000] }
+  low: {
+    8:[5.6,2.1,1.1,1,0.5,1,1.1,2.1,5.6],
+    9:[5.6,2,1.6,1,0.7,0.7,1,1.6,2,5.6],
+    10:[8.9,3,1.4,1.1,1,0.5,1,1.1,1.4,3,8.9],
+    11:[8.4,3,1.9,1.3,1,0.7,0.7,1,1.3,1.9,3,8.4],
+    12:[10,3,1.6,1.4,1.1,1,0.5,1,1.1,1.4,1.6,3,10],
+    13:[8.1,4,3,1.9,1.2,0.9,0.7,0.7,0.9,1.2,1.9,3,4,8.1],
+    14:[7.1,4,1.9,1.4,1.3,1.1,1,0.5,1,1.1,1.3,1.4,1.9,4,7.1],
+    15:[15,8,3,2,1.5,1.1,1,0.7,0.7,1,1.1,1.5,2,3,8,15],
+    16:[16,9,2,1.4,1.4,1.2,1.1,1,0.5,1,1.1,1.2,1.4,1.4,2,9,16]
+  },
+  medium: {
+    8:[13,3,1.3,0.7,0.4,0.7,1.3,3,13],
+    9:[18,4,1.7,0.9,0.5,0.5,0.9,1.7,4,18],
+    10:[22,5,2,1.4,0.6,0.4,0.6,1.4,2,5,22],
+    11:[24,6,3,1.8,0.7,0.5,0.5,0.7,1.8,3,6,24],
+    12:[33,11,4,2,1.1,0.6,0.3,0.6,1.1,2,4,11,33],
+    13:[43,13,6,3,1.3,0.7,0.4,0.4,0.7,1.3,3,6,13,43],
+    14:[58,15,7,4,1.9,1,0.5,0.2,0.5,1,1.9,4,7,15,58],
+    15:[88,18,11,5,3,1.3,0.5,0.3,0.3,0.5,1.3,3,5,11,18,88],
+    16:[110,41,10,5,3,1.5,1,0.5,0.3,0.5,1,1.5,3,5,10,41,110]
+  },
+  high: {
+    8:[29,4,1.5,0.3,0.2,0.3,1.5,4,29],
+    9:[43,7,2,0.6,0.2,0.2,0.6,2,7,43],
+    10:[76,10,3,0.9,0.3,0.2,0.3,0.9,3,10,76],
+    11:[120,14,5.2,1.4,0.4,0.2,0.2,0.4,1.4,5.2,14,120],
+    12:[170,24,8.1,2,0.7,0.2,0.2,0.2,0.7,2,8.1,24,170],
+    13:[284,37,11,4,1,0.2,0.2,0.2,0.2,1,4,11,37,284],
+    14:[420,56,18,5,1.9,0.3,0.2,0.2,0.2,0.3,1.9,5,18,56,420],
+    15:[620,83,27,8,3,0.5,0.2,0.2,0.2,0.2,0.5,3,8,27,83,620],
+    16:[1000,130,26,9,4,2,0.2,0.2,0.2,0.2,0.2,2,4,9,26,130,1000]
+  }
 };
 function setPlinkoRisk(risk) {
   plinkoRisk = risk;
@@ -3427,19 +3490,39 @@ function setPlinkoRisk(risk) {
 }
 function changePlinkoRows(d) {
   plinkoRows = Math.min(16, Math.max(8, plinkoRows + d));
-  document.getElementById('plinko-rows').textContent = plinkoRows;
+  document.getElementById('plinko-rows').value = plinkoRows;
+  drawPlinkoBoard(plinkoRows);
+}
+function syncPlinkoRows() {
+  const el = document.getElementById('plinko-rows');
+  let v = parseInt(el.value);
+  if (isNaN(v)) return;
+  v = Math.min(16, Math.max(8, v));
+  plinkoRows = v;
+  if (document.activeElement !== el) el.value = v;
+  drawPlinkoBoard(plinkoRows);
 }
 function drawPlinkoBoard(rows) {
   const canvas = document.getElementById('plinko-canvas');
   const ctx = canvas.getContext('2d');
   const w = canvas.width, h = canvas.height;
   ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = '#0d0d0d';
+  // Dark background with subtle gradient
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+  bgGrad.addColorStop(0, '#0a0a0f');
+  bgGrad.addColorStop(1, '#0d0d12');
+  ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, w, h);
-  const padTop = 40, padBot = 70;
+  const padTop = 30, padBot = 60;
   const rowH = (h - padTop - padBot) / (rows + 1);
-  const spacing = (w * 0.75) / (rows + 2);
-  // Draw pegs
+  const spacing = (w * 0.78) / (rows + 2);
+  // Collect active ball positions for peg glow
+  const ballPositions = [];
+  plinkoBalls.forEach(ball => {
+    const visPath = ball.path.slice(0, Math.min(ball.step + 1, ball.path.length));
+    if (visPath.length > 0) ballPositions.push(visPath[visPath.length - 1]);
+  });
+  // Draw pegs with glow effect
   for (let r = 0; r < rows; r++) {
     const pegsInRow = r + 3;
     const rowWidth = spacing * pegsInRow;
@@ -3447,68 +3530,85 @@ function drawPlinkoBoard(rows) {
     for (let p = 0; p < pegsInRow; p++) {
       const x = startX + p * spacing;
       const y = padTop + (r + 1) * rowH;
+      // Check if any ball is near this peg
+      let glowing = false;
+      for (const bp of ballPositions) {
+        const dx = bp.x - x, dy = bp.y - y;
+        if (dx * dx + dy * dy < spacing * spacing * 0.3) { glowing = true; break; }
+      }
+      if (glowing) {
+        ctx.beginPath();
+        ctx.arc(x, y, 8, 0, 2 * Math.PI);
+        ctx.fillStyle = 'rgba(255,95,31,0.15)';
+        ctx.fill();
+      }
       ctx.beginPath();
-      ctx.arc(x, y, 3, 0, 2 * Math.PI);
-      ctx.fillStyle = '#555';
+      ctx.arc(x, y, rows > 12 ? 3 : 4, 0, 2 * Math.PI);
+      ctx.fillStyle = glowing ? '#ff8c42' : '#3a3a4a';
       ctx.fill();
     }
   }
-  // Draw multiplier slots
+  // Draw multiplier buckets
   const multis = PLINKO_MULTIS[plinkoRisk][rows] || PLINKO_MULTIS[plinkoRisk][12];
   const slotCount = multis.length;
   const slotW = (w * 0.88) / slotCount;
   const slotStartX = (w - slotW * slotCount) / 2;
-  const slotY = h - padBot + 8;
+  const slotY = h - padBot + 4;
   const mid = Math.floor(slotCount / 2);
-  // Collect hit slots from finished balls
   const hitSlots = new Set();
   plinkoBalls.forEach(b => { if (b.done) hitSlots.add(b.finalSlot); });
   multis.forEach((m, i) => {
     const x = slotStartX + i * slotW;
     const isHit = hitSlots.has(i);
     const dist = Math.abs(i - mid) / mid;
-    let color;
-    if (plinkoRisk === 'high') {
-      color = dist > 0.7 ? '#ff5f1f' : dist > 0.4 ? '#eab308' : '#22c55e';
-    } else if (plinkoRisk === 'medium') {
-      color = dist > 0.6 ? '#ff5f1f' : dist > 0.3 ? '#eab308' : '#22c55e';
-    } else {
-      color = dist > 0.7 ? '#eab308' : '#22c55e';
-    }
-    const alpha = isHit ? 0.5 : 0.15;
-    ctx.fillStyle = `rgba(${parseInt(color.slice(1,3),16)},${parseInt(color.slice(3,5),16)},${parseInt(color.slice(5,7),16)},${alpha})`;
+    // Color gradient: edges=red, mid=yellow, center=green (like winna/stake)
+    let r, g, b;
+    if (dist > 0.7) { r = 255; g = 60; b = 30; }
+    else if (dist > 0.4) { r = 234; g = 179; b = 8; }
+    else { r = 34; g = 197; b = 94; }
+    const alpha = isHit ? 0.65 : 0.2;
+    ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
     ctx.beginPath();
-    ctx.roundRect(x + 1, slotY, slotW - 2, 32, 4);
+    ctx.roundRect(x + 1, slotY, slotW - 2, 34, 5);
     ctx.fill();
     if (isHit) {
-      ctx.strokeStyle = color;
+      ctx.shadowColor = `rgba(${r},${g},${b},0.6)`;
+      ctx.shadowBlur = 12;
+      ctx.strokeStyle = `rgb(${r},${g},${b})`;
       ctx.lineWidth = 2;
       ctx.stroke();
+      ctx.shadowBlur = 0;
     }
-    ctx.fillStyle = isHit ? '#fff' : color;
-    ctx.font = 'bold ' + (slotCount > 13 ? '9' : '11') + 'px -apple-system, sans-serif';
+    ctx.fillStyle = isHit ? '#fff' : `rgb(${r},${g},${b})`;
+    ctx.font = 'bold ' + (slotCount > 14 ? '8' : slotCount > 11 ? '10' : '12') + 'px -apple-system, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(m + 'x', x + slotW / 2, slotY + 21);
+    ctx.fillText(m + 'x', x + slotW / 2, slotY + 22);
   });
-  // Draw all active balls
+  // Draw all active balls with trail
   plinkoBalls.forEach(ball => {
     const visPath = ball.path.slice(0, Math.min(ball.step + 1, ball.path.length));
-    // Trail (last 3 positions only for speed)
-    const trailStart = Math.max(0, visPath.length - 4);
+    // Trail glow (last 5 positions)
+    const trailStart = Math.max(0, visPath.length - 6);
     for (let i = trailStart; i < visPath.length - 1; i++) {
-      const alpha = 0.08 + ((i - trailStart) / 4) * 0.2;
+      const alpha = 0.05 + ((i - trailStart) / 6) * 0.25;
       ctx.beginPath();
-      ctx.arc(visPath[i].x, visPath[i].y, 4, 0, 2 * Math.PI);
-      ctx.fillStyle = `rgba(255,95,31,${alpha})`;
+      ctx.arc(visPath[i].x, visPath[i].y, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = `rgba(255,140,66,${alpha})`;
       ctx.fill();
     }
-    // Ball
+    // Main ball with glow
     if (visPath.length > 0) {
       const pos = visPath[visPath.length - 1];
+      ctx.shadowColor = 'rgba(255,95,31,0.5)';
+      ctx.shadowBlur = 10;
       ctx.beginPath();
-      ctx.arc(pos.x, pos.y, 7, 0, 2 * Math.PI);
-      ctx.fillStyle = '#ff5f1f';
+      ctx.arc(pos.x, pos.y, 8, 0, 2 * Math.PI);
+      const ballGrad = ctx.createRadialGradient(pos.x - 2, pos.y - 2, 1, pos.x, pos.y, 8);
+      ballGrad.addColorStop(0, '#ffb347');
+      ballGrad.addColorStop(1, '#ff5f1f');
+      ctx.fillStyle = ballGrad;
       ctx.fill();
+      ctx.shadowBlur = 0;
     }
   });
 }
@@ -3516,45 +3616,38 @@ function startPlinkoAnimLoop() {
   if (plinkoAnimRunning) return;
   plinkoAnimRunning = true;
   const rows = plinkoRows;
-  const turbo = isTurbo('plinko');
-  const stepDelay = turbo ? 30 : 60;
   let lastStep = 0;
   function tick(ts) {
     if (plinkoBalls.length === 0) { plinkoAnimRunning = false; return; }
+    const turbo = isTurbo('plinko');
+    const stepDelay = turbo ? 18 : 40;
     if (ts - lastStep >= stepDelay) {
       lastStep = ts;
-      let anyActive = false;
       plinkoBalls.forEach(ball => {
         if (!ball.done) {
           ball.step++;
           if (ball.step >= ball.path.length) {
             ball.done = true;
-            // Resolve this ball
             const multi = ball.multi;
             showGameSeed('plinko-seed', ball.seedAfter.serverSeed, ball.seedAfter.serverSeedHash);
+            const payout = Math.floor(ball.bet * multi);
+            balance += payout;
             if (multi >= 1) {
-              const payout = Math.floor(ball.bet * multi);
-              balance += payout;
               document.getElementById('plinko-result-text').style.color = 'var(--green)';
               document.getElementById('plinko-result-text').textContent = multi + 'x! +' + (payout - ball.bet).toLocaleString();
               showResult('plinko-result', true, multi + 'x! Won +' + (payout - ball.bet).toLocaleString() + ' SPUNK\u2022BET');
               addHistory('Plinko', ball.bet, 'win', payout - ball.bet, ball.seedAfter);
             } else {
-              const payout = Math.floor(ball.bet * multi);
-              balance += payout;
               document.getElementById('plinko-result-text').style.color = 'var(--red)';
               document.getElementById('plinko-result-text').textContent = multi + 'x \u2212' + (ball.bet - payout).toLocaleString();
               showResult('plinko-result', false, multi + 'x. Lost ' + (ball.bet - payout).toLocaleString() + ' SPUNK\u2022BET');
               addHistory('Plinko', ball.bet, 'lose', -(ball.bet - payout), ball.seedAfter);
             }
             updateBalance(); saveState();
-            // Remove finished ball after brief flash
             setTimeout(() => {
               plinkoBalls = plinkoBalls.filter(b => b !== ball);
               if (plinkoBalls.length === 0) drawPlinkoBoard(rows);
-            }, 400);
-          } else {
-            anyActive = true;
+            }, 250);
           }
         }
       });
@@ -3853,6 +3946,7 @@ function climbTower(floor, col) {
 }
 function cashoutTower() {
   if (!towerState || !towerState.active) return;
+  if (towerState.currentFloor < 1) { showToast('Climb at least 1 floor before cashing out!'); return; }
   towerState.active = false;
   const multi = getTowerMulti(towerState.currentFloor, towerState.diff);
   const payout = Math.floor(towerState.bet * multi);
@@ -4330,8 +4424,8 @@ async function runAutobetRound(game) {
   }
 
   // Wait for game animations to finish
-  const delayMap = { coinflip:900, dice:700, mines:800, crash:2000, limbo:650, keno:2200, wheel:4500, plinko:2500, hilo:1200, tower:800 };
-  const turboDelayMap = { coinflip:200, dice:200, mines:400, crash:1000, limbo:200, keno:500, wheel:1500, plinko:800, hilo:600, tower:400 };
+  const delayMap = { coinflip:600, dice:500, mines:600, crash:1500, limbo:400, keno:1500, wheel:3500, plinko:1800, hilo:800, tower:600 };
+  const turboDelayMap = { coinflip:100, dice:100, mines:250, crash:600, limbo:100, keno:300, wheel:800, plinko:400, hilo:300, tower:250 };
   const delay = isTurbo(game) ? (turboDelayMap[game] || 300) : (delayMap[game] || 1000);
 
   setTimeout(() => {
@@ -4507,7 +4601,7 @@ async function playKenoAnimated() {
           drawnArea.appendChild(ball);
         }
         resolve();
-      }, i * 180);
+      }, i * 100);
     });
   };
 
@@ -4613,7 +4707,6 @@ function closeBigWin() {
 
 async function shareBigWinOnX() {
   closeBigWin();
-  downloadWinCard();
   shareWinOnX();
 }
 
@@ -4831,8 +4924,22 @@ async function sharePrizeOnX(prizeName) {
   } else {
     text = 'Real ordinal prizes up for grabs on Spunk.Bet! \uD83C\uDFC6\n\nFree runes daily, win Bitcoin ordinals. Support @SpunkArt13 \u2192 ' + link;
   }
-  const url = 'https://x.com/intent/tweet?text=' + encodeURIComponent(text);
-  window.open(url, '_blank', 'width=550,height=420');
+  // Try Web Share API first
+  try {
+    const canvas = generateWinCard({ referralOnly: true });
+    canvas.toBlob(function(blob) {
+      const file = new File([blob], 'spunkbet-prizes.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ text: text, files: [file] }).catch(() => {
+          window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+        });
+      } else {
+        window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+      }
+    }, 'image/png');
+  } catch(e) {
+    window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+  }
   shareBonus();
 }
 
@@ -4909,6 +5016,41 @@ async function scanPrizeWallet() {
           }));
           source = 'Ordinals.com';
         }
+      }
+    } catch(e) {}
+  }
+
+  // Fallback: UTXO-based scan via mempool.space (most reliable)
+  if (list.length === 0) {
+    try {
+      const utxoRes = await fetch('https://mempool.space/api/address/' + PRIZE_WALLET + '/utxo');
+      if (utxoRes.ok) {
+        const utxos = await utxoRes.json();
+        // Small UTXOs (< 1000 sats) are likely ordinals
+        const ordinalUtxos = utxos.filter(u => u.value <= 1000 && u.status && u.status.confirmed);
+        for (const utxo of ordinalUtxos) {
+          const outpoint = utxo.txid + ':' + utxo.vout;
+          try {
+            const inscRes = await fetch('https://ordinals.com/api/output/' + outpoint);
+            if (inscRes.ok) {
+              const inscData = await inscRes.json();
+              const inscs = inscData.inscriptions || [];
+              for (const inscId of inscs) {
+                list.push({
+                  id: inscId,
+                  inscriptionId: inscId,
+                  inscriptionNumber: '?',
+                  number: '?',
+                  contentType: 'image/png',
+                  contentURI: 'https://ordinals.com/content/' + inscId,
+                  contentPreviewURI: 'https://ordinals.com/content/' + inscId,
+                  collectionName: 'Bitcoin Ordinal',
+                });
+              }
+            }
+          } catch(e2) {}
+        }
+        if (list.length > 0) source = 'UTXO-scan';
       }
     } catch(e) {}
   }
