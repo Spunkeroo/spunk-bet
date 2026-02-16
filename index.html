@@ -5764,6 +5764,193 @@ setInterval(() => { const d = loadWagerLB(); trackWagerLB(0); }, 300000);
 // Close big win overlay on backdrop click
 document.getElementById('bigwin-overlay').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeBigWin(); });
 document.getElementById('daily-spin-modal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeDailySpin(); });
+
+// ===== AUTO-AUDIT SYSTEM (runs every 30 minutes) =====
+(function() {
+  const AUDIT_INTERVAL = 30 * 60 * 1000; // 30 minutes
+  let lastAuditLog = [];
+
+  function runSiteAudit() {
+    const issues = [];
+    const fixes = [];
+    const t0 = performance.now();
+
+    // 1. CHECK ALL GAME PAGES EXIST
+    const gamePages = ['coinflip','dice','mines','crash','limbo','keno','wheel','plinko','hilo','tower'];
+    gamePages.forEach(g => {
+      const page = document.getElementById(g + '-page');
+      if (!page) issues.push('MISSING: ' + g + '-page element');
+    });
+
+    // 2. CHECK ALL BET INPUTS EXIST AND HAVE VALID VALUES
+    const betInputs = ['coinflip-bet','dice-bet','mines-bet','crash-bet','limbo-bet','keno-bet','wheel-bet','plinko-bet','hilo-bet','tower-bet'];
+    betInputs.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) { issues.push('MISSING: ' + id + ' input'); return; }
+      const v = parseInt(el.value);
+      if (isNaN(v) || v < 0) {
+        el.value = MIN_BET;
+        fixes.push('FIX: Reset ' + id + ' to ' + MIN_BET + ' (was invalid)');
+      }
+    });
+
+    // 3. CHECK BALANCE INTEGRITY
+    if (typeof balance === 'undefined' || isNaN(balance) || balance < 0) {
+      balance = 0;
+      fixes.push('FIX: Reset negative/NaN balance to 0');
+    }
+    const balEl = document.getElementById('balance');
+    if (balEl && parseInt(balEl.textContent.replace(/,/g,'')) !== balance) {
+      balEl.textContent = balance.toLocaleString();
+      fixes.push('FIX: Synced balance display');
+    }
+
+    // 4. CHECK KEY BUTTONS ARE WIRED (onclick handlers)
+    const criticalButtons = [
+      { sel: '#faucet-btn', label: 'Faucet button' },
+      { sel: '.nav-link', label: 'Nav links', min: 5 },
+    ];
+    criticalButtons.forEach(b => {
+      const els = document.querySelectorAll(b.sel);
+      if (els.length === 0) issues.push('MISSING: ' + b.label);
+      if (b.min && els.length < b.min) issues.push('LOW COUNT: ' + b.label + ' (' + els.length + '/' + b.min + ')');
+    });
+
+    // 5. CHECK CSS VARIABLES LOADED (theme integrity)
+    const root = getComputedStyle(document.documentElement);
+    ['--bg','--surface','--accent','--text'].forEach(v => {
+      if (!root.getPropertyValue(v).trim()) issues.push('MISSING CSS VAR: ' + v);
+    });
+
+    // 6. CHECK LOCALSTORAGE ISN'T CORRUPTED
+    try {
+      const state = JSON.parse(localStorage.getItem('spunkbet_state') || '{}');
+      if (typeof state !== 'object') {
+        localStorage.removeItem('spunkbet_state');
+        fixes.push('FIX: Cleared corrupted localStorage state');
+      }
+    } catch(e) {
+      localStorage.removeItem('spunkbet_state');
+      fixes.push('FIX: Cleared unparseable localStorage state');
+    }
+
+    // 7. CHECK CUMULATIVE STATS INTEGRITY
+    try {
+      const stats = JSON.parse(localStorage.getItem('spunkbet_cumulative') || '{}');
+      if (stats.games_played < 0 || stats.total_wagered < 0) {
+        stats.games_played = Math.max(0, stats.games_played || 0);
+        stats.total_wagered = Math.max(0, stats.total_wagered || 0);
+        localStorage.setItem('spunkbet_cumulative', JSON.stringify(stats));
+        fixes.push('FIX: Corrected negative cumulative stats');
+      }
+    } catch(e) {}
+
+    // 8. CHECK PROVABLY FAIR SYSTEM
+    if (typeof serverSeed === 'undefined' || !serverSeed) {
+      if (typeof initProvablyFair === 'function') {
+        initProvablyFair();
+        fixes.push('FIX: Re-initialized provably fair seeds');
+      }
+    }
+
+    // 9. CHECK FAUCET TIMER DISPLAY
+    const faucetBtn = document.getElementById('faucet-btn');
+    if (faucetBtn && typeof updateFaucetButton === 'function') {
+      updateFaucetButton();
+    }
+
+    // 10. SPEED CHECK - Measure DOM query performance
+    const speedT0 = performance.now();
+    for (let i = 0; i < 100; i++) document.querySelectorAll('.game-card');
+    const domSpeed = performance.now() - speedT0;
+    if (domSpeed > 50) issues.push('SLOW DOM: querySelectorAll took ' + domSpeed.toFixed(1) + 'ms for 100 queries');
+
+    // 11. CHECK PRIZE CACHE FRESHNESS
+    const prizeCache = localStorage.getItem('spunkbet_prize_cache');
+    if (prizeCache) {
+      try {
+        const pc = JSON.parse(prizeCache);
+        const age = Date.now() - (pc.timestamp || 0);
+        if (age > 60 * 60 * 1000) { // older than 1 hour
+          scanPrizeWallet();
+          fixes.push('FIX: Refreshed stale prize cache (was ' + Math.round(age/60000) + 'min old)');
+        }
+      } catch(e) {}
+    }
+
+    // 12. CHECK HISTORY ARRAY SIZE (prevent memory bloat)
+    if (typeof history !== 'undefined' && Array.isArray(history) && history.length > 50) {
+      history.length = 50;
+      fixes.push('FIX: Trimmed history to 50 entries');
+    }
+
+    // 13. SYNC RANK BADGE
+    if (typeof updatePlayerRankBadge === 'function') updatePlayerRankBadge();
+
+    // 14. REFRESH LIVE STATS FROM CF WORKER
+    if (typeof fetchLiveStats === 'function') fetchLiveStats();
+
+    // 15. REFRESH STREAK BADGE
+    if (typeof updateStreakBadge === 'function') updateStreakBadge();
+
+    // 16. CHECK ONLINE COUNT IS RUNNING
+    const onlineEl = document.getElementById('online-count');
+    if (onlineEl && (!onlineEl.textContent || onlineEl.textContent === '0')) {
+      if (typeof updateOnlineCount === 'function') updateOnlineCount();
+      fixes.push('FIX: Refreshed online count');
+    }
+
+    const elapsed = (performance.now() - t0).toFixed(1);
+
+    // Build audit report
+    const report = {
+      timestamp: new Date().toISOString(),
+      elapsed_ms: parseFloat(elapsed),
+      issues_found: issues.length,
+      auto_fixes: fixes.length,
+      issues: issues,
+      fixes: fixes,
+      stats: {
+        balance: balance,
+        games_played: (cumulativeStats || {}).games_played || 0,
+        total_wagered: (cumulativeStats || {}).total_wagered || 0,
+        dom_speed_100q: parseFloat(domSpeed.toFixed(1)) + 'ms',
+        live_stats: window.liveStats ? 'connected' : 'local only',
+        memory_mb: (performance.memory ? (performance.memory.usedJSHeapSize / 1048576).toFixed(1) : 'N/A'),
+      },
+      status: issues.length === 0 ? 'HEALTHY' : 'ISSUES DETECTED'
+    };
+
+    lastAuditLog.unshift(report);
+    if (lastAuditLog.length > 10) lastAuditLog.pop();
+    localStorage.setItem('spunkbet_audit_log', JSON.stringify(lastAuditLog));
+
+    // Console output
+    const statusColor = issues.length === 0 ? '#22c55e' : '#ef4444';
+    console.log('%c SITE AUDIT ' + report.status + ' (' + elapsed + 'ms) ', 'background:' + statusColor + ';color:#fff;font-weight:bold;padding:4px 8px;border-radius:4px;');
+    if (fixes.length) {
+      console.log('%c Auto-fixes applied: ' + fixes.length, 'color:#22c55e;');
+      fixes.forEach(f => console.log('  ' + f));
+    }
+    if (issues.length) {
+      console.log('%c Issues: ' + issues.length, 'color:#ef4444;');
+      issues.forEach(i => console.log('  ' + i));
+    }
+
+    return report;
+  }
+
+  // Expose to console
+  window.spunkAudit = runSiteAudit;
+  window.spunkAuditLog = function() {
+    try { return JSON.parse(localStorage.getItem('spunkbet_audit_log') || '[]'); } catch(e) { return []; }
+  };
+
+  // Run initial audit after page fully loads
+  setTimeout(runSiteAudit, 5000);
+  // Run every 30 minutes
+  setInterval(runSiteAudit, AUDIT_INTERVAL);
+})();
 </script>
 </body>
 </html>
