@@ -1266,8 +1266,8 @@
   <div class="daily-spin-section" id="daily-spin-section">
     <div class="daily-spin-card">
       <div class="daily-spin-left">
-        <h3>Daily Bonus <span>Spin</span></h3>
-        <p>Spin once per day for free SPUNK•BET. Share your result on X for 2x the prize!</p>
+        <h3>Free Daily <span>Wheel Spin</span></h3>
+        <p>Spin the wheel every day for free SPUNK•BET runes! Share on X for 2x the prize. Come back daily!</p>
       </div>
       <button class="daily-spin-btn" id="daily-spin-btn" onclick="openDailySpin()">Spin Now</button>
     </div>
@@ -1311,8 +1311,8 @@
     <div class="bigwin-title">BIG WIN!</div>
     <div class="bigwin-amount" id="bigwin-amount">+0</div>
     <div class="bigwin-multi" id="bigwin-multi"></div>
-    <div class="bigwin-bonus">Share &amp; earn 2,500 bonus SPUNK•BET!</div>
-    <button class="bigwin-share" onclick="shareBigWinOnX()"><svg viewBox="0 0 24 24" width="16" height="16" fill="#fff"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> Share this win on X</button>
+    <div class="bigwin-bonus">Share on X &amp; earn 2,500 bonus SPUNK•BET! Win card auto-saves.</div>
+    <button class="bigwin-share" onclick="shareBigWinOnX()"><svg viewBox="0 0 24 24" width="16" height="16" fill="#fff"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> Share win + attach image on X</button>
     <button class="bigwin-dismiss" onclick="closeBigWin()">No thanks</button>
   </div>
 </div>
@@ -2508,9 +2508,12 @@ function generateWinCard(options) {
     ctx.fillStyle = '#ff5f1f';
     ctx.fillText('SPUNK\u2022BET TOKENS', 60, 410);
 
-    ctx.font = '600 24px -apple-system, system-ui, sans-serif';
+    ctx.font = 'bold 28px -apple-system, system-ui, sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.fillText('Fast. Fair. Free.', 60, 460);
+    ctx.font = '500 20px -apple-system, system-ui, sans-serif';
     ctx.fillStyle = '#71717a';
-    ctx.fillText('Claim your free tokens and start playing now', 60, 470);
+    ctx.fillText('Free daily runes \u00B7 Ordinal prizes \u00B7 Free wheel spin every day', 60, 495);
   } else {
     // Win card - game tag
     ctx.font = '700 20px -apple-system, system-ui, sans-serif';
@@ -2547,10 +2550,13 @@ function generateWinCard(options) {
       ctx.textAlign = 'left';
     }
 
-    // Provably Fair tag
-    ctx.font = '500 20px -apple-system, system-ui, sans-serif';
-    ctx.fillStyle = '#3f3f46';
-    ctx.fillText('Provably Fair \u00B7 Bitcoin \u00B7 No KYC', 60, 420);
+    // Fast Fair Free tag
+    ctx.font = 'bold 22px -apple-system, system-ui, sans-serif';
+    ctx.fillStyle = '#ff5f1f';
+    ctx.fillText('Fast. Fair. Free.', 60, 400);
+    ctx.font = '500 18px -apple-system, system-ui, sans-serif';
+    ctx.fillStyle = '#71717a';
+    ctx.fillText('Free daily runes \u00B7 Real ordinal prizes \u00B7 Free daily wheel spin', 60, 430);
   }
 
   // Bottom bar with referral
@@ -2565,8 +2571,8 @@ function generateWinCard(options) {
 
   ctx.textAlign = 'right';
   ctx.font = '600 22px -apple-system, system-ui, sans-serif';
-  ctx.fillStyle = '#71717a';
-  ctx.fillText('Play free \u2192', 1140, 592);
+  ctx.fillStyle = '#ff5f1f';
+  ctx.fillText('Claim free runes & play \u2192', 1140, 592);
   ctx.textAlign = 'left';
 
   return c;
@@ -2586,25 +2592,44 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// Rotating viral tweet templates
+// Rotating viral tweet templates — Fast. Fair. Free. + CTA + @SpunkArt13
 const TWEET_TEMPLATES = [
-  (g, amt, multi, link) => '+' + amt + ' SPUNK\u2022BET on ' + g + '! \uD83C\uDFB0\n\nPlay free \u2192 ' + link,
-  (g, amt, multi, link) => 'Just hit ' + multi + ' on ' + g + '! +' + amt + ' SPUNK\u2022BET \uD83C\uDFB0\n\n' + link,
-  (g, amt, multi, link) => 'Free crypto casino, no cap. Just won ' + amt + ' on ' + g + ' \uD83D\uDCB0\n\n' + link,
-  (g, amt, multi, link) => multi + ' multiplier on ' + g + '! This casino is actually fun \uD83D\uDD25\n\n' + link,
-  (g, amt, multi, link) => 'No KYC casino on Bitcoin. ' + amt + ' SPUNK\u2022BET win on ' + g + ' \uD83C\uDF89\n\n' + link,
+  (g, amt, multi, link) => '+' + amt + ' SPUNK\u2022BET on ' + g + '! \uD83C\uDFB0\n\nFast. Fair. Free. Claim 10k tokens & play now \u2192 ' + link + '\n\n@SpunkArt13',
+  (g, amt, multi, link) => 'Just hit ' + multi + ' on ' + g + '! +' + amt + ' SPUNK\u2022BET \uD83D\uDD25\n\nFree casino on Bitcoin. No KYC. Real ordinal prizes \u2192 ' + link + '\n\n@SpunkArt13',
+  (g, amt, multi, link) => multi + ' multiplier on ' + g + '! +' + amt + ' SPUNK\u2022BET \uD83D\uDCB0\n\nFree daily runes + ordinal giveaways. Come play \u2192 ' + link + '\n\n@SpunkArt13',
+  (g, amt, multi, link) => 'Won ' + amt + ' SPUNK\u2022BET on ' + g + '! \uD83C\uDF89\n\nFast. Fair. Free. A casino for everyone on Bitcoin \u2192 ' + link + '\n\n@SpunkArt13',
+  (g, amt, multi, link) => '+' + amt + ' on ' + g + '! ' + multi + ' \uD83D\uDE80\n\nFree tokens daily, win real ordinals. Support @SpunkArt13 \u2192 ' + link,
+  (g, amt, multi, link) => 'This casino gives you free runes daily + ordinal prizes \uD83E\uDD2F\n\nJust won ' + amt + ' SPUNK\u2022BET on ' + g + ' \u2192 ' + link + '\n\n@SpunkArt13',
 ];
 function getViralTweet(game, amount, multi, link) {
   const idx = Math.floor(Math.random() * TWEET_TEMPLATES.length);
   return TWEET_TEMPLATES[idx](game, amount, multi, link);
 }
 
+// Auto-download win card image so user can attach to tweet
+function downloadWinCard() {
+  try {
+    const canvas = generateWinCard();
+    canvas.toBlob(function(blob) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'spunkbet-win.png';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    }, 'image/png');
+  } catch(e) {}
+}
+
 function shareWinOnX() {
   const refCode = walletState.connected ? walletState.paymentAddress.slice(0, 8) : '';
   const link = refCode ? 'https://spunk.bet?ref=' + refCode : 'https://spunk.bet';
   const text = getViralTweet(lastWin.game, lastWin.amount.toLocaleString(), lastWin.multi, link);
+  // Auto-download win card image for the user to attach
+  downloadWinCard();
   window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
   shareBonus();
+  showToast('\uD83D\uDCF8 Win card saved! Attach it to your tweet for maximum impact.');
 }
 
 // ===== COIN FLIP =====
@@ -4005,7 +4030,8 @@ function shareReferralOnX() {
   if (typeof trackEvent === 'function') trackEvent('referral_share');
   const code = walletState.paymentAddress.slice(0, 8);
   const link = 'https://spunk.bet?ref=' + code;
-  const text = 'Free crypto casino on Bitcoin \uD83C\uDFB0\n\nNo KYC, provably fair. Claim 10k free tokens \u2192 ' + link;
+  const text = 'Free crypto casino on Bitcoin \uD83C\uDFB0\n\nFast. Fair. Free. 10k free tokens daily + real ordinal prizes. No KYC. Come play \u2192 ' + link + '\n\nSupport @SpunkArt13 \u2014 a project for everyone \uD83E\uDDE1';
+  downloadWinCard();
   window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
   shareBonus();
 }
@@ -4021,7 +4047,7 @@ function shareFirst100() {
   const code = walletState.paymentAddress.slice(0, 8);
   const link = 'https://spunk.bet?ref=' + code;
   const remaining = document.getElementById('first100-count')?.textContent || '?';
-  const text = 'Only ' + remaining + ' spots left for 2x bonus rewards on Spunk.Bet \uD83C\uDFB0\n\nFree Bitcoin casino, no KYC. Claim yours \u2192 ' + link;
+  const text = 'Only ' + remaining + ' spots left for 2x bonus rewards on Spunk.Bet \uD83C\uDFB0\n\nFast. Fair. Free. Daily runes + ordinal prizes. Claim yours \u2192 ' + link + '\n\n@SpunkArt13';
   window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
   shareBonus();
 }
@@ -4447,7 +4473,7 @@ function checkStreakMilestone() {
 async function shareStreakOnX() {
   const refCode = walletState.connected ? walletState.paymentAddress.slice(0, 8) : '';
   const link = refCode ? 'https://spunk.bet?ref=' + refCode : 'https://spunk.bet';
-  const text = '\uD83D\uDD25 ' + winStreak + ' Win Streak on Spunk.Bet!\n\nFree crypto casino, no KYC. Try to beat my streak \u2192 ' + link;
+  const text = '\uD83D\uDD25 ' + winStreak + ' Win Streak on Spunk.Bet!\n\nFast. Fair. Free. Beat my streak & win real ordinals \u2192 ' + link + '\n\n@SpunkArt13';
   const url = 'https://x.com/intent/tweet?text=' + encodeURIComponent(text);
   window.open(url, '_blank', 'width=550,height=420');
   shareBonus();
@@ -4470,7 +4496,8 @@ function closeBigWin() {
 
 async function shareBigWinOnX() {
   closeBigWin();
-  await shareWinOnX();
+  downloadWinCard();
+  shareWinOnX();
 }
 
 function spawnConfetti() {
@@ -4656,7 +4683,7 @@ function shareDailySpinOnX() {
   updateBalance();
   saveState();
   showToast('2x bonus! <span class="toast-amount">+' + dailySpinPrize.toLocaleString() + ' SPUNK\u2022BET</span> extra!');
-  const text = 'Just spun +' + (dailySpinPrize * 2).toLocaleString() + ' SPUNK\u2022BET on the daily wheel! \uD83C\uDFA1\n\nFree crypto casino \u2192 ' + link;
+  const text = 'Just spun +' + (dailySpinPrize * 2).toLocaleString() + ' SPUNK\u2022BET on the daily wheel! \uD83C\uDFA1\n\nFree runes daily + ordinal giveaways. Fast. Fair. Free \u2192 ' + link + '\n\n@SpunkArt13';
   window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
   closeDailySpin();
 }
@@ -4675,9 +4702,9 @@ async function sharePrizeOnX(prizeName) {
   const link = refCode ? 'https://spunk.bet?ref=' + refCode : 'https://spunk.bet';
   let text;
   if (prizeName) {
-    text = 'Win a ' + prizeName + ' ordinal on @SpunkArt13\'s casino! \uD83C\uDFC6\n\nFree to play, prizes are real \u2192 ' + link;
+    text = 'Win a ' + prizeName + ' ordinal on @SpunkArt13\'s casino! \uD83C\uDFC6\n\nFree daily SPUNK\u2022BET runes + real ordinal prizes. Fast. Fair. Free \u2192 ' + link;
   } else {
-    text = 'Ordinal prizes up for grabs on Spunk.Bet! \uD83C\uDFC6\n\nFree crypto casino on Bitcoin. No KYC \u2192 ' + link;
+    text = 'Real ordinal prizes up for grabs on Spunk.Bet! \uD83C\uDFC6\n\nFree runes daily, win Bitcoin ordinals. Support @SpunkArt13 \u2192 ' + link;
   }
   const url = 'https://x.com/intent/tweet?text=' + encodeURIComponent(text);
   window.open(url, '_blank', 'width=550,height=420');
