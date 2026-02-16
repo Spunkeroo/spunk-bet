@@ -4651,21 +4651,32 @@ async function sharePrizeOnX(prizeName) {
   shareBonus();
 }
 
-// ===== PRIZE WALLET AUTO-SCAN =====
+// ===== PRIZE WALLET AUTO-SCAN (Magic Eden) =====
 const PRIZE_WALLET = 'bc1p27l6s82w5dek9yffjtlyj58ue2sndxm6zszpcz9zcwqpd4v86n9s5l37xm';
 let prizeOrdinals = [];
+let prizeLastHash = '';
 
 async function scanPrizeWallet() {
   try {
-    const res = await fetch('https://api.hiro.so/ordinals/v1/inscriptions?address=' + PRIZE_WALLET + '&limit=50');
+    const res = await fetch('https://api-mainnet.magiceden.dev/v2/ord/btc/tokens?ownerAddress=' + PRIZE_WALLET + '&limit=50');
+    if (!res.ok) throw new Error('ME ' + res.status);
     const data = await res.json();
-    prizeOrdinals = data.results || [];
+    const tokens = data.tokens || data || [];
+    const list = Array.isArray(tokens) ? tokens : [];
+    // Only re-render if data changed
+    const hash = JSON.stringify(list.map(t => t.id || t.inscriptionId || ''));
+    if (hash === prizeLastHash && prizeOrdinals.length > 0) return;
+    prizeLastHash = hash;
+    prizeOrdinals = list;
     renderPrizes('prize-grid');
     renderPrizes('wallet-prize-grid');
   } catch(e) {
-    console.warn('Prize scan failed, showing empty state');
-    renderPrizes('prize-grid');
-    renderPrizes('wallet-prize-grid');
+    console.warn('Prize scan:', e.message);
+    // Only render empty state if we never loaded anything
+    if (prizeOrdinals.length === 0) {
+      renderPrizes('prize-grid');
+      renderPrizes('wallet-prize-grid');
+    }
   }
 }
 
@@ -4685,27 +4696,36 @@ function renderPrizes(containerId) {
 
   const bgs = ['bg1','bg2','bg3','bg4'];
   container.innerHTML = prizeOrdinals.map((ord, i) => {
-    const id = ord.id || '';
+    const id = ord.id || ord.inscriptionId || '';
     const shortId = id.slice(0,8) + '...' + id.slice(-4);
-    const num = ord.number || '?';
-    const type = (ord.content_type || '').split('/')[0];
+    const num = ord.inscriptionNumber || ord.number || '?';
+    const collection = ord.collection || ord.collectionSymbol || '';
+    const collectionName = ord.collectionName || collection || 'Bitcoin Ordinal';
+    const contentType = ord.contentType || ord.content_type || '';
+    const type = contentType.split('/')[0];
     const isImage = type === 'image';
-    const contentUrl = 'https://ordinals.com/content/' + id;
+    // Magic Eden image or ordinals.com fallback
+    const imgUrl = ord.contentURI || ord.contentPreviewURI || ('https://ordinals.com/content/' + id);
     const bg = bgs[i % bgs.length];
 
     let imgHtml;
-    if (isImage) {
-      imgHtml = '<img src="' + contentUrl + '" alt="Inscription #' + num + '" style="width:100%;height:100%;object-fit:cover;position:relative;z-index:1;border-radius:12px 12px 0 0;" loading="lazy">';
+    if (isImage || ord.contentPreviewURI) {
+      imgHtml = '<img src="' + imgUrl + '" alt="' + collectionName + ' #' + num + '" style="width:100%;height:100%;object-fit:cover;position:relative;z-index:1;border-radius:12px 12px 0 0;" loading="lazy" onerror="this.style.display=\'none\'">';
     } else {
       imgHtml = '<div class="prize-img-bg ' + bg + '"></div><span style="position:relative;z-index:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.5));animation:prizeFloat 3s ease-in-out infinite;animation-delay:' + (i * 0.5) + 's;">🏆</span>';
     }
 
-    return '<div class="prize-card" onclick="sharePrizeOnX(\'Inscription #' + num + '\')">' +
+    const title = collectionName !== 'Bitcoin Ordinal' ? collectionName : 'Inscription #' + num;
+
+    return '<div class="prize-card" onclick="sharePrizeOnX(\'' + title.replace(/'/g, '') + '\')">' +
       '<div class="prize-img">' + imgHtml + '<span class="prize-badge win-this">WIN THIS</span></div>' +
-      '<div class="prize-info"><h4>Inscription #' + num + '</h4><p style="font-size:0.6rem;color:var(--muted);font-family:monospace;">' + shortId + '</p><div class="prize-share-hint">Tap to share on X</div></div>' +
+      '<div class="prize-info"><h4>' + title + '</h4><p style="font-size:0.6rem;color:var(--muted);font-family:monospace;">#' + num + ' &middot; ' + shortId + '</p><div class="prize-share-hint">Tap to share on X</div></div>' +
       '</div>';
   }).join('');
 }
+
+// Background polling — check for new prizes every 60s
+setInterval(scanPrizeWallet, 60000);
 
 // ===== INIT =====
 captureReferral();
