@@ -5307,6 +5307,50 @@ let prizeOrdinals = [];
 let prizeLastHash = '';
 let prizeScanRetries = 0;
 
+// Known prize inscriptions with verified metadata (ultimate fallback)
+const KNOWN_PRIZES = [
+  {
+    id: '0a363cdd84ca2d49a9b55d20f82af5d82c781444f8d64caa09b95136e3306412i0',
+    inscriptionId: '0a363cdd84ca2d49a9b55d20f82af5d82c781444f8d64caa09b95136e3306412i0',
+    inscriptionNumber: 118867108, number: 118867108,
+    contentType: 'image/webp', contentLength: '63 KB',
+    contentURI: 'https://ordinals.com/content/0a363cdd84ca2d49a9b55d20f82af5d82c781444f8d64caa09b95136e3306412i0',
+    contentPreviewURI: 'https://ordinals.com/content/0a363cdd84ca2d49a9b55d20f82af5d82c781444f8d64caa09b95136e3306412i0',
+    collectionName: 'SpunkArt Collection', collection: 'spunkart',
+    timestamp: '2026-02-09', satRarity: 'common',
+  },
+  {
+    id: 'd7244525a36a312105aa2c9db78778b98ec659b30b4e6063d7b9a9dfd47dc2b7i0',
+    inscriptionId: 'd7244525a36a312105aa2c9db78778b98ec659b30b4e6063d7b9a9dfd47dc2b7i0',
+    inscriptionNumber: 119284034, number: 119284034,
+    contentType: 'image/svg+xml', contentLength: '4 KB',
+    contentURI: 'https://ordinals.com/content/d7244525a36a312105aa2c9db78778b98ec659b30b4e6063d7b9a9dfd47dc2b7i0',
+    contentPreviewURI: 'https://ordinals.com/content/d7244525a36a312105aa2c9db78778b98ec659b30b4e6063d7b9a9dfd47dc2b7i0',
+    collectionName: 'SpunkArt Collection', collection: 'spunkart',
+    timestamp: '2026-02-13', satRarity: 'common',
+  },
+  {
+    id: '65e06f5b9ccbd0202268e5f3d4d778e77c0a10af5ab1dbe55f7210f9121884adi0',
+    inscriptionId: '65e06f5b9ccbd0202268e5f3d4d778e77c0a10af5ab1dbe55f7210f9121884adi0',
+    inscriptionNumber: 118866403, number: 118866403,
+    contentType: 'image/webp', contentLength: '61 KB',
+    contentURI: 'https://ordinals.com/content/65e06f5b9ccbd0202268e5f3d4d778e77c0a10af5ab1dbe55f7210f9121884adi0',
+    contentPreviewURI: 'https://ordinals.com/content/65e06f5b9ccbd0202268e5f3d4d778e77c0a10af5ab1dbe55f7210f9121884adi0',
+    collectionName: 'SpunkArt Collection', collection: 'spunkart',
+    timestamp: '2026-02-09', satRarity: 'common',
+  },
+  {
+    id: 'c6e9ad7454cf9bb8b1d75ec9df13229dee1e18f16a5fd57b6549de87e8cce4abi5',
+    inscriptionId: 'c6e9ad7454cf9bb8b1d75ec9df13229dee1e18f16a5fd57b6549de87e8cce4abi5',
+    inscriptionNumber: 118723669, number: 118723669,
+    contentType: 'image/svg+xml', contentLength: '1 KB',
+    contentURI: 'https://ordinals.com/content/c6e9ad7454cf9bb8b1d75ec9df13229dee1e18f16a5fd57b6549de87e8cce4abi5',
+    contentPreviewURI: 'https://ordinals.com/content/c6e9ad7454cf9bb8b1d75ec9df13229dee1e18f16a5fd57b6549de87e8cce4abi5',
+    collectionName: 'SpunkArt Collection', collection: 'spunkart',
+    timestamp: '2026-02-08', satRarity: 'common',
+  }
+];
+
 // Load cached prizes from localStorage so they show instantly
 try {
   const cached = JSON.parse(localStorage.getItem('spunkbet_prizes') || '[]');
@@ -5315,6 +5359,16 @@ try {
     prizeLastHash = JSON.stringify(cached.map(t => t.id || t.inscriptionId || ''));
   }
 } catch(e) {}
+
+// Enrich list items with known metadata
+function enrichWithKnown(list) {
+  return list.map(item => {
+    const id = item.id || item.inscriptionId || '';
+    const known = KNOWN_PRIZES.find(k => k.id === id);
+    if (known) return { ...known, ...item, collectionName: known.collectionName, collection: known.collection, inscriptionNumber: known.inscriptionNumber, number: known.number, contentType: known.contentType };
+    return item;
+  });
+}
 
 async function scanPrizeWallet() {
   let list = [];
@@ -5354,37 +5408,12 @@ async function scanPrizeWallet() {
     } catch(e) {}
   }
 
-  // Fallback to Ordinals.com API
-  if (list.length === 0) {
-    try {
-      const res = await fetch('https://ordinals.com/api/address/' + PRIZE_WALLET + '/inscriptions');
-      if (res.ok) {
-        const data = await res.json();
-        const items = Array.isArray(data) ? data : (data.inscriptions || []);
-        if (items.length > 0) {
-          list = items.map(r => ({
-            id: r.id || r.inscription_id || r,
-            inscriptionId: r.id || r.inscription_id || r,
-            inscriptionNumber: r.number || r.inscription_number || '?',
-            number: r.number || r.inscription_number || '?',
-            contentType: r.content_type || 'image/png',
-            contentURI: 'https://ordinals.com/content/' + (r.id || r.inscription_id || r),
-            contentPreviewURI: 'https://ordinals.com/content/' + (r.id || r.inscription_id || r),
-            collectionName: r.collection || 'Bitcoin Ordinal',
-          }));
-          source = 'Ordinals.com';
-        }
-      }
-    } catch(e) {}
-  }
-
-  // Fallback: UTXO-based scan via mempool.space (most reliable)
+  // Fallback: UTXO-based scan via mempool.space
   if (list.length === 0) {
     try {
       const utxoRes = await fetch('https://mempool.space/api/address/' + PRIZE_WALLET + '/utxo');
       if (utxoRes.ok) {
         const utxos = await utxoRes.json();
-        // Small UTXOs (< 1000 sats) are likely ordinals
         const ordinalUtxos = utxos.filter(u => u.value <= 1000 && u.status && u.status.confirmed);
         for (const utxo of ordinalUtxos) {
           const outpoint = utxo.txid + ':' + utxo.vout;
@@ -5395,10 +5424,8 @@ async function scanPrizeWallet() {
               const inscs = inscData.inscriptions || [];
               for (const inscId of inscs) {
                 list.push({
-                  id: inscId,
-                  inscriptionId: inscId,
-                  inscriptionNumber: '?',
-                  number: '?',
+                  id: inscId, inscriptionId: inscId,
+                  inscriptionNumber: '?', number: '?',
                   contentType: 'image/png',
                   contentURI: 'https://ordinals.com/content/' + inscId,
                   contentPreviewURI: 'https://ordinals.com/content/' + inscId,
@@ -5412,6 +5439,15 @@ async function scanPrizeWallet() {
       }
     } catch(e) {}
   }
+
+  // Ultimate fallback: use known verified inscriptions
+  if (list.length === 0) {
+    list = KNOWN_PRIZES.slice();
+    source = 'known';
+  }
+
+  // Enrich all items with known metadata (collection names, numbers, etc.)
+  list = enrichWithKnown(list);
 
   // Update if we got data
   const hash = JSON.stringify(list.map(t => t.id || t.inscriptionId || ''));
@@ -5453,6 +5489,7 @@ function renderPrizes(containerId) {
     return;
   }
 
+  const isWalletPage = containerId === 'wallet-prize-grid';
   const bgs = ['bg1','bg2','bg3','bg4'];
   container.innerHTML = prizeOrdinals.map((ord, i) => {
     const id = ord.id || ord.inscriptionId || '';
@@ -5461,24 +5498,51 @@ function renderPrizes(containerId) {
     const collection = ord.collection || ord.collectionSymbol || '';
     const collectionName = ord.collectionName || collection || 'Bitcoin Ordinal';
     const contentType = ord.contentType || ord.content_type || '';
+    const contentLength = ord.contentLength || '';
+    const timestamp = ord.timestamp || '';
     const type = contentType.split('/')[0];
     const isImage = type === 'image';
-    // Magic Eden image or ordinals.com fallback
+    const isSVG = contentType === 'image/svg+xml';
     const imgUrl = ord.contentURI || ord.contentPreviewURI || ('https://ordinals.com/content/' + id);
     const bg = bgs[i % bgs.length];
+    const ordLink = 'https://ordinals.com/inscription/' + id;
 
     let imgHtml;
-    if (isImage || ord.contentPreviewURI) {
-      imgHtml = '<img src="' + imgUrl + '" alt="' + collectionName + ' #' + num + '" style="width:100%;height:100%;object-fit:cover;position:relative;z-index:1;border-radius:12px 12px 0 0;" loading="lazy" onerror="this.style.display=\'none\'">';
+    if (isSVG) {
+      // For SVGs, use an iframe to render properly
+      imgHtml = '<iframe src="' + imgUrl + '" style="width:100%;height:100%;border:none;position:relative;z-index:1;border-radius:12px 12px 0 0;pointer-events:none;" loading="lazy" sandbox="allow-scripts"></iframe>';
+    } else if (isImage || ord.contentPreviewURI) {
+      imgHtml = '<img src="' + imgUrl + '" alt="' + collectionName + ' #' + num + '" style="width:100%;height:100%;object-fit:cover;position:relative;z-index:1;border-radius:12px 12px 0 0;" loading="lazy" onerror="this.parentElement.innerHTML=\'<div class=prize-img-bg ' + bg + '></div><span style=position:relative;z-index:1;font-size:2rem;>🏆</span>\'">';
     } else {
       imgHtml = '<div class="prize-img-bg ' + bg + '"></div><span style="position:relative;z-index:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.5));animation:prizeFloat 3s ease-in-out infinite;animation-delay:' + (i * 0.5) + 's;">🏆</span>';
     }
 
     const title = collectionName !== 'Bitcoin Ordinal' ? collectionName : 'Inscription #' + num;
 
+    // Collection badge color
+    const collBadge = collection ? '<span style="display:inline-block;background:linear-gradient(90deg,var(--accent),var(--purple));color:#fff;font-size:0.55rem;font-weight:700;padding:0.15rem 0.4rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.2rem;">' + collectionName + '</span>' : '';
+
+    // Extended details for wallet page
+    let detailsHtml = '';
+    if (isWalletPage) {
+      detailsHtml =
+        '<div style="font-size:0.65rem;color:var(--muted);margin-top:0.3rem;line-height:1.5;">' +
+          '<div>Inscription <span style="color:var(--text);font-weight:600;">#' + num + '</span></div>' +
+          '<div>Type: <span style="color:var(--text);">' + contentType + '</span>' + (contentLength ? ' &middot; ' + contentLength : '') + '</div>' +
+          (timestamp ? '<div>Inscribed: <span style="color:var(--text);">' + timestamp + '</span></div>' : '') +
+          '<div style="margin-top:0.25rem;"><a href="' + ordLink + '" target="_blank" style="color:var(--accent);text-decoration:none;font-size:0.6rem;">View on ordinals.com ↗</a></div>' +
+        '</div>';
+    }
+
     return '<div class="prize-card" onclick="sharePrizeOnX(\'' + title.replace(/'/g, '') + '\')">' +
       '<div class="prize-img">' + imgHtml + '<span class="prize-badge win-this">WIN THIS</span></div>' +
-      '<div class="prize-info"><h4>' + title + '</h4><p style="font-size:0.6rem;color:var(--muted);font-family:monospace;">#' + num + ' &middot; ' + shortId + '</p><div class="prize-share-hint">Tap to share on X</div></div>' +
+      '<div class="prize-info">' +
+        collBadge +
+        '<h4>' + title + '</h4>' +
+        '<p style="font-size:0.6rem;color:var(--muted);font-family:monospace;">#' + num + ' &middot; ' + shortId + '</p>' +
+        detailsHtml +
+        '<div class="prize-share-hint">Tap to share on X</div>' +
+      '</div>' +
       '</div>';
   }).join('');
 }
