@@ -632,18 +632,36 @@
     .tower-diff-btn:hover, .tower-diff-btn.active { border-color: var(--accent); color: var(--accent); }
 
     /* HISTORY */
-    .history-list { display: flex; flex-direction: column; gap: 0; }
+    .history-header { display:grid; grid-template-columns:1.2fr 1fr 0.8fr 0.7fr 1fr 0.8fr; padding:0.5rem 0.75rem; font-size:0.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid var(--border); font-weight:600; }
+    .history-list { display:flex; flex-direction:column; gap:0; max-height:70vh; overflow-y:auto; }
+    .history-list::-webkit-scrollbar { width:4px; }
+    .history-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
     .history-item {
-      display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center;
-      font-size: 0.8rem; padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border);
-      background: var(--surface); transition: background 0.15s;
+      display:grid; grid-template-columns:1.2fr 1fr 0.8fr 0.7fr 1fr 0.8fr; align-items:center;
+      font-size:0.78rem; padding:0.5rem 0.75rem; border-bottom:1px solid rgba(255,255,255,0.03);
+      background:var(--surface); transition:background 0.15s;
     }
-    .history-item:nth-child(even) { background: var(--surface2); }
-    .history-item:hover { background: rgba(255,255,255,0.03); }
-    .history-game { color: var(--muted); font-weight: 500; }
-    .history-result { font-weight: 600; text-align: right; }
-    .history-result.win { color: var(--green); }
-    .history-result.lose { color: var(--red); }
+    .history-item:nth-child(even) { background:var(--surface2); }
+    .history-item:hover { background:rgba(255,255,255,0.04); }
+    .history-item.new-bet { animation:fadeInBet 0.4s ease; }
+    @keyframes fadeInBet { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+    .history-player { font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .history-player.you { color:var(--accent); font-weight:700; }
+    .history-game { color:var(--text); font-weight:500; }
+    .history-bet { color:var(--muted); }
+    .history-multi { font-weight:600; }
+    .history-multi.win { color:var(--green); }
+    .history-multi.lose { color:var(--red); }
+    .history-payout { font-weight:600; text-align:right; }
+    .history-payout.win { color:var(--green); }
+    .history-payout.lose { color:var(--red); }
+    .history-time { color:var(--muted); font-size:0.7rem; text-align:right; }
+    .history-live-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--green); margin-right:0.4rem; animation:pulse 1.5s infinite; }
+    .history-count { font-size:0.75rem; color:var(--muted); }
+    @media(max-width:600px) {
+      .history-header,.history-item { grid-template-columns:1fr 0.8fr 0.7fr 0.8fr; font-size:0.72rem; }
+      .history-player,.history-time { display:none; }
+    }
 
     /* PROVABLY FAIR PAGE */
     .fair-container { max-width: 620px; margin: 0 auto; padding: 2rem; }
@@ -2184,15 +2202,31 @@
 <!-- HISTORY PAGE -->
 <div id="history-page" class="page">
   <div class="game-container">
-    <div style="display:flex;gap:0;margin-bottom:1rem;">
-      <button class="mode-tab active" id="hist-tab-all" onclick="switchHistoryTab('all',this)">All Bets</button>
-      <button class="mode-tab" id="hist-tab-mine" onclick="switchHistoryTab('mine',this)">My Bets</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+      <div style="display:flex;gap:0;">
+        <button class="mode-tab active" id="hist-tab-all" onclick="switchHistoryTab('all',this)">All Bets</button>
+        <button class="mode-tab" id="hist-tab-mine" onclick="switchHistoryTab('mine',this)">My Bets</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <span class="history-live-dot"></span>
+        <span class="history-count" id="history-count">0 bets</span>
+      </div>
     </div>
-    <div id="history-all-list" class="history-list" style="font-size:0.85rem;">
-      <div style="color:var(--muted);text-align:center;padding:2rem;">Loading live bets...</div>
+    <div id="history-all-wrap">
+      <div class="history-header">
+        <span>Player</span><span>Game</span><span>Bet</span><span>Multi</span><span>Payout</span><span>Time</span>
+      </div>
+      <div id="history-all-list" class="history-list">
+        <div style="color:var(--muted);text-align:center;padding:2rem;">Loading live bets...</div>
+      </div>
     </div>
-    <div id="history-full-list" class="history-list" style="font-size:0.85rem;display:none;">
-      <div style="color:var(--muted);text-align:center;padding:2rem;">No bets yet. Go play!</div>
+    <div id="history-mine-wrap" style="display:none;">
+      <div class="history-header">
+        <span>Player</span><span>Game</span><span>Bet</span><span>Multi</span><span>Payout</span><span>Time</span>
+      </div>
+      <div id="history-full-list" class="history-list">
+        <div style="color:var(--muted);text-align:center;padding:2rem;">No bets yet. Go play!</div>
+      </div>
     </div>
   </div>
 </div>
@@ -2997,7 +3031,7 @@ function setBet(id, action) {
 
 function addHistory(game, bet, result, amount, seedData) {
   history.unshift({ game, bet, result, amount, time: new Date(), seed: seedData || null });
-  if (history.length > 50) history.pop();
+  if (history.length > 100) history.pop();
 
   const multiNum = bet > 0 ? (amount + bet) / bet : 0;
   if (result === 'win') {
@@ -3028,28 +3062,45 @@ function addHistory(game, bet, result, amount, seedData) {
   saveState();
 }
 
+function formatTimeAgo(t) {
+  const s = Math.floor((Date.now() - new Date(t)) / 1000);
+  if (s < 5) return 'now';
+  if (s < 60) return s + 's';
+  if (s < 3600) return Math.floor(s/60) + 'm';
+  if (s < 86400) return Math.floor(s/3600) + 'h';
+  return Math.floor(s/86400) + 'd';
+}
+
+function renderBetRow(h, playerName, isNew) {
+  const isWin = h.result === 'win';
+  const multi = h.bet > 0 ? ((Math.abs(h.amount) + (isWin ? h.bet : 0)) / h.bet) : 0;
+  const multiStr = isWin ? multi.toFixed(2) + 'x' : '0x';
+  const payout = isWin ? '+' + Math.abs(h.amount).toLocaleString() : '-' + Math.abs(h.amount).toLocaleString();
+  const isYou = playerName === 'You';
+  return '<div class="history-item' + (isNew ? ' new-bet' : '') + '">' +
+    '<span class="history-player' + (isYou ? ' you' : '') + '">' + playerName + '</span>' +
+    '<span class="history-game">' + h.game + '</span>' +
+    '<span class="history-bet">' + h.bet.toLocaleString() + '</span>' +
+    '<span class="history-multi ' + h.result + '">' + multiStr + '</span>' +
+    '<span class="history-payout ' + h.result + '">' + payout + '</span>' +
+    '<span class="history-time">' + formatTimeAgo(h.time) + '</span>' +
+  '</div>';
+}
+
 function renderHistory() {
   const el = document.getElementById('history-full-list');
   if (history.length === 0) {
-    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:2rem;">No bets yet.</div>';
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:2rem;">No bets yet. Go play!</div>';
     return;
   }
-  el.innerHTML = history.map(h => {
-    const isWin = h.result === 'win';
-    const seedBtn = h.seed ? ' <span style="color:var(--accent);cursor:pointer;font-size:0.7rem;" data-seed="' + encodeURIComponent(JSON.stringify(h.seed)) + '" onclick="navigator.clipboard.writeText(decodeURIComponent(this.dataset.seed))">[copy seed]</span>' : '';
-    return '<div class="history-item">' +
-      '<span class="history-game">' + h.game + seedBtn + '</span>' +
-      '<span>' + h.bet + ' SPUNK•BET</span>' +
-      '<span class="history-result ' + h.result + '">' + (isWin ? '+' : '-') + Math.abs(h.amount).toLocaleString() + ' SPUNK•BET</span>' +
-    '</div>';
-  }).join('');
+  el.innerHTML = history.map(h => renderBetRow(h, 'You', false)).join('');
 }
 
 function switchHistoryTab(tab, tabEl) {
   document.querySelectorAll('#history-page .mode-tab').forEach(t => t.classList.remove('active'));
   tabEl.classList.add('active');
-  document.getElementById('history-all-list').style.display = tab === 'all' ? '' : 'none';
-  document.getElementById('history-full-list').style.display = tab === 'mine' ? '' : 'none';
+  document.getElementById('history-all-wrap').style.display = tab === 'all' ? '' : 'none';
+  document.getElementById('history-mine-wrap').style.display = tab === 'mine' ? '' : 'none';
 }
 
 // Simulated community bet feed
@@ -3072,39 +3123,34 @@ function generateCommunityBet() {
 function renderCommunityHistory() {
   const el = document.getElementById('history-all-list');
   if (!el) return;
-  // Mix real player bets with community bets
   const allBets = [
     ...history.map(h => ({ ...h, player: 'You' })),
     ...communityBets
-  ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 50);
+  ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 100);
+
+  const countEl = document.getElementById('history-count');
+  if (countEl) countEl.textContent = allBets.length + ' bets';
 
   if (allBets.length === 0) {
-    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:2rem;">No bets yet.</div>';
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:2rem;">Waiting for bets...</div>';
     return;
   }
-  el.innerHTML = allBets.map(h => {
-    const isWin = h.result === 'win';
-    const playerStyle = h.player === 'You' ? 'color:var(--accent);font-weight:700;' : 'color:var(--muted);';
-    return '<div class="history-item">' +
-      '<span style="' + playerStyle + 'font-size:0.75rem;min-width:80px;">' + h.player + '</span>' +
-      '<span class="history-game">' + h.game + '</span>' +
-      '<span>' + h.bet.toLocaleString() + '</span>' +
-      '<span class="history-result ' + h.result + '">' + (isWin ? '+' : '-') + Math.abs(h.amount).toLocaleString() + '</span>' +
-    '</div>';
-  }).join('');
+  el.innerHTML = allBets.map((h, i) => renderBetRow(h, h.player, i === 0)).join('');
 }
 
 // Generate initial community bets and keep adding
-for (let i = 0; i < 20; i++) {
+for (let i = 0; i < 50; i++) {
   const b = generateCommunityBet();
-  b.time = new Date(Date.now() - Math.random() * 300000);
+  b.time = new Date(Date.now() - Math.random() * 600000);
   communityBets.push(b);
 }
+communityBets.sort((a, b) => new Date(b.time) - new Date(a.time));
 setInterval(() => {
-  communityBets.push(generateCommunityBet());
-  if (communityBets.length > 40) communityBets.shift();
+  if (document.hidden) return;
+  communityBets.unshift(generateCommunityBet());
+  if (communityBets.length > 100) communityBets.pop();
   renderCommunityHistory();
-}, 4000 + Math.random() * 6000);
+}, 3000 + Math.random() * 5000);
 
 let lastWin = { game: '', amount: 0, multi: '' };
 
