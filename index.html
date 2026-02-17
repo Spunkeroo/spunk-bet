@@ -762,9 +762,11 @@
     .wallet-btn:hover { opacity: 0.9; }
     .wallet-btn.connected {
       background: var(--surface); border: 1px solid var(--border); color: var(--text);
-      font-size: 0.8rem;
+      font-size: 0.8rem; position:relative;
     }
     .wallet-btn.connected:hover { border-color: var(--accent); }
+    .wallet-btn .wallet-disconnect { display:none; font-size:0.6rem; color:var(--red,#ef4444); margin-left:0.3rem; opacity:0.7; }
+    .wallet-btn.connected:hover .wallet-disconnect { display:inline; }
     .wallet-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
     .wallet-modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200;
@@ -1077,14 +1079,21 @@
     @keyframes streakGlow { 0%,100% { box-shadow:0 0 4px rgba(255,95,31,0.2); } 50% { box-shadow:0 0 12px rgba(255,95,31,0.4); } }
 
     /* DAILY BONUS WHEEL */
-    .daily-spin-section { max-width:900px; margin:0 auto; padding:0 2rem 1.5rem; }
-    .daily-spin-card { background:linear-gradient(135deg,rgba(168,85,247,0.08),rgba(255,95,31,0.08)); border:1px solid var(--purple); border-radius:14px; padding:1.25rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
-    .daily-spin-left h3 { font-size:1rem; font-weight:700; margin-bottom:0.2rem; }
+    .daily-spin-section { max-width:900px; margin:0 auto; padding:0.5rem 2rem 1.5rem; }
+    .daily-spin-card { background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(255,95,31,0.12)); border:2px solid var(--purple); border-radius:16px; padding:1.5rem 2rem; display:flex; align-items:center; justify-content:space-between; gap:1.5rem; flex-wrap:wrap; position:relative; overflow:hidden; animation:spinCardGlow 3s ease-in-out infinite; }
+    .daily-spin-card::before { content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%; background:conic-gradient(from 0deg,transparent,rgba(168,85,247,0.06),transparent,rgba(255,95,31,0.06),transparent); animation:spinCardRotate 8s linear infinite; }
+    @keyframes spinCardRotate { to { transform:rotate(360deg); } }
+    @keyframes spinCardGlow { 0%,100% { box-shadow:0 0 15px rgba(168,85,247,0.15); } 50% { box-shadow:0 0 30px rgba(168,85,247,0.3),0 0 60px rgba(255,95,31,0.1); } }
+    .daily-spin-left { position:relative; z-index:1; }
+    .daily-spin-left .spin-emoji { font-size:2rem; margin-bottom:0.3rem; }
+    .daily-spin-left h3 { font-size:1.2rem; font-weight:800; margin-bottom:0.3rem; }
     .daily-spin-left h3 span { color:var(--purple); }
-    .daily-spin-left p { font-size:0.8rem; color:var(--muted); line-height:1.5; }
-    .daily-spin-btn { background:var(--purple); color:#fff; border:none; padding:0.6rem 1.5rem; border-radius:10px; font-size:0.9rem; font-weight:700; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
-    .daily-spin-btn:hover { opacity:0.9; }
-    .daily-spin-btn:disabled { opacity:0.4; cursor:not-allowed; }
+    .daily-spin-left p { font-size:0.85rem; color:var(--muted); line-height:1.5; }
+    .daily-spin-left .spin-prizes { display:flex; gap:0.5rem; margin-top:0.5rem; flex-wrap:wrap; }
+    .daily-spin-left .spin-prize-tag { font-size:0.7rem; padding:0.2rem 0.5rem; border-radius:6px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.3); color:#c084fc; font-weight:600; }
+    .daily-spin-btn { position:relative; z-index:1; background:linear-gradient(135deg,var(--purple),#9333ea); color:#fff; border:none; padding:0.8rem 2rem; border-radius:12px; font-size:1rem; font-weight:800; cursor:pointer; transition:all 0.2s; white-space:nowrap; box-shadow:0 4px 20px rgba(168,85,247,0.4); text-transform:uppercase; letter-spacing:0.04em; }
+    .daily-spin-btn:hover { transform:translateY(-2px); box-shadow:0 6px 28px rgba(168,85,247,0.5); }
+    .daily-spin-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
     .daily-spin-modal { position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:400; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
     .daily-spin-modal.show { display:flex; }
     .daily-spin-modal-inner { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:2rem; width:400px; max-width:90vw; text-align:center; }
@@ -1412,12 +1421,32 @@
 
 <!-- Wallet Details Modal -->
 <div class="wallet-modal-overlay" id="wallet-details-modal">
-  <div class="wallet-modal">
-    <h3>Wallet Connected</h3>
+  <div class="wallet-modal" style="max-width:440px;">
+    <h3 style="margin-bottom:0.75rem;">Wallet Connected</h3>
     <div class="wallet-info" id="wallet-info-details"></div>
     <div id="wallet-tier-display" style="margin-bottom:1rem;"></div>
-    <button class="btn" style="width:100%; margin-bottom:0.5rem;" onclick="disconnectWallet()">Disconnect</button>
-    <button class="wallet-modal-close" onclick="closeWalletDetails()">Close</button>
+
+    <!-- GET SPUNK SECTION -->
+    <div style="background:linear-gradient(135deg,rgba(34,197,94,0.08),rgba(255,95,31,0.08));border:1px solid var(--green);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem;">
+      <h4 style="font-size:0.95rem;font-weight:700;margin-bottom:0.6rem;color:var(--green);">Get SPUNK•BET Tokens</h4>
+      <div style="display:flex;flex-direction:column;gap:0.5rem;">
+        <button class="btn" style="width:100%;background:var(--green);color:#fff;font-weight:700;padding:0.6rem;font-size:0.85rem;" onclick="claimFaucet();closeWalletDetails();">🎁 Claim 10,000 Free Daily Tokens</button>
+        <button class="btn" style="width:100%;background:linear-gradient(135deg,var(--purple),#9333ea);color:#fff;font-weight:700;padding:0.6rem;font-size:0.85rem;" onclick="openDailySpin();closeWalletDetails();">🎡 Free Daily Wheel Spin</button>
+        <div style="border-top:1px solid var(--border);padding-top:0.5rem;margin-top:0.25rem;">
+          <p style="font-size:0.75rem;color:var(--text);font-weight:600;margin-bottom:0.3rem;">Buy SPUNK•BET Rune on-chain:</p>
+          <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+            <a href="https://magiceden.us/runes/SPUNK%E2%80%A2BET" target="_blank" rel="noopener noreferrer" style="flex:1;text-align:center;padding:0.45rem;border-radius:8px;background:#e42575;color:#fff;text-decoration:none;font-size:0.75rem;font-weight:700;">Magic Eden</a>
+            <a href="https://unisat.io/runes/market?tick=SPUNK%E2%80%A2BET" target="_blank" rel="noopener noreferrer" style="flex:1;text-align:center;padding:0.45rem;border-radius:8px;background:#000;border:1px solid #333;color:#fff;text-decoration:none;font-size:0.75rem;font-weight:700;">Unisat</a>
+          </div>
+          <p style="font-size:0.65rem;color:var(--muted);margin-top:0.4rem;line-height:1.4;">Buy the SPUNK•BET rune token from any marketplace and send to your connected wallet to top up your balance.</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:0.5rem;">
+      <button class="btn btn-outline" style="flex:1;" onclick="disconnectWallet()">Disconnect</button>
+      <button class="wallet-modal-close" style="flex:1;" onclick="closeWalletDetails()">Close</button>
+    </div>
   </div>
 </div>
 
@@ -1536,6 +1565,20 @@
   <!-- Faucet Button (hidden, triggered by hero flash) -->
   <button class="faucet-btn" id="faucet-btn" onclick="claimFaucet()" style="display:none;">Claim</button>
 
+  <!-- GET SPUNK TOKENS SECTION -->
+  <div style="max-width:900px;margin:0.5rem auto 0;padding:0 2rem;">
+    <div id="get-spunk-card" style="background:linear-gradient(135deg,rgba(34,197,94,0.1),rgba(168,85,247,0.1));border:2px solid var(--green);border-radius:16px;padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+      <div>
+        <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:0.2rem;">🪙 Get SPUNK•BET Tokens</h3>
+        <p id="faucet-desc" style="font-size:0.8rem;color:var(--muted);line-height:1.5;">Get 2,000 free tokens to play, or connect your wallet for 10,000! Claim every 24 hours.</p>
+      </div>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+        <button class="faucet-btn" onclick="claimFaucet()" id="faucet-btn-main" style="display:inline-flex;">Claim Free</button>
+        <a href="https://magiceden.us/runes/SPUNK%E2%80%A2BET" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;background:linear-gradient(135deg,#e42575,#a855f7);color:#fff;border:none;padding:0.6rem 1.2rem;border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;">Buy SPUNK</a>
+      </div>
+    </div>
+  </div>
+
   <!-- First 100 Referrers Banner -->
   <div class="first100-banner" id="first100-banner">
     <div class="first100-card">
@@ -1623,10 +1666,17 @@
   <div class="daily-spin-section" id="daily-spin-section">
     <div class="daily-spin-card">
       <div class="daily-spin-left">
+        <div class="spin-emoji">🎰</div>
         <h3>Free Daily <span>Wheel Spin</span></h3>
-        <p>Spin the wheel every day for free SPUNK•BET runes! Share on X for 2x the prize. Come back daily!</p>
+        <p>Spin the wheel every day for free SPUNK•BET runes! Share on X for 2x the prize.</p>
+        <div class="spin-prizes">
+          <span class="spin-prize-tag">500 SPUNK</span>
+          <span class="spin-prize-tag">1,000 SPUNK</span>
+          <span class="spin-prize-tag">5,000 SPUNK</span>
+          <span class="spin-prize-tag">25,000 SPUNK</span>
+        </div>
       </div>
-      <button class="daily-spin-btn" id="daily-spin-btn" onclick="openDailySpin()">Spin Now</button>
+      <button class="daily-spin-btn" id="daily-spin-btn" onclick="openDailySpin()">🎡 Spin Free</button>
     </div>
   </div>
 
@@ -2685,21 +2735,23 @@ function canClaimFaucet() {
 }
 
 function updateFaucetButton() {
-  const btn = document.getElementById('faucet-btn');
-  if (!btn) return;
-  if (canClaimFaucet()) {
-    btn.disabled = false;
-    const amount = getFaucetAmount();
-    btn.textContent = 'Claim ' + amount.toLocaleString() + ' SPUNK\u2022BET';
-  } else {
-    btn.disabled = true;
-    const lastClaim = parseInt(localStorage.getItem('spunkbet_faucet_time'));
-    const nextClaim = lastClaim + 24 * 60 * 60 * 1000;
-    const remaining = nextClaim - Date.now();
-    const hours = Math.floor(remaining / (60 * 60 * 1000));
-    const mins = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
-    btn.textContent = 'Claim again in ' + hours + 'h ' + mins + 'm';
-  }
+  const btns = [document.getElementById('faucet-btn'), document.getElementById('faucet-btn-main')];
+  btns.forEach(btn => {
+    if (!btn) return;
+    if (canClaimFaucet()) {
+      btn.disabled = false;
+      const amount = getFaucetAmount();
+      btn.textContent = 'Claim ' + amount.toLocaleString() + ' Free';
+    } else {
+      btn.disabled = true;
+      const lastClaim = parseInt(localStorage.getItem('spunkbet_faucet_time'));
+      const nextClaim = lastClaim + 24 * 60 * 60 * 1000;
+      const remaining = nextClaim - Date.now();
+      const hours = Math.floor(remaining / (60 * 60 * 1000));
+      const mins = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+      btn.textContent = 'Claim in ' + hours + 'h ' + mins + 'm';
+    }
+  });
 }
 
 function getFaucetAmount() {
@@ -4071,6 +4123,7 @@ async function spinWheel() {
   balance -= bet; updateBalance();
   wheelSpinning = true;
   document.getElementById('wheel-spin-btn').disabled = true;
+  document.getElementById('wheel-result-text').textContent = '';
 
   const seedBefore = { serverSeedHash: pfState.serverSeedHash, clientSeed: pfState.clientSeed, nonce: pfState.nonce };
   const rand = await fairRandom();
@@ -4081,36 +4134,63 @@ async function spinWheel() {
   const winIndex = Math.floor(rand * segs.length);
   const segAngle = (2 * Math.PI) / segs.length;
   const targetAngle = -(winIndex * segAngle + segAngle / 2);
-  const spins = Math.round(3 + Math.random() * 2);
+  const spins = 5 + Math.floor(Math.random() * 3);
   const totalRotation = spins * 2 * Math.PI + targetAngle;
-  const duration = 2800;
+  const duration = 4500;
   const startTime = Date.now();
+  let lastTickAngle = 0;
+  const center = document.getElementById('wheel-center');
+  center.textContent = '';
+  center.style.transform = 'scale(1)';
 
   function animateSpin() {
     const elapsed = Date.now() - startTime;
     const progress = Math.min(1, elapsed / duration);
-    const ease = 1 - Math.pow(1 - progress, 3);
+    // Smoother easing — fast start, dramatic slowdown at end
+    const ease = 1 - Math.pow(1 - progress, 4);
     const currentRotation = ease * totalRotation;
     drawWheel(currentRotation);
+
+    // Tick sound on each segment crossing
+    const tickAngle = Math.abs(currentRotation) % segAngle;
+    if (tickAngle < lastTickAngle && progress < 0.95) SFX.play('spin');
+    lastTickAngle = tickAngle;
+
+    // Suspense: slow pulse on center as it decelerates
+    if (progress > 0.7) {
+      const pulse = 1 + Math.sin(elapsed * 0.01) * 0.05;
+      center.style.transform = 'scale(' + pulse + ')';
+    }
+
     if (progress < 1) {
-      if (Math.random() < 0.15) SFX.play('spin');
       requestAnimationFrame(animateSpin);
     } else {
       const val = segs[winIndex];
-      document.getElementById('wheel-center').textContent = val > 0 ? val + 'x' : '0';
+      center.style.transform = 'scale(1)';
       showGameSeed('wheel-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
       if (val > 0) {
         SFX.play('win');
         const payout = Math.floor(bet * val);
         balance += payout;
+        // Exciting win reveal
+        center.textContent = val + 'x';
+        center.style.transform = 'scale(1.3)';
+        setTimeout(() => { center.style.transform = 'scale(1)'; }, 300);
         document.getElementById('wheel-result-text').style.color = 'var(--green)';
         document.getElementById('wheel-result-text').textContent = val + 'x! +' + (payout - bet).toLocaleString();
         showResult('wheel-result', true, 'Landed on ' + val + 'x! Won +' + (payout - bet).toLocaleString() + ' SPUNK\u2022BET');
         addHistory('Wheel', bet, 'win', payout - bet, seedAfter);
+        // Flash the canvas border on big wins
+        if (val >= 5) {
+          const canvas = document.getElementById('wheel-canvas');
+          canvas.style.filter = 'brightness(1.5) drop-shadow(0 0 20px ' + (WHEEL_COLORS[val] || '#fff') + ')';
+          setTimeout(() => { canvas.style.filter = ''; }, 800);
+        }
       } else {
         SFX.play('lose');
+        center.textContent = '0';
         document.getElementById('wheel-result-text').style.color = 'var(--red)';
-        document.getElementById('wheel-result-text').textContent = '0x - Bust!';
+        document.getElementById('wheel-result-text').textContent = '0x — Bust!';
         showResult('wheel-result', false, 'Landed on 0. Lost ' + bet.toLocaleString() + ' SPUNK\u2022BET');
         addHistory('Wheel', bet, 'lose', -bet, seedAfter);
       }
@@ -4697,7 +4777,7 @@ function updateWalletButton() {
   if (walletState.connected) {
     const short = walletState.paymentAddress.slice(0, 6) + '...' + walletState.paymentAddress.slice(-4);
     btn.className = 'wallet-btn connected';
-    btn.innerHTML = '<div class="wallet-dot"></div>' + short;
+    btn.innerHTML = '<div class="wallet-dot"></div>' + short + '<span class="wallet-disconnect">(tap to manage)</span>';
   } else {
     btn.className = 'wallet-btn';
     btn.textContent = 'Connect Wallet';
