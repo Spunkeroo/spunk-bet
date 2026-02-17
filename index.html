@@ -722,6 +722,8 @@
     .tip-spunk-btn .tip-icon { font-size:1.2rem; animation:tipPulse 1.5s ease-in-out infinite; }
     @keyframes tipPulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.3); } }
     .tip-spunk-btn.tip-nav { padding:0.45rem 1rem; font-size:0.85rem; white-space:nowrap; }
+    .sound-toggle { background:none; border:1px solid #333; border-radius:8px; padding:0.35rem 0.5rem; font-size:1.1rem; cursor:pointer; line-height:1; transition:all 0.2s; }
+    .sound-toggle:hover { border-color:var(--accent); }
     .tip-modal-overlay { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); justify-content:center; align-items:center; }
     .tip-modal-overlay.active { display:flex; }
     .tip-modal { background:var(--card); border:2px solid #7c3aed; border-radius:1rem; padding:2rem; max-width:400px; width:90%; text-align:center; box-shadow:0 0 40px rgba(168,85,247,0.3); }
@@ -1160,6 +1162,7 @@
       .bigwin-card { padding:1.5rem; }
       .bigwin-amount { font-size:2rem; }
       .tip-spunk-btn.tip-nav { padding:0.35rem 0.7rem; font-size:0.75rem; }
+      .sound-toggle { padding:0.25rem 0.4rem; font-size:0.95rem; }
       .footer-links { gap: 0.75rem; flex-wrap: wrap; justify-content: center; }
       .tip-modal { padding: 1.5rem; }
       .tip-modal h3 { font-size: 1.2rem; }
@@ -1335,6 +1338,7 @@
     <div class="player-rank-badge" id="player-rank-badge" onclick="showPage('leaderboard-page')"></div>
     <div class="streak-badge" id="streak-badge" onclick="shareStreakOnX()">&#128293; <span id="streak-count">0</span> Streak</div>
     <div class="balance-display"><span id="balance-display">0</span> SPUNK•BET</div>
+    <button class="sound-toggle" id="sound-toggle" onclick="SFX.toggle()">🔊</button>
     <button class="tip-spunk-btn tip-nav" onclick="openTipModal()">🧡 Tip</button>
     <button class="share-btn" id="share-btn" onclick="openReferralModal()">Share &amp; Earn</button>
     <button class="wallet-btn" id="wallet-btn" onclick="handleWalletClick()">Connect Wallet</button>
@@ -2325,6 +2329,154 @@
 </div>
 
 <script>
+// ===== SOUND EFFECTS (Web Audio API) =====
+const SFX = (() => {
+  let ctx = null;
+  let enabled = localStorage.getItem('spunkbet_sound') !== 'off';
+
+  function getCtx() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+
+  function toggle() {
+    enabled = !enabled;
+    localStorage.setItem('spunkbet_sound', enabled ? 'on' : 'off');
+    document.getElementById('sound-toggle').textContent = enabled ? '\u{1F50A}' : '\u{1F507}';
+  }
+
+  function play(name) {
+    if (!enabled) return;
+    try { sounds[name](); } catch(e) {}
+  }
+
+  const sounds = {
+    bet() {
+      const c = getCtx(), o = c.createOscillator(), g = c.createGain();
+      o.type = 'sine'; o.frequency.value = 800;
+      g.gain.setValueAtTime(0.15, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.08);
+      o.connect(g); g.connect(c.destination);
+      o.start(); o.stop(c.currentTime + 0.08);
+    },
+    win() {
+      const c = getCtx(), t = c.currentTime;
+      [523, 659, 784].forEach((f, i) => {
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.12, t + i * 0.1);
+        g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.1 + 0.2);
+        o.connect(g); g.connect(c.destination);
+        o.start(t + i * 0.1); o.stop(t + i * 0.1 + 0.2);
+      });
+    },
+    lose() {
+      const c = getCtx(), o = c.createOscillator(), g = c.createGain();
+      o.type = 'sawtooth'; o.frequency.value = 250;
+      o.frequency.exponentialRampToValueAtTime(120, c.currentTime + 0.25);
+      g.gain.setValueAtTime(0.1, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.3);
+      o.connect(g); g.connect(c.destination);
+      o.start(); o.stop(c.currentTime + 0.3);
+    },
+    flip() {
+      const c = getCtx(), buf = c.createBuffer(1, c.sampleRate * 0.15, c.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length) * 0.3;
+      const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+      s.buffer = buf; f.type = 'bandpass'; f.frequency.value = 2000; f.Q.value = 0.5;
+      g.gain.setValueAtTime(0.15, c.currentTime);
+      s.connect(f); f.connect(g); g.connect(c.destination);
+      s.start(); s.stop(c.currentTime + 0.15);
+    },
+    reveal() {
+      const c = getCtx(), o = c.createOscillator(), g = c.createGain();
+      o.type = 'sine'; o.frequency.value = 1200;
+      o.frequency.exponentialRampToValueAtTime(1600, c.currentTime + 0.06);
+      g.gain.setValueAtTime(0.12, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.1);
+      o.connect(g); g.connect(c.destination);
+      o.start(); o.stop(c.currentTime + 0.1);
+    },
+    explode() {
+      const c = getCtx(), buf = c.createBuffer(1, c.sampleRate * 0.3, c.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2);
+      const s = c.createBufferSource(), g = c.createGain();
+      s.buffer = buf;
+      g.gain.setValueAtTime(0.2, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.3);
+      s.connect(g); g.connect(c.destination);
+      s.start(); s.stop(c.currentTime + 0.3);
+    },
+    cashout() {
+      const c = getCtx(), t = c.currentTime;
+      [880, 1175, 1318].forEach((f, i) => {
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = 'square'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.08, t + i * 0.08);
+        g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.08 + 0.15);
+        o.connect(g); g.connect(c.destination);
+        o.start(t + i * 0.08); o.stop(t + i * 0.08 + 0.15);
+      });
+    },
+    tick() {
+      const c = getCtx(), o = c.createOscillator(), g = c.createGain();
+      o.type = 'sine'; o.frequency.value = 600;
+      g.gain.setValueAtTime(0.05, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.03);
+      o.connect(g); g.connect(c.destination);
+      o.start(); o.stop(c.currentTime + 0.03);
+    },
+    spin() {
+      const c = getCtx(), o = c.createOscillator(), g = c.createGain();
+      o.type = 'triangle'; o.frequency.value = 1000 + Math.random() * 400;
+      g.gain.setValueAtTime(0.08, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.05);
+      o.connect(g); g.connect(c.destination);
+      o.start(); o.stop(c.currentTime + 0.05);
+    },
+    bigwin() {
+      const c = getCtx(), t = c.currentTime;
+      [523, 659, 784, 1047, 784, 1047].forEach((f, i) => {
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.12, t + i * 0.12);
+        g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.12 + 0.2);
+        o.connect(g); g.connect(c.destination);
+        o.start(t + i * 0.12); o.stop(t + i * 0.12 + 0.2);
+      });
+    },
+    plinko() {
+      const c = getCtx(), o = c.createOscillator(), g = c.createGain();
+      o.type = 'sine'; o.frequency.value = 800 + Math.random() * 1200;
+      g.gain.setValueAtTime(0.08, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.04);
+      o.connect(g); g.connect(c.destination);
+      o.start(); o.stop(c.currentTime + 0.04);
+    },
+    card() {
+      const c = getCtx(), buf = c.createBuffer(1, c.sampleRate * 0.06, c.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length) * 0.5;
+      const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+      s.buffer = buf; f.type = 'highpass'; f.frequency.value = 3000;
+      g.gain.setValueAtTime(0.12, c.currentTime);
+      s.connect(f); f.connect(g); g.connect(c.destination);
+      s.start(); s.stop(c.currentTime + 0.06);
+    }
+  };
+
+  // Init toggle icon
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('sound-toggle');
+    if (btn) btn.textContent = enabled ? '\u{1F50A}' : '\u{1F507}';
+  });
+
+  return { toggle, play };
+})();
+
 // ===== PROVABLY FAIR SYSTEM =====
 // Uses SHA-256 HMAC for seed-based outcome generation
 // Server seed is committed (hashed) before each game, revealed after
@@ -3198,6 +3350,7 @@ async function flipCoin() {
   const bet = getBet('cf-bet');
   if (bet <= 0 || bet > balance) return;
   coinFlipping = true;
+  SFX.play('bet');
   balance -= bet;
   updateBalance();
 
@@ -3207,6 +3360,7 @@ async function flipCoin() {
   const coin = document.getElementById('cf-coin');
   coin.className = 'coin flipping';
   coin.textContent = '?';
+  SFX.play('flip');
 
   const rand = await fairRandom();
   const seedAfter = { ...seedBefore, serverSeed: pfState.serverSeed };
@@ -3226,11 +3380,13 @@ async function flipCoin() {
     showGameSeed('cf-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
 
     if (win) {
+      SFX.play('win');
       const payout = Math.floor(bet * 1.98);
       balance += payout;
       showResult('cf-result', true, result.toUpperCase() + '! You won +' + (payout - bet).toLocaleString() + ' SPUNK•BET');
       addHistory('Coin Flip', bet, 'win', payout - bet, seedAfter);
     } else {
+      SFX.play('lose');
       showResult('cf-result', false, result.toUpperCase() + '. You lost ' + bet.toLocaleString() + ' SPUNK•BET');
       addHistory('Coin Flip', bet, 'lose', -bet, seedAfter);
     }
@@ -3290,6 +3446,7 @@ async function rollDice() {
   const chance = diceMode === 'under' ? target - 1 : 100 - target;
   if (chance <= 0) { showToast('Adjust target — 0% win chance!'); return; }
   diceRolling = true;
+  SFX.play('bet');
   balance -= bet;
   updateBalance();
 
@@ -3315,11 +3472,13 @@ async function rollDice() {
     showGameSeed('dice-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
 
     if (win) {
+      SFX.play('win');
       const payout = Math.floor(bet * multi);
       balance += payout;
       showResult('dice-result', true, 'Rolled ' + roll + ' (' + modeLabel + ' ' + target + '). Won +' + (payout - bet).toLocaleString() + ' SPUNK•BET');
       addHistory('Dice', bet, 'win', payout - bet, seedAfter);
     } else {
+      SFX.play('lose');
       showResult('dice-result', false, 'Rolled ' + roll + ' (needed ' + modeLabel + ' ' + target + '). Lost ' + bet.toLocaleString() + ' SPUNK•BET');
       addHistory('Dice', bet, 'lose', -bet, seedAfter);
     }
@@ -3379,6 +3538,7 @@ async function startMines() {
   const bet = getBet('mines-bet');
   if (bet > balance || bet <= 0) return;
   minesStarting = true;
+  SFX.play('bet');
   const mineCount = parseInt(document.getElementById('mines-count').value);
   balance -= bet;
   updateBalance();
@@ -3417,6 +3577,7 @@ function revealMine(index) {
   const cell = document.querySelectorAll('.mine-cell')[index];
   if (cell.classList.contains('revealed')) return;
   if (minesState.mines.includes(index)) {
+    SFX.play('explode');
     cell.classList.add('revealed', 'bomb');
     cell.textContent = '\u{1F4A5}';
     minesState.active = false;
@@ -3429,6 +3590,7 @@ function revealMine(index) {
     document.getElementById('mines-cashout-btn').style.display = 'none';
     document.getElementById('mines-start-btn').style.display = '';
   } else {
+    SFX.play('reveal');
     cell.classList.add('revealed', 'safe');
     cell.textContent = '\u{1F48E}';
     minesState.revealed++;
@@ -3443,6 +3605,7 @@ function revealMine(index) {
 
 function cashoutMines() {
   if (!minesState || !minesState.active) return;
+  SFX.play('cashout');
   minesState.active = false;
   const multi = getMinesMulti(minesState.revealed, minesState.mineCount);
   const payout = Math.floor(minesState.bet * multi);
@@ -3469,6 +3632,7 @@ async function startCrash() {
   const bet = getBet('crash-bet');
   if (bet > balance || bet <= 0) return;
   crashStarting = true;
+  SFX.play('bet');
   balance -= bet;
   updateBalance();
   saveState();
@@ -3520,6 +3684,7 @@ function animateCrash(ctx, canvas) {
   }
   ctx.stroke();
   if (crashState.multi >= crashState.crashAt && !crashState.cashed) {
+    SFX.play('explode');
     crashState.active = false;
     document.getElementById('crash-multi').className = 'crash-multi crashed';
     document.getElementById('crash-multi').textContent = crashState.crashAt.toFixed(2) + 'x';
@@ -3536,6 +3701,7 @@ function animateCrash(ctx, canvas) {
 
 function cashoutCrash() {
   if (!crashState || !crashState.active) return;
+  SFX.play('cashout');
   crashState.active = false;
   crashState.cashed = true;
   const payout = Math.floor(crashState.bet * crashState.multi);
@@ -3568,6 +3734,7 @@ async function playLimbo() {
   const bet = getBet('limbo-bet');
   if (bet <= 0 || bet > balance) return;
   limboPlaying = true;
+  SFX.play('bet');
   const target = parseFloat(document.getElementById('limbo-target').value) || 2;
   if (target < 1.01) { showToast('Target must be at least 1.01x'); limboPlaying = false; return; }
   balance -= bet;
@@ -3589,11 +3756,13 @@ async function playLimbo() {
     addLimboHistory(result, target);
     showGameSeed('limbo-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
     if (win) {
+      SFX.play('win');
       const payout = Math.floor(bet * target);
       balance += payout;
       showResult('limbo-result', true, 'Result: ' + result.toFixed(2) + 'x (target ' + target.toFixed(2) + 'x). Won +' + (payout - bet).toLocaleString() + ' SPUNK\u2022BET');
       addHistory('Limbo', bet, 'win', payout - bet, seedAfter);
     } else {
+      SFX.play('lose');
       showResult('limbo-result', false, 'Result: ' + result.toFixed(2) + 'x (needed ' + target.toFixed(2) + 'x). Lost ' + bet.toLocaleString() + ' SPUNK\u2022BET');
       addHistory('Limbo', bet, 'lose', -bet, seedAfter);
     }
@@ -3707,6 +3876,7 @@ async function playKeno() {
   if (kenoSelected.size === 0) { showToast('Pick at least 1 number'); return; }
   const bet = getBet('keno-bet');
   if (bet <= 0 || bet > balance) return;
+  SFX.play('bet');
   balance -= bet;
   updateBalance();
 
@@ -3745,11 +3915,13 @@ async function playKeno() {
   const multi = getKenoMultiplier(kenoSelected.size, hits);
   showGameSeed('keno-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
   if (multi > 0) {
+    SFX.play('win');
     const payout = Math.floor(bet * multi);
     balance += payout;
     showResult('keno-result', true, hits + ' hits! ' + multi + 'x payout. Won +' + (payout - bet).toLocaleString() + ' SPUNK\u2022BET');
     addHistory('Keno', bet, 'win', payout - bet, seedAfter);
   } else {
+    SFX.play('lose');
     showResult('keno-result', false, hits + ' hits. Not enough to win. Lost ' + bet.toLocaleString() + ' SPUNK\u2022BET');
     addHistory('Keno', bet, 'lose', -bet, seedAfter);
   }
@@ -3849,6 +4021,7 @@ async function spinWheel() {
   if (wheelSpinning) return;
   const bet = getBet('wheel-bet');
   if (bet <= 0 || bet > balance) return;
+  SFX.play('bet');
   balance -= bet; updateBalance();
   wheelSpinning = true;
   document.getElementById('wheel-spin-btn').disabled = true;
@@ -3874,12 +4047,14 @@ async function spinWheel() {
     const currentRotation = ease * totalRotation;
     drawWheel(currentRotation);
     if (progress < 1) {
+      if (Math.random() < 0.15) SFX.play('spin');
       requestAnimationFrame(animateSpin);
     } else {
       const val = segs[winIndex];
       document.getElementById('wheel-center').textContent = val > 0 ? val + 'x' : '0';
       showGameSeed('wheel-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
       if (val > 0) {
+        SFX.play('win');
         const payout = Math.floor(bet * val);
         balance += payout;
         document.getElementById('wheel-result-text').style.color = 'var(--green)';
@@ -3887,6 +4062,7 @@ async function spinWheel() {
         showResult('wheel-result', true, 'Landed on ' + val + 'x! Won +' + (payout - bet).toLocaleString() + ' SPUNK\u2022BET');
         addHistory('Wheel', bet, 'win', payout - bet, seedAfter);
       } else {
+        SFX.play('lose');
         document.getElementById('wheel-result-text').style.color = 'var(--red)';
         document.getElementById('wheel-result-text').textContent = '0x - Bust!';
         showResult('wheel-result', false, 'Landed on 0. Lost ' + bet.toLocaleString() + ' SPUNK\u2022BET');
@@ -4085,6 +4261,7 @@ function startPlinkoAnimLoop() {
       plinkoBalls.forEach(ball => {
         if (!ball.done) {
           ball.step++;
+          if (ball.step > 0 && ball.step < ball.path.length) SFX.play('plinko');
           if (ball.step >= ball.path.length) {
             ball.done = true;
             const multi = ball.multi;
@@ -4092,11 +4269,13 @@ function startPlinkoAnimLoop() {
             const payout = Math.floor(ball.bet * multi);
             balance += payout;
             if (multi >= 1) {
+              SFX.play('win');
               document.getElementById('plinko-result-text').style.color = 'var(--green)';
               document.getElementById('plinko-result-text').textContent = multi + 'x! +' + (payout - ball.bet).toLocaleString();
               showResult('plinko-result', true, multi + 'x! Won +' + (payout - ball.bet).toLocaleString() + ' SPUNK\u2022BET');
               addHistory('Plinko', ball.bet, 'win', payout - ball.bet, ball.seedAfter);
             } else {
+              SFX.play('lose');
               document.getElementById('plinko-result-text').style.color = 'var(--red)';
               document.getElementById('plinko-result-text').textContent = multi + 'x \u2212' + (ball.bet - payout).toLocaleString();
               showResult('plinko-result', false, multi + 'x. Lost ' + (ball.bet - payout).toLocaleString() + ' SPUNK\u2022BET');
@@ -4123,6 +4302,7 @@ function startPlinkoAnimLoop() {
 async function dropPlinko() {
   const bet = getBet('plinko-bet');
   if (bet <= 0 || bet > balance) return;
+  SFX.play('bet');
   balance -= bet; updateBalance();
 
   const rows = plinkoRows;
@@ -4175,6 +4355,7 @@ function renderCard(elId, rank, suit, extraClass) {
 async function startHiLo() {
   const bet = getBet('hilo-bet');
   if (bet <= 0 || bet > balance) return;
+  SFX.play('bet');
   balance -= bet; updateBalance(); saveState();
 
   const seedBefore = { serverSeedHash: pfState.serverSeedHash, clientSeed: pfState.clientSeed, nonce: pfState.nonce };
@@ -4182,6 +4363,7 @@ async function startHiLo() {
   const cardIdx = Math.floor(rand * 52);
   const rank = CARD_RANKS[cardIdx % 13];
   const suit = CARD_SUITS[Math.floor(cardIdx / 13)];
+  SFX.play('card');
 
   hiloState = {
     bet, currentRank: rank, currentSuit: suit, streak: 0, multi: 1.00, active: true,
@@ -4221,8 +4403,10 @@ async function guessHiLo(guess) {
   const correct = (guess === 'hi' && newVal >= oldVal) || (guess === 'lo' && newVal <= oldVal);
 
   setTimeout(() => {
+    SFX.play('card');
     renderCard('hilo-next', newRank, newSuit, correct ? 'win' : 'lose');
     if (correct) {
+      SFX.play('win');
       hiloState.streak++;
       const odds = guess === 'hi' ? (13 - oldVal + 1) / 13 : oldVal / 13;
       hiloState.multi *= (0.98 / odds);
@@ -4244,6 +4428,7 @@ async function guessHiLo(guess) {
         document.getElementById('hilo-lo-btn').textContent = '\u25BC Lower (' + Math.round(((val - 1) / 13) * 100) + '%)';
       }, 600);
     } else {
+      SFX.play('lose');
       hiloState.active = false;
       const seedAfter = { ...hiloState.seedBefore, serverSeed: hiloState.firstSeed };
       showGameSeed('hilo-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
@@ -4257,6 +4442,7 @@ async function guessHiLo(guess) {
 }
 function cashoutHiLo() {
   if (!hiloState || !hiloState.active) return;
+  SFX.play('cashout');
   hiloState.active = false;
   const payout = Math.floor(hiloState.bet * hiloState.multi);
   balance += payout;
@@ -4325,6 +4511,7 @@ async function startTower() {
   const bet = getBet('tower-bet');
   if (bet <= 0 || bet > balance) return;
   towerStarting = true;
+  SFX.play('bet');
   balance -= bet; updateBalance(); saveState();
 
   const cfg = TOWER_CONFIG[towerDiff];
@@ -4365,6 +4552,7 @@ function climbTower(floor, col) {
 
   const isTrapped = towerState.traps[floor].includes(col);
   if (isTrapped) {
+    SFX.play('explode');
     cell.classList.add('revealed', 'trap');
     cell.textContent = '\u2620';
     towerState.active = false;
@@ -4378,6 +4566,7 @@ function climbTower(floor, col) {
     document.getElementById('tower-cashout-btn').style.display = 'none';
     document.getElementById('tower-start-btn').style.display = '';
   } else {
+    SFX.play('reveal');
     cell.classList.add('revealed', 'safe');
     cell.textContent = '\u2B50';
     // Reveal traps on this floor
@@ -4406,6 +4595,7 @@ function climbTower(floor, col) {
 function cashoutTower() {
   if (!towerState || !towerState.active) return;
   if (towerState.currentFloor < 1) { showToast('Climb at least 1 floor before cashing out!'); return; }
+  SFX.play('cashout');
   towerState.active = false;
   const multi = getTowerMulti(towerState.currentFloor, towerState.diff);
   const payout = Math.floor(towerState.bet * multi);
@@ -5031,6 +5221,7 @@ async function playKenoAnimated() {
   const bet = getBet('keno-bet');
   if (bet <= 0 || bet > balance) return;
   kenoPlaying = true;
+  SFX.play('bet');
   balance -= bet;
   updateBalance();
 
@@ -5074,6 +5265,7 @@ async function playKenoAnimated() {
         const num = drawn[i];
         const isHit = kenoSelected.has(num);
         if (isHit) hits++;
+        SFX.play('spin');
 
         // Mark on grid with highlight
         const cell = cells[num - 1];
@@ -5131,11 +5323,13 @@ async function playKenoAnimated() {
   const multi = getKenoMultiplier(picks, hits);
   showGameSeed('keno-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
   if (multi > 0) {
+    SFX.play('win');
     const payout = Math.floor(bet * multi);
     balance += payout;
     showResult('keno-result', true, hits + ' hits! ' + multi + 'x payout. Won +' + (payout - bet).toLocaleString() + ' SPUNK\u2022BET');
     addHistory('Keno', bet, 'win', payout - bet, seedAfter);
   } else {
+    SFX.play('lose');
     showResult('keno-result', false, hits + ' hits. Not enough to win. Lost ' + bet.toLocaleString() + ' SPUNK\u2022BET');
     addHistory('Keno', bet, 'lose', -bet, seedAfter);
   }
@@ -5203,6 +5397,7 @@ function showBigWinOverlay(amount, multi, game) {
   const emojis = ['\uD83C\uDF89', '\uD83C\uDFB0', '\uD83D\uDCB0', '\uD83D\uDD25', '\uD83D\uDE80'];
   document.getElementById('bigwin-emoji').textContent = emojis[Math.floor(Math.random() * emojis.length)];
   overlay.classList.add('show');
+  SFX.play('bigwin');
   spawnConfetti();
 }
 
