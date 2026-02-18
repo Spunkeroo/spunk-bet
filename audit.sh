@@ -72,6 +72,9 @@ JS_RESULT=$(node -e "
   const scripts = html.match(/<script[^>]*>([\s\S]*?)<\/script>/gi) || [];
   let errors = [];
   scripts.forEach((block, i) => {
+    const tag = block.match(/<script([^>]*)>/i);
+    const attrs = tag ? tag[1] : '';
+    if (/type=[\"'][^\"']*json[^\"']*[\"']/i.test(attrs)) return; // skip JSON-LD and other non-JS types
     const code = block.replace(/<\/?script[^>]*>/gi, '');
     if (code.trim().length === 0) return;
     try { new Function(code); }
