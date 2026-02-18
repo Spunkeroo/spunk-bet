@@ -2868,7 +2868,7 @@ function sanitizeUrl(url) {
 function captureReferral() {
   const params = new URLSearchParams(window.location.search);
   const ref = params.get('ref');
-  if (ref && ref.length >= 6 && ref.length <= 64 && /^[a-zA-Z0-9]+$/.test(ref)) {
+  if (ref && ref.length >= 3 && ref.length <= 64 && /^[a-zA-Z0-9]+$/.test(ref)) {
     if (!localStorage.getItem('spunkbet_referrer')) {
       localStorage.setItem('spunkbet_referrer', ref);
     }
