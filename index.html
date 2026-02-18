@@ -1712,14 +1712,25 @@
 
 <!-- Daily Spin Modal -->
 <div class="daily-spin-modal" id="daily-spin-modal">
-  <div class="daily-spin-modal-inner">
-    <h3>Daily Bonus Spin</h3>
-    <p style="color:var(--muted);font-size:0.85rem;">Tap to spin!</p>
-    <div id="daily-spin-display" style="font-size:4rem;margin:1rem 0;cursor:pointer;" onclick="executeDailySpin()">&#127905;</div>
-    <div class="daily-spin-result" id="daily-spin-result" style="display:none;"></div>
-    <div class="daily-spin-bonus" id="daily-spin-bonus" style="display:none;">Share on X for 2x the prize!</div>
-    <button class="btn" id="daily-spin-share-btn" style="width:100%;margin-bottom:0.5rem;background:#000;border:1px solid #333;display:none;" onclick="shareDailySpinOnX()">Share on X for 2x Bonus</button>
-    <button class="wallet-modal-close" onclick="closeDailySpin()">Close</button>
+  <div class="daily-spin-modal-inner" style="width:420px;max-width:95vw;">
+    <h3 style="font-size:1.4rem;font-weight:900;margin-bottom:0.2rem;">🎰 DAILY SPIN</h3>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:0.8rem;">Win up to <span style="color:var(--purple);font-weight:800;">5,000</span> SPUNK•BET!</p>
+    <div style="position:relative;width:280px;height:280px;margin:0 auto 1rem;">
+      <canvas id="sb-spin-canvas" width="280" height="280" style="border-radius:50%;"></canvas>
+      <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:2rem;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.5));z-index:5;">▼</div>
+      <div id="sb-spin-center" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.3rem;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.5);z-index:4;pointer-events:none;">SPIN!</div>
+    </div>
+    <div id="sb-spin-result-area" style="display:none;">
+      <div id="daily-spin-result" style="font-size:2.2rem;font-weight:900;color:var(--purple);margin:0.5rem 0;"></div>
+      <div id="daily-spin-bonus" style="display:none;font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem;">Share on X for 2x the prize!</div>
+      <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;">
+        <button class="btn" id="daily-spin-share-btn" style="display:none;background:#000;border:1px solid #333;padding:0.5rem 1.2rem;" onclick="shareDailySpinOnX()">Share on 𝕏 for 2x</button>
+        <button class="btn" style="background:var(--green);color:#fff;padding:0.5rem 1.5rem;" onclick="closeDailySpin()">🪙 Collect</button>
+      </div>
+    </div>
+    <div id="sb-spin-action-area">
+      <button class="btn" id="sb-spin-go" onclick="executeDailySpin()" style="background:linear-gradient(135deg,var(--purple),#9333ea);color:#fff;font-size:1.2rem;padding:0.9rem 3.5rem;box-shadow:0 4px 20px rgba(168,85,247,0.4);letter-spacing:0.05em;width:auto;">🎰 SPIN!</button>
+    </div>
   </div>
 </div>
 
@@ -5927,8 +5938,11 @@ function openDailySpin() {
   document.getElementById('daily-spin-result').style.display = 'none';
   document.getElementById('daily-spin-bonus').style.display = 'none';
   document.getElementById('daily-spin-share-btn').style.display = 'none';
-  document.getElementById('daily-spin-display').textContent = '\uD83C\uDFA1';
-  document.getElementById('daily-spin-display').style.cursor = 'pointer';
+  document.getElementById('sb-spin-result-area').style.display = 'none';
+  document.getElementById('sb-spin-action-area').style.display = 'block';
+  document.getElementById('sb-spin-center').textContent = 'SPIN!';
+  sbSpinAngle = 0;
+  drawSBWheel(-1);
 }
 
 function closeDailySpin() {
@@ -5936,34 +5950,150 @@ function closeDailySpin() {
 }
 
 let dailySpinPrize = 0;
+let sbSpinAngle = 0;
+let sbSpinning = false;
+
+const SB_SEGMENTS = [
+  {label:'500',   value:500,  color:'#a855f7'},
+  {label:'1K',    value:1000, color:'#f59e0b'},
+  {label:'2.5K',  value:2500, color:'#06b6d4'},
+  {label:'1K',    value:1000, color:'#ef4444'},
+  {label:'5K!',   value:5000, color:'#22c55e'},
+  {label:'2.5K',  value:2500, color:'#ec4899'},
+  {label:'500',   value:500,  color:'#6366f1'},
+  {label:'2.5K',  value:2500, color:'#ff5f1f'},
+];
+
+function drawSBWheel(highlight) {
+  const canvas = document.getElementById('sb-spin-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const cx = 140, cy = 140, r = 130;
+  const seg = SB_SEGMENTS.length;
+  const arc = (2 * Math.PI) / seg;
+  ctx.clearRect(0, 0, 280, 280);
+  // Outer ring
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 6, 0, 2 * Math.PI);
+  ctx.strokeStyle = 'rgba(168,85,247,0.4)';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.restore();
+  // Segments
+  for (let i = 0; i < seg; i++) {
+    const angle = sbSpinAngle + i * arc;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, angle, angle + arc);
+    ctx.closePath();
+    const grad = ctx.createRadialGradient(cx, cy, 20, cx, cy, r);
+    grad.addColorStop(0, SB_SEGMENTS[i].color + '40');
+    grad.addColorStop(0.6, SB_SEGMENTS[i].color + 'cc');
+    grad.addColorStop(1, SB_SEGMENTS[i].color);
+    ctx.fillStyle = grad;
+    if (highlight === i) { ctx.shadowColor = SB_SEGMENTS[i].color; ctx.shadowBlur = 30; }
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+    // Label
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle + arc / 2);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold ' + (SB_SEGMENTS[i].value >= 5000 ? '15' : '13') + 'px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 4;
+    ctx.fillText(SB_SEGMENTS[i].label, r * 0.65, 0);
+    ctx.restore();
+  }
+  // Center
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, 28, 0, 2 * Math.PI);
+  const cg = ctx.createRadialGradient(cx, cy, 5, cx, cy, 28);
+  cg.addColorStop(0, '#1a1a2e');
+  cg.addColorStop(1, '#0e0e18');
+  ctx.fillStyle = cg;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(168,85,247,0.5)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+  // Tick marks
+  for (let i = 0; i < 36; i++) {
+    const a = (i / 36) * 2 * Math.PI;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(a);
+    ctx.fillStyle = i % 3 === 0 ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)';
+    ctx.fillRect(r - 6, -1, i % 3 === 0 ? 6 : 3, 2);
+    ctx.restore();
+  }
+}
+
 function executeDailySpin() {
-  if (!canDailySpin()) return;
-  const display = document.getElementById('daily-spin-display');
-  if (display.style.cursor !== 'pointer') return;
-  display.style.cursor = 'default';
-  const prizes = [500, 1000, 1000, 2500, 2500, 2500, 5000, 5000, 1000, 500];
-  const idx = Math.floor(Math.random() * prizes.length);
-  dailySpinPrize = prizes[idx];
-  // Animate
-  let spins = 0;
-  const emojis = ['\uD83C\uDFA1', '\u2728', '\uD83C\uDFB0', '\uD83D\uDCB0', '\uD83D\uDD25'];
-  const spinInterval = setInterval(() => {
-    display.textContent = emojis[spins % emojis.length];
-    spins++;
-    if (spins > 15) {
-      clearInterval(spinInterval);
-      display.textContent = '\uD83C\uDF89';
+  if (!canDailySpin() || sbSpinning) return;
+  sbSpinning = true;
+  document.getElementById('sb-spin-go').disabled = true;
+  document.getElementById('sb-spin-center').textContent = '';
+
+  // Random prize (weighted toward 1k-2.5k)
+  const weights = [15, 20, 18, 20, 3, 12, 10, 12];
+  const totalW = weights.reduce((a,b) => a+b, 0);
+  let rand = Math.random() * totalW;
+  let winIdx = 0;
+  for (let i = 0; i < weights.length; i++) { rand -= weights[i]; if (rand <= 0) { winIdx = i; break; } }
+  dailySpinPrize = SB_SEGMENTS[winIdx].value;
+
+  const seg = SB_SEGMENTS.length;
+  const arc = (2 * Math.PI) / seg;
+  const targetStop = -((winIdx * arc) + arc / 2) - Math.PI / 2 + (Math.random() * arc * 0.6 - arc * 0.3);
+  const totalRotation = Math.PI * 2 * (8 + Math.random() * 4) + targetStop;
+  const duration = 5000;
+  const start = performance.now();
+  const startAngle = sbSpinAngle;
+
+  function animate(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3.5);
+    sbSpinAngle = startAngle + totalRotation * ease;
+    drawSBWheel(progress > 0.85 ? winIdx : -1);
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      sbSpinning = false;
+      drawSBWheel(winIdx);
+      document.getElementById('sb-spin-center').textContent = SB_SEGMENTS[winIdx].label;
+      // Award
       balance += dailySpinPrize;
       updateBalance();
       saveState();
       localStorage.setItem('spunkbet_daily_spin', Date.now().toString());
       updateDailySpinButton();
-      document.getElementById('daily-spin-result').textContent = '+' + dailySpinPrize.toLocaleString() + ' SPUNK\u2022BET!';
-      document.getElementById('daily-spin-result').style.display = '';
-      document.getElementById('daily-spin-bonus').style.display = '';
-      document.getElementById('daily-spin-share-btn').style.display = '';
+      setTimeout(function() {
+        document.getElementById('daily-spin-result').textContent = '+' + dailySpinPrize.toLocaleString() + ' SPUNK\u2022BET!';
+        document.getElementById('sb-spin-result-area').style.display = 'block';
+        document.getElementById('sb-spin-action-area').style.display = 'none';
+        document.getElementById('daily-spin-result').style.display = '';
+        document.getElementById('daily-spin-bonus').style.display = '';
+        document.getElementById('daily-spin-share-btn').style.display = '';
+        if (dailySpinPrize >= 5000) {
+          showToast('🎰 JACKPOT! <span class="toast-amount">+' + dailySpinPrize.toLocaleString() + '</span> SPUNK\u2022BET!');
+        } else {
+          showToast('🎰 <span class="toast-amount">+' + dailySpinPrize.toLocaleString() + '</span> SPUNK\u2022BET!');
+        }
+        document.getElementById('sb-spin-go').disabled = false;
+      }, 600);
     }
-  }, 120);
+  }
+  requestAnimationFrame(animate);
 }
 
 function shareDailySpinOnX() {
