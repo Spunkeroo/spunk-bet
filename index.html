@@ -2853,10 +2853,16 @@ function updateFaucetDisplay() {
 }
 
 // ===== REFERRAL CAPTURE =====
+function sanitizeText(str) {
+  const el = document.createElement('div');
+  el.textContent = str;
+  return el.innerHTML;
+}
+
 function captureReferral() {
   const params = new URLSearchParams(window.location.search);
   const ref = params.get('ref');
-  if (ref && ref.length >= 6) {
+  if (ref && ref.length >= 6 && ref.length <= 64 && /^[a-zA-Z0-9]+$/.test(ref)) {
     if (!localStorage.getItem('spunkbet_referrer')) {
       localStorage.setItem('spunkbet_referrer', ref);
     }
@@ -2876,7 +2882,7 @@ function processReferralOnConnect(address) {
 
   if (isReferred) {
     trackReferral(referrer, address);
-    showToast('Welcome! You were referred by <span class="toast-amount">' + referrer + '</span>. Share your own link to earn SPUNK\u2022BET!');
+    showToast('Welcome! You were referred by <span class="toast-amount">' + sanitizeText(referrer) + '</span>. Share your own link to earn SPUNK\u2022BET!');
     // Send on-chain referral reward to the referrer
     claimReferralOnChain(address);
   } else {
@@ -7057,5 +7063,13 @@ document.getElementById('daily-spin-modal').addEventListener('click', (e) => { i
   window.tournamentLB = loadLeaderboard;
 })();
 </script>
+
+<!-- Stimulant Network -->
+<div style="border-top:1px solid var(--border);padding:0.8rem 1rem;display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;">
+  <a href="https://stimulant.wiki" style="color:#8888a0;font-size:0.7rem;font-weight:600;text-decoration:none;" target="_blank" rel="noopener noreferrer">Stimulant Wiki</a>
+  <a href="https://stimulant.doctor" style="color:#8888a0;font-size:0.7rem;font-weight:600;text-decoration:none;" target="_blank" rel="noopener noreferrer">Stimulant Doctor</a>
+  <a href="https://stimulant.shop" style="color:#8888a0;font-size:0.7rem;font-weight:600;text-decoration:none;" target="_blank" rel="noopener noreferrer">Stimulant Shop</a>
+  <a href="https://spunkart.com" style="color:#8888a0;font-size:0.7rem;font-weight:600;text-decoration:none;" target="_blank" rel="noopener noreferrer">SpunkArt.com</a>
+</div>
 </body>
 </html>
