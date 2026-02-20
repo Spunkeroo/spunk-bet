@@ -1,0 +1,24 @@
+{
+  "opRetort": "1.0.0",
+  "entity": {
+    "type": "individual",
+    "name": "SpunkArt",
+    "github": "Spunkeroo"
+  },
+  "funding": {
+    "channels": [
+      {"type": "github", "url": "https://github.com/sponsors/Spunkeroo"},
+      {"type": "website", "url": "https://spunk.bet"}
+    ],
+    "plans": []
+  },
+  "projects": [
+    {
+      "name": "spunk.bet",
+      "url": "https://spunk.bet",
+      "description": "Open source website — part of the 70+ site network built with AI",
+      "license": "MIT",
+      "repository": "https://github.com/Spunkeroo/spunk-bet"
+    }
+  ]
+}
