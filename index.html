@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name='impact-site-verification' value='0a023a05-a425-40bb-84e4-557cbca155e6'>
   <meta name='impact-site-verification' value='8f9d40a0-5769-4083-929a-d34fe67e4454'>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://subscribe-forms.beehiiv.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api-mainnet.magiceden.dev https://api.hiro.so https://mempool.space https://ordinals.com https://spunk-analytics.spunkbet.workers.dev https://www.google-analytics.com; frame-src https://ordinals.com https://subscribe-forms.beehiiv.com; object-src 'none'; base-uri 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://subscribe-forms.beehiiv.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api-mainnet.magiceden.dev https://api.hiro.so https://mempool.space https://ordinals.com https://spunk-analytics.spunkbet.workers.dev https://www.google-analytics.com https://predict-network-ec767-default-rtdb.firebaseio.com; frame-src https://ordinals.com https://subscribe-forms.beehiiv.com; object-src 'none'; base-uri 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Spunk.Bet — Fast. Fair. Free. Casino on Bitcoin</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -2385,9 +2385,12 @@
   </div>
 </div>
 
-<div style="max-width:500px;margin:2rem auto;padding:2rem 1rem;text-align:center;">
-  <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:0.3rem;color:var(--text);">Get Free SPUNK & Crypto Alerts</h3>
-  <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">Giveaways, new games, and crypto news. Weekly. Free.</p>
+<div style="max-width:520px;margin:2.5rem auto;padding:2rem 1.5rem;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:16px;position:relative;overflow:hidden;">
+  <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#ff5f1f,#ff8c00,#a855f7);"></div>
+  <div style="font-size:2rem;margin-bottom:0.5rem;">🎰</div>
+  <h3 style="font-size:1.2rem;font-weight:900;margin-bottom:0.4rem;color:#ff5f1f;letter-spacing:-0.3px;">Get Free SPUNK & Crypto Alerts</h3>
+  <p style="color:var(--muted);font-size:0.85rem;margin-bottom:0.3rem;">Giveaways, new games, ordinal drops & crypto news.</p>
+  <p style="color:var(--accent);font-size:0.8rem;font-weight:700;margin-bottom:1rem;">Weekly. Free. No spam.</p>
   <iframe src="https://subscribe-forms.beehiiv.com/6831d05b-f121-4e0d-951b-16f88ddd9ec3" class="beehiiv-embed" data-test-id="beehiiv-embed" frameborder="0" scrolling="no" style="width:100%;max-width:400px;height:375px;margin:0 auto;border-radius:12px;background:transparent;box-shadow:none;display:block;"></iframe>
 </div>
 
@@ -3157,6 +3160,8 @@ function addHistory(game, bet, result, amount, seedData) {
   }
   // Update cumulative stats
   updateCumulativeStats(game, bet, result, amount, multiNum);
+  // Push to Firebase live feed
+  pushBetToFirebase(game, bet, result, amount);
   // Track on Cloudflare Worker
   if (typeof trackGamePlay === 'function') trackGamePlay(game, bet, result);
   // Update live ticker
@@ -3207,30 +3212,37 @@ function switchHistoryTab(tab, tabEl) {
   document.getElementById('history-mine-wrap').style.display = tab === 'mine' ? '' : 'none';
 }
 
-// Simulated community bet feed
-const COMMUNITY_GAMES = ['Keno','Limbo','Dice','Coin Flip','Plinko','Mines','Wheel','HiLo','Crash','Rune Tower'];
-const COMMUNITY_NAMES = ['Player_','Anon_','Degen_','Whale_','Lucky_','Rune_','BTC_','Sat_','Punk_','Spunky_'];
+// Live community bet feed — backed by Firebase
+const FB_BETS = 'https://predict-network-ec767-default-rtdb.firebaseio.com/spunkbet/live_bets';
 let communityBets = [];
 
-function generateCommunityBet() {
-  const game = COMMUNITY_GAMES[Math.floor(Math.random() * COMMUNITY_GAMES.length)];
-  const prefix = COMMUNITY_NAMES[Math.floor(Math.random() * COMMUNITY_NAMES.length)];
-  const player = prefix + Math.floor(Math.random() * 9999).toString().padStart(4, '0');
-  const betAmounts = [100, 200, 500, 1000, 2500, 5000, 10000, 25000, 50000];
-  const bet = betAmounts[Math.floor(Math.random() * betAmounts.length)];
-  const isWin = Math.random() < 0.45;
-  const multi = isWin ? (1 + Math.random() * 9).toFixed(2) : 0;
-  const amount = isWin ? Math.floor(bet * multi) - bet : -bet;
-  return { player, game, bet, result: isWin ? 'win' : 'lose', amount, time: new Date() };
+function pushBetToFirebase(game, bet, result, amount) {
+  const player = walletState.connected ? walletState.paymentAddress.slice(0, 8) + '...' : 'Anon_' + Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+  const entry = { player, game, bet, result, amount, time: Date.now() };
+  fetch(FB_BETS + '.json', {
+    method: 'POST',
+    body: JSON.stringify(entry)
+  }).catch(function(){});
+}
+
+function loadCommunityBets() {
+  fetch(FB_BETS + '.json?orderBy="time"&limitToLast=100')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data) return;
+      communityBets = Object.values(data).sort(function(a, b) { return b.time - a.time; });
+      renderCommunityHistory();
+    }).catch(function(){});
 }
 
 function renderCommunityHistory() {
   const el = document.getElementById('history-all-list');
   if (!el) return;
-  const allBets = [
-    ...history.map(h => ({ ...h, player: 'You' })),
-    ...communityBets
-  ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 100);
+  // Merge community bets with local bets, mark local as "You"
+  const localBets = history.map(function(h) { return Object.assign({}, h, { player: 'You', time: new Date(h.time).getTime() }); });
+  const allBets = localBets.concat(communityBets)
+    .sort(function(a, b) { return b.time - a.time; })
+    .slice(0, 100);
 
   const countEl = document.getElementById('history-count');
   if (countEl) countEl.textContent = allBets.length + ' bets';
@@ -3239,22 +3251,16 @@ function renderCommunityHistory() {
     el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:2rem;">Waiting for bets...</div>';
     return;
   }
-  el.innerHTML = allBets.map((h, i) => renderBetRow(h, h.player, i === 0)).join('');
+  el.innerHTML = allBets.map(function(h, i) {
+    return renderBetRow({ game: h.game, bet: h.bet, result: h.result, amount: h.amount, time: h.time }, h.player, i === 0);
+  }).join('');
 }
 
-// Generate initial community bets and keep adding
-for (let i = 0; i < 50; i++) {
-  const b = generateCommunityBet();
-  b.time = new Date(Date.now() - Math.random() * 600000);
-  communityBets.push(b);
-}
-communityBets.sort((a, b) => new Date(b.time) - new Date(a.time));
-setInterval(() => {
-  if (document.hidden) return;
-  communityBets.unshift(generateCommunityBet());
-  if (communityBets.length > 100) communityBets.pop();
-  renderCommunityHistory();
-}, 3000 + Math.random() * 5000);
+// Load community bets on start + refresh every 10 seconds
+loadCommunityBets();
+setInterval(function() {
+  if (!document.hidden) loadCommunityBets();
+}, 10000);
 
 let lastWin = { game: '', amount: 0, multi: '' };
 
@@ -3423,14 +3429,14 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// Rotating viral tweet templates — Fast. Fair. Free. + CTA + @SpunkArt13
+// Rotating viral tweet templates — bold, clean, strong CTA
 const TWEET_TEMPLATES = [
-  (g, amt, multi) => '+' + amt + ' SPUNK\u2022BET on ' + g + '! \uD83C\uDFB0\n\nFast. Fair. Free. Claim 10k tokens & play now\n\n@SpunkArt13',
-  (g, amt, multi) => 'Just hit ' + multi + ' on ' + g + '! +' + amt + ' SPUNK\u2022BET \uD83D\uDD25\n\nFree casino on Bitcoin. No KYC. Real ordinal prizes\n\n@SpunkArt13',
-  (g, amt, multi) => multi + ' multiplier on ' + g + '! +' + amt + ' SPUNK\u2022BET \uD83D\uDCB0\n\nFree daily runes + ordinal giveaways. Come play\n\n@SpunkArt13',
-  (g, amt, multi) => 'Won ' + amt + ' SPUNK\u2022BET on ' + g + '! \uD83C\uDF89\n\nFast. Fair. Free. A casino for everyone on Bitcoin\n\n@SpunkArt13',
-  (g, amt, multi) => '+' + amt + ' on ' + g + '! ' + multi + ' \uD83D\uDE80\n\nFree tokens daily, win real ordinals. @SpunkArt13',
-  (g, amt, multi) => 'This casino gives you free runes daily + ordinal prizes \uD83E\uDD2F\n\nJust won ' + amt + ' SPUNK\u2022BET on ' + g + '\n\n@SpunkArt13',
+  (g, amt, multi) => '\uD83C\uDFB0 +' + amt + ' SPUNK\u2022BET on ' + g + '!\n\nFast. Fair. Free.\n\nClaim 10,000 free tokens now \u2192 spunk.bet\n\n@SpunkArt13',
+  (g, amt, multi) => '\uD83D\uDD25 ' + multi + ' HIT on ' + g + '!\n\n+' + amt + ' SPUNK\u2022BET\n\nFree Bitcoin casino. No KYC. Real ordinal prizes.\n\nPlay free \u2192 spunk.bet @SpunkArt13',
+  (g, amt, multi) => '\uD83D\uDCB0 ' + multi + ' on ' + g + '! +' + amt + ' SPUNK\u2022BET\n\nFree daily runes + ordinal giveaways\n\nJoin free \u2192 spunk.bet @SpunkArt13',
+  (g, amt, multi) => '\uD83C\uDF89 WON ' + amt + ' SPUNK\u2022BET on ' + g + '!\n\nFast. Fair. Free. A free casino for everyone on Bitcoin.\n\nClaim yours \u2192 spunk.bet @SpunkArt13',
+  (g, amt, multi) => '\uD83D\uDE80 +' + amt + ' on ' + g + ' (' + multi + ')\n\nFree tokens daily. Win real Bitcoin ordinals.\n\nStart playing \u2192 spunk.bet @SpunkArt13',
+  (g, amt, multi) => '\uD83E\uDD2F This casino gives you FREE runes daily + ordinal prizes\n\nJust won ' + amt + ' SPUNK\u2022BET on ' + g + '\n\nTry it free \u2192 spunk.bet @SpunkArt13',
 ];
 function getViralTweet(game, amount, multi) {
   const idx = Math.floor(Math.random() * TWEET_TEMPLATES.length);
@@ -5096,7 +5102,7 @@ function shareReferralOnX() {
   if (typeof trackEvent === 'function') trackEvent('referral_share');
   const code = walletState.paymentAddress.slice(0, 8);
   const siteUrl = 'https://spunk.bet?ref=' + code;
-  const text = 'Free crypto casino on Bitcoin \uD83C\uDFB0\n\nFast. Fair. Free. 10k free tokens daily + real ordinal prizes. No KYC.\n\nSupport @SpunkArt13 \u2014 a project for everyone \uD83E\uDDE1';
+  const text = '\uD83C\uDFB0 FREE Bitcoin Casino — No KYC\n\n10,000 free SPUNK\u2022BET tokens daily\nReal ordinal prizes\nProvably fair\n\nClaim yours free \u2192 spunk.bet @SpunkArt13';
   downloadWinCard();
   window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(siteUrl), '_blank');
   shareBonus();
@@ -5113,7 +5119,7 @@ function shareFirst100() {
   const code = walletState.paymentAddress.slice(0, 8);
   const siteUrl = 'https://spunk.bet?ref=' + code;
   const remaining = document.getElementById('first100-count')?.textContent || '?';
-  const text = 'Only ' + remaining + ' spots left for 2x bonus rewards on Spunk.Bet \uD83C\uDFB0\n\nFast. Fair. Free. Daily runes + ordinal prizes.\n\n@SpunkArt13';
+  const text = '\uD83D\uDEA8 Only ' + remaining + ' spots left for 2x bonus rewards!\n\nSpunk.Bet — Free Bitcoin casino\nDaily runes + ordinal prizes\n\nClaim your spot \u2192 spunk.bet @SpunkArt13';
   window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(siteUrl), '_blank');
   shareBonus();
 }
@@ -5560,7 +5566,7 @@ function checkStreakMilestone() {
 async function shareStreakOnX() {
   const refCode = walletState.connected ? walletState.paymentAddress.slice(0, 8) : '';
   const siteUrl = refCode ? 'https://spunk.bet?ref=' + refCode : 'https://spunk.bet';
-  const text = '\uD83D\uDD25 ' + winStreak + ' Win Streak on Spunk.Bet!\n\nFast. Fair. Free. Beat my streak & win real ordinals\n\n@SpunkArt13';
+  const text = '\uD83D\uDD25 ' + winStreak + ' WIN STREAK on Spunk.Bet!\n\nCan you beat it? Free to play.\nDaily runes + ordinal prizes.\n\nTry it \u2192 spunk.bet @SpunkArt13';
   window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(siteUrl), '_blank', 'width=550,height=420');
   shareBonus();
 }
@@ -6147,7 +6153,7 @@ function shareDailySpinOnX() {
   updateBalance();
   saveState();
   showToast('2x bonus! <span class="toast-amount">+' + dailySpinPrize.toLocaleString() + ' SPUNK\u2022BET</span> extra!');
-  const text = 'Just spun +' + (dailySpinPrize * 2).toLocaleString() + ' SPUNK\u2022BET on the daily wheel! \uD83C\uDFA1\n\nFree runes daily + ordinal giveaways. Fast. Fair. Free.\n\n@SpunkArt13';
+  const text = '\uD83C\uDFA1 +' + (dailySpinPrize * 2).toLocaleString() + ' SPUNK\u2022BET from the daily wheel!\n\nFree spin every day. Free runes. Real ordinal prizes.\n\nSpin yours \u2192 spunk.bet @SpunkArt13';
   window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(link), '_blank');
   closeDailySpin();
 }
@@ -6166,9 +6172,9 @@ async function sharePrizeOnX(prizeName) {
   const siteUrl = refCode ? 'https://spunk.bet?ref=' + refCode : 'https://spunk.bet';
   let text;
   if (prizeName) {
-    text = 'Win a ' + prizeName + ' ordinal on @SpunkArt13\'s casino! \uD83C\uDFC6\n\nFree daily SPUNK\u2022BET runes + real ordinal prizes. Fast. Fair. Free.';
+    text = '\uD83C\uDFC6 Win a ' + prizeName + ' ordinal on Spunk.Bet!\n\nFree daily SPUNK\u2022BET runes + real ordinal prizes\n\nPlay free \u2192 spunk.bet @SpunkArt13';
   } else {
-    text = 'Real ordinal prizes up for grabs on Spunk.Bet! \uD83C\uDFC6\n\nFree runes daily, win Bitcoin ordinals. Support @SpunkArt13';
+    text = '\uD83C\uDFC6 Real Bitcoin ordinal prizes up for grabs!\n\nFree runes daily. Free to play. Provably fair.\n\nClaim yours \u2192 spunk.bet @SpunkArt13';
   }
   const tweetUrl = 'https://x.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(siteUrl);
   try {
@@ -7081,9 +7087,10 @@ document.getElementById('daily-spin-modal').addEventListener('click', (e) => { i
     const refCode = wallet ? wallet.slice(0, 8) : '';
     const siteUrl = 'https://spunk.bet' + (refCode ? '?ref=' + refCode : '');
     const text = encodeURIComponent(
-      "I'm competing in SPUNK WARS on @SpunkArt13! \u{1F3B0}\n\n" +
+      "\u{1F3B0} SPUNK WARS is live!\n\n" +
       "Win a Puppet Corp Bitcoin Ordinal \u{1F3C6}\n" +
-      "Play. Share. Refer. Top scorer wins."
+      "Play. Share. Refer. Top scorer wins.\n\n" +
+      "Join free \u2192 spunk.bet @SpunkArt13"
     );
     window.open('https://x.com/intent/tweet?text=' + text + '&url=' + encodeURIComponent(siteUrl), '_blank');
     tournamentAction('share');
