@@ -3290,7 +3290,7 @@ function pushBetToFirebase(game, bet, result, amount) {
 }
 
 function loadCommunityBets() {
-  fetch(FB_BETS + '.json?orderBy="time"&limitToLast=100')
+  fetch(FB_BETS + '.json?orderBy="$key"&limitToLast=100')
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (!data) return;
