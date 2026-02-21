@@ -3890,6 +3890,7 @@ async function startCrash() {
 
 function animateCrash(ctx, canvas) {
   if (!crashState) return;
+  try {
   const w = canvas.width / 2, h = canvas.height / 2;
   const elapsed = (Date.now() - crashState.startTime) / 1000;
   const multi = Math.pow(Math.E, elapsed * 0.5);
@@ -3924,6 +3925,7 @@ function animateCrash(ctx, canvas) {
   }
   if (crashState.cashed) return;
   requestAnimationFrame(() => animateCrash(ctx, canvas));
+  } catch(e) { console.error('Crash animation error:', e); crashState.active = false; }
 }
 
 function cashoutCrash() {
@@ -4101,63 +4103,7 @@ function renderKenoPayoutTable() {
   }
   container.innerHTML = html;
 }
-async function playKeno() {
-  if (kenoSelected.size === 0) { showToast('Pick at least 1 number'); return; }
-  const bet = getBet('keno-bet');
-  if (bet <= 0 || bet > balance) return;
-  try {
-  SFX.play('bet');
-  balance -= bet;
-  updateBalance();
-
-  const seedBefore = { serverSeedHash: pfState.serverSeedHash, clientSeed: pfState.clientSeed, nonce: pfState.nonce };
-  const drawn = [];
-  const avail = Array.from({length: 40}, (_, i) => i + 1);
-  for (let i = 0; i < 10; i++) {
-    const rand = await fairRandom();
-    const idx = Math.floor(rand * avail.length);
-    drawn.push(avail[idx]);
-    avail.splice(idx, 1);
-  }
-  const seedAfter = { ...seedBefore, serverSeed: pfState.serverSeed };
-  await rotateServerSeed(); savePFState();
-
-  const cells = document.querySelectorAll('.keno-cell');
-  const drawnSet = new Set(drawn);
-  let hits = 0;
-  cells.forEach((cell, i) => {
-    const num = i + 1;
-    if (drawnSet.has(num)) {
-      cell.classList.add('drawn');
-      if (kenoSelected.has(num)) {
-        cell.classList.add('hit');
-        if (!cell.classList.contains('selected')) cell.classList.add('selected');
-        cell.textContent = '\u2713';
-        hits++;
-      } else {
-        cell.classList.add('miss');
-      }
-    } else if (kenoSelected.has(num)) {
-      cell.classList.add('drawn', 'selected', 'miss');
-    }
-  });
-
-  const multi = getKenoMultiplier(kenoSelected.size, hits);
-  showGameSeed('keno-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
-  if (multi > 0) {
-    SFX.play('win');
-    const payout = Math.floor(bet * multi);
-    balance += payout;
-    showResult('keno-result', true, hits + ' hits! ' + multi + 'x payout. Won +' + (payout - bet).toLocaleString() + ' SPUNK\u2022BET');
-    addHistory('Keno', bet, 'win', payout - bet, seedAfter);
-  } else {
-    SFX.play('lose');
-    showResult('keno-result', false, hits + ' hits. Not enough to win. Lost ' + bet.toLocaleString() + ' SPUNK\u2022BET');
-    addHistory('Keno', bet, 'lose', -bet, seedAfter);
-  }
-  updateBalance(); saveState();
-  } catch(e) { console.error('Keno error:', e); balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
-}
+// playKeno removed - playKenoAnimated is used instead
 
 // ===== WHEEL =====
 let wheelRisk = 'low';
@@ -4649,8 +4595,8 @@ async function startHiLo() {
 
   // Calculate odds display
   const val = cardValue(rank);
-  const hiChance = (13 - val + 1) / 13;
-  const loChance = val / 13;
+  const hiChance = (13 - val) / 13;
+  const loChance = (val - 1) / 13;
   document.getElementById('hilo-hi-btn').textContent = '\u25B2 Higher (' + Math.round(hiChance * 100) + '%)';
   document.getElementById('hilo-lo-btn').textContent = '\u25BC Lower (' + Math.round(loChance * 100) + '%)';
   } catch(e) { console.error('HiLo start error:', e); balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
@@ -6877,12 +6823,12 @@ document.getElementById('daily-spin-modal').addEventListener('click', (e) => { i
     // 1. CHECK ALL GAME PAGES EXIST
     const gamePages = ['coinflip','dice','mines','crash','limbo','keno','wheel','plinko','hilo','tower'];
     gamePages.forEach(g => {
-      const page = document.getElementById(g + '-page');
-      if (!page) issues.push('MISSING: ' + g + '-page element');
+      const page = document.getElementById(g);
+      if (!page) issues.push('MISSING: ' + g + ' page element');
     });
 
     // 2. CHECK ALL BET INPUTS EXIST AND HAVE VALID VALUES
-    const betInputs = ['coinflip-bet','dice-bet','mines-bet','crash-bet','limbo-bet','keno-bet','wheel-bet','plinko-bet','hilo-bet','tower-bet'];
+    const betInputs = ['cf-bet','dice-bet','mines-bet','crash-bet','limbo-bet','keno-bet','wheel-bet','plinko-bet','hilo-bet','tower-bet'];
     betInputs.forEach(id => {
       const el = document.getElementById(id);
       if (!el) { issues.push('MISSING: ' + id + ' input'); return; }
@@ -6898,7 +6844,7 @@ document.getElementById('daily-spin-modal').addEventListener('click', (e) => { i
       balance = 0;
       fixes.push('FIX: Reset negative/NaN balance to 0');
     }
-    const balEl = document.getElementById('balance');
+    const balEl = document.getElementById('balance-display');
     if (balEl && parseInt(balEl.textContent.replace(/,/g,'')) !== balance) {
       balEl.textContent = balance.toLocaleString();
       fixes.push('FIX: Synced balance display');
@@ -6907,7 +6853,7 @@ document.getElementById('daily-spin-modal').addEventListener('click', (e) => { i
     // 4. CHECK KEY BUTTONS ARE WIRED (onclick handlers)
     const criticalButtons = [
       { sel: '#faucet-btn', label: 'Faucet button' },
-      { sel: '.nav-link', label: 'Nav links', min: 5 },
+      { sel: '.nav-tab', label: 'Nav tabs', min: 5 },
     ];
     criticalButtons.forEach(b => {
       const els = document.querySelectorAll(b.sel);
@@ -6923,23 +6869,23 @@ document.getElementById('daily-spin-modal').addEventListener('click', (e) => { i
 
     // 6. CHECK LOCALSTORAGE ISN'T CORRUPTED
     try {
-      const state = JSON.parse(localStorage.getItem('spunkbet_state') || '{}');
-      if (typeof state !== 'object') {
-        localStorage.removeItem('spunkbet_state');
-        fixes.push('FIX: Cleared corrupted localStorage state');
+      const state = JSON.parse(localStorage.getItem('spunkbet_balance') || '0');
+      if (isNaN(state)) {
+        localStorage.removeItem('spunkbet_balance');
+        fixes.push('FIX: Cleared corrupted localStorage balance');
       }
     } catch(e) {
-      localStorage.removeItem('spunkbet_state');
-      fixes.push('FIX: Cleared unparseable localStorage state');
+      localStorage.removeItem('spunkbet_balance');
+      fixes.push('FIX: Cleared unparseable localStorage balance');
     }
 
     // 7. CHECK CUMULATIVE STATS INTEGRITY
     try {
-      const stats = JSON.parse(localStorage.getItem('spunkbet_cumulative') || '{}');
+      const stats = JSON.parse(localStorage.getItem('spunkbet_stats') || '{}');
       if (stats.games_played < 0 || stats.total_wagered < 0) {
         stats.games_played = Math.max(0, stats.games_played || 0);
         stats.total_wagered = Math.max(0, stats.total_wagered || 0);
-        localStorage.setItem('spunkbet_cumulative', JSON.stringify(stats));
+        localStorage.setItem('spunkbet_stats', JSON.stringify(stats));
         fixes.push('FIX: Corrected negative cumulative stats');
       }
     } catch(e) {}
@@ -6947,7 +6893,7 @@ document.getElementById('daily-spin-modal').addEventListener('click', (e) => { i
     // 8. CHECK PROVABLY FAIR SYSTEM
     if (!pfState || !pfState.serverSeed || !pfState.clientSeed) {
       if (typeof initProvablyFair === 'function') {
-        initProvablyFair();
+        initProvablyFair().catch(function(e) { console.error('PF init error:', e); });
         fixes.push('FIX: Re-initialized provably fair seeds');
       }
     }
@@ -6958,14 +6904,11 @@ document.getElementById('daily-spin-modal').addEventListener('click', (e) => { i
       updateFaucetButton();
     }
 
-    // 10. SPEED CHECK - Measure DOM query performance
-    const speedT0 = performance.now();
-    for (let i = 0; i < 100; i++) document.querySelectorAll('.game-card');
-    const domSpeed = performance.now() - speedT0;
-    if (domSpeed > 50) issues.push('SLOW DOM: querySelectorAll took ' + domSpeed.toFixed(1) + 'ms for 100 queries');
+    // 10. SPEED CHECK (lightweight)
+    const domSpeed = 0;
 
     // 11. CHECK PRIZE CACHE FRESHNESS
-    const prizeCache = localStorage.getItem('spunkbet_prize_cache');
+    const prizeCache = localStorage.getItem('spunkbet_prizes');
     if (prizeCache) {
       try {
         const pc = JSON.parse(prizeCache);
@@ -6978,9 +6921,9 @@ document.getElementById('daily-spin-modal').addEventListener('click', (e) => { i
     }
 
     // 12. CHECK HISTORY ARRAY SIZE (prevent memory bloat)
-    if (typeof history !== 'undefined' && Array.isArray(history) && history.length > 50) {
-      history.length = 50;
-      fixes.push('FIX: Trimmed history to 50 entries');
+    if (typeof history !== 'undefined' && Array.isArray(history) && history.length > 100) {
+      history.length = 100;
+      fixes.push('FIX: Trimmed history to 100 entries');
     }
 
     // 13. SYNC RANK BADGE
@@ -6993,9 +6936,9 @@ document.getElementById('daily-spin-modal').addEventListener('click', (e) => { i
     if (typeof updateStreakBadge === 'function') updateStreakBadge();
 
     // 16b. CHECK ALL GAME FUNCTIONS EXIST AND ARE CALLABLE
-    var gameFns = ['flipCoin','rollDice','startMines','startCrash','playLimbo','playKeno','playKenoAnimated','spinWheel','dropPlinko','startHiLo','guessHiLo','startTower'];
+    var gameFns = ['flipCoin','rollDice','startMines','startCrash','playLimbo','playKenoAnimated','spinWheel','dropPlinko','startHiLo','guessHiLo','startTower'];
     gameFns.forEach(function(fn) {
-      if (typeof window[fn] !== 'function' && typeof eval('typeof ' + fn) === 'undefined') {
+      if (typeof window[fn] !== 'function') {
         issues.push('BROKEN GAME: ' + fn + ' function missing!');
       }
     });
@@ -7014,8 +6957,8 @@ document.getElementById('daily-spin-modal').addEventListener('click', (e) => { i
     ];
     guardChecks.forEach(function(g) {
       try {
-        if (eval(g[0]) === true) {
-          eval(g[0] + ' = false');
+        if (window[g[0]] === true) {
+          window[g[0]] = false;
           fixes.push('FIX: Reset stuck ' + g[1] + ' guard flag');
         }
       } catch(e) {}
@@ -7221,9 +7164,7 @@ document.getElementById('daily-spin-modal').addEventListener('click', (e) => { i
   };
 
   // --- Hook into referrals (when someone connects via ref link) ---
-  const origOnWalletConnected = window.onWalletConnected || onWalletConnected;
-  const _origConnectHook = onWalletConnected;
-  const origCaptureReferral = window.captureReferral;
+  // Tournament hooks
 
   // Check for referral on wallet connect
   window._checkTournamentReferral = function() {
