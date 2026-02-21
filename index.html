@@ -6809,12 +6809,21 @@ const ANALYTICS_WORKER = 'https://spunk-analytics.spunkbet.workers.dev';
   setInterval(updateOnlineCount, 45000); // refresh every 45s
 })();
 
+// ===== GLOBAL ERROR HANDLER =====
+window.onerror = function(msg, url, line, col, err) {
+  console.error('SPUNK.BET ERROR:', msg, 'at line', line, err);
+  return false;
+};
+window.addEventListener('unhandledrejection', function(e) {
+  console.error('SPUNK.BET UNHANDLED PROMISE:', e.reason);
+});
+
 // ===== INIT =====
 captureReferral();
 loadState();
 loadCumulativeStats();
 updateDiceSlider();
-initProvablyFair();
+initProvablyFair().catch(function(e) { console.error('Init PF failed:', e); });
 initAutobetPanels();
 updateStreakBadge();
 updatePlayerRankBadge();
@@ -6911,7 +6920,7 @@ document.getElementById('daily-spin-modal').addEventListener('click', (e) => { i
     } catch(e) {}
 
     // 8. CHECK PROVABLY FAIR SYSTEM
-    if (typeof serverSeed === 'undefined' || !serverSeed) {
+    if (!pfState || !pfState.serverSeed || !pfState.clientSeed) {
       if (typeof initProvablyFair === 'function') {
         initProvablyFair();
         fixes.push('FIX: Re-initialized provably fair seeds');
