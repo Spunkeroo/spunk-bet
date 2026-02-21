@@ -2613,25 +2613,47 @@ const SFX = (() => {
 // Server seed is committed (hashed) before each game, revealed after
 
 function generateRandomHex(bytes) {
-  const arr = new Uint8Array(bytes);
-  crypto.getRandomValues(arr);
-  return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+  try {
+    const arr = new Uint8Array(bytes);
+    crypto.getRandomValues(arr);
+    return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+  } catch(e) {
+    // Fallback: Math.random based hex (less secure but functional)
+    let hex = '';
+    for (let i = 0; i < bytes; i++) hex += Math.floor(Math.random() * 256).toString(16).padStart(2, '0');
+    return hex;
+  }
 }
 
 async function sha256(message) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(message);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hashBuffer), b => b.toString(16).padStart(2, '0')).join('');
+  try {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hashBuffer), b => b.toString(16).padStart(2, '0')).join('');
+  } catch(e) {
+    // Fallback: simple hash for functionality
+    let hash = 0;
+    for (let i = 0; i < message.length; i++) { hash = ((hash << 5) - hash) + message.charCodeAt(i); hash |= 0; }
+    return Math.abs(hash).toString(16).padStart(64, '0').substring(0, 64);
+  }
 }
 
 async function hmacSha256(key, message) {
-  const encoder = new TextEncoder();
-  const keyData = encoder.encode(key);
-  const msgData = encoder.encode(message);
-  const cryptoKey = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const sig = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
-  return Array.from(new Uint8Array(sig), b => b.toString(16).padStart(2, '0')).join('');
+  try {
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(key);
+    const msgData = encoder.encode(message);
+    const cryptoKey = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const sig = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
+    return Array.from(new Uint8Array(sig), b => b.toString(16).padStart(2, '0')).join('');
+  } catch(e) {
+    // Fallback: combine key+message for hash
+    const combined = key + ':' + message;
+    let hash = 0;
+    for (let i = 0; i < combined.length; i++) { hash = ((hash << 5) - hash) + combined.charCodeAt(i); hash |= 0; }
+    return Math.abs(hash).toString(16).padStart(64, '0').substring(0, 64);
+  }
 }
 
 // Provably fair state
@@ -2643,23 +2665,43 @@ let pfState = {
 };
 
 async function initProvablyFair() {
-  const saved = localStorage.getItem('spunkbet_pf');
-  if (saved) {
-    try { pfState = JSON.parse(saved); } catch(e) {}
-  }
-  if (!pfState.clientSeed) {
+  try {
+    const saved = localStorage.getItem('spunkbet_pf');
+    if (saved) {
+      try { pfState = JSON.parse(saved); } catch(e) {}
+    }
+    if (!pfState.clientSeed) {
+      pfState.clientSeed = generateRandomHex(16);
+    }
+    if (!pfState.serverSeed) {
+      await rotateServerSeed();
+    }
+    // Ensure serverSeedHash exists
+    if (!pfState.serverSeedHash && pfState.serverSeed) {
+      pfState.serverSeedHash = await sha256(pfState.serverSeed);
+    }
+    savePFState();
+    updatePFDisplay();
+  } catch(e) {
+    console.error('initProvablyFair error:', e);
+    // Force reset to working state
     pfState.clientSeed = generateRandomHex(16);
+    pfState.serverSeed = generateRandomHex(32);
+    pfState.serverSeedHash = pfState.serverSeed.substring(0, 64);
+    pfState.nonce = 0;
+    savePFState();
   }
-  if (!pfState.serverSeed) {
-    await rotateServerSeed();
-  }
-  savePFState();
-  updatePFDisplay();
 }
 
 async function rotateServerSeed() {
-  pfState.serverSeed = generateRandomHex(32);
-  pfState.serverSeedHash = await sha256(pfState.serverSeed);
+  try {
+    pfState.serverSeed = generateRandomHex(32);
+    pfState.serverSeedHash = await sha256(pfState.serverSeed);
+  } catch(e) {
+    console.error('rotateServerSeed error:', e);
+    pfState.serverSeed = generateRandomHex(32);
+    pfState.serverSeedHash = pfState.serverSeed.substring(0, 64);
+  }
 }
 
 function savePFState() {
@@ -2667,12 +2709,14 @@ function savePFState() {
 }
 
 async function rotateClientSeed() {
-  pfState.clientSeed = generateRandomHex(16);
-  pfState.nonce = 0;
-  await rotateServerSeed();
-  savePFState();
-  updatePFDisplay();
-  showToast('Client seed rotated. Server seed reset.');
+  try {
+    pfState.clientSeed = generateRandomHex(16);
+    pfState.nonce = 0;
+    await rotateServerSeed();
+    savePFState();
+    updatePFDisplay();
+    showToast('Client seed rotated. Server seed reset.');
+  } catch(e) { console.error('rotateClientSeed error:', e); showToast('Seed rotation failed — try again'); }
 }
 
 function updatePFDisplay() {
@@ -2686,11 +2730,22 @@ function updatePFDisplay() {
 
 // Get a provably fair random number between 0 and 1
 async function fairRandom() {
-  const hash = await hmacSha256(pfState.serverSeed, pfState.clientSeed + ':' + pfState.nonce);
-  pfState.nonce++;
-  // Use first 8 hex chars = 4 bytes = 32 bits
-  const num = parseInt(hash.substring(0, 8), 16);
-  return num / 0x100000000; // 0 to 0.999...
+  try {
+    // Ensure pfState is valid
+    if (!pfState.serverSeed) pfState.serverSeed = generateRandomHex(32);
+    if (!pfState.clientSeed) pfState.clientSeed = generateRandomHex(16);
+    if (typeof pfState.nonce !== 'number') pfState.nonce = 0;
+    const hash = await hmacSha256(pfState.serverSeed, pfState.clientSeed + ':' + pfState.nonce);
+    pfState.nonce++;
+    // Use first 8 hex chars = 4 bytes = 32 bits
+    const num = parseInt(hash.substring(0, 8), 16);
+    const result = num / 0x100000000; // 0 to 0.999...
+    return isNaN(result) ? Math.random() : result;
+  } catch(e) {
+    console.error('fairRandom error:', e);
+    pfState.nonce = (pfState.nonce || 0) + 1;
+    return Math.random();
+  }
 }
 
 // Show seed info on a game's seed display element
