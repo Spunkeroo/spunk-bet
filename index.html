@@ -3180,7 +3180,15 @@ function getBet(id) {
     showToast('Minimum bet is <span class="toast-amount">' + MIN_BET + ' SPUNK•BET</span>');
     return 0;
   }
-  return Math.min(v, balance);
+  if (balance <= 0) {
+    showToast('No balance! <span class="toast-amount">Claim the faucet</span> for free SPUNK•BET');
+    return 0;
+  }
+  if (v > balance) {
+    showToast('Not enough balance. You have <span class="toast-amount">' + balance.toLocaleString() + '</span> SPUNK•BET');
+    return 0;
+  }
+  return v;
 }
 
 function setBet(id, action) {
@@ -6819,6 +6827,23 @@ window.addEventListener('unhandledrejection', function(e) {
 });
 
 // ===== INIT =====
+// v4 - Auto-repair corrupted localStorage state
+(function repairState() {
+  try {
+    var b = localStorage.getItem('spunkbet_balance');
+    if (b !== null && (isNaN(parseInt(b)) || parseInt(b) < 0)) {
+      localStorage.setItem('spunkbet_balance', '0');
+    }
+    var pf = localStorage.getItem('spunkbet_pf');
+    if (pf) {
+      var parsed = JSON.parse(pf);
+      if (!parsed.clientSeed || !parsed.serverSeed || typeof parsed.nonce !== 'number') {
+        localStorage.removeItem('spunkbet_pf');
+      }
+    }
+  } catch(e) { localStorage.removeItem('spunkbet_pf'); }
+})();
+
 captureReferral();
 loadState();
 loadCumulativeStats();
@@ -6966,6 +6991,44 @@ document.getElementById('daily-spin-modal').addEventListener('click', (e) => { i
 
     // 15. REFRESH STREAK BADGE
     if (typeof updateStreakBadge === 'function') updateStreakBadge();
+
+    // 16b. CHECK ALL GAME FUNCTIONS EXIST AND ARE CALLABLE
+    var gameFns = ['flipCoin','rollDice','startMines','startCrash','playLimbo','playKeno','playKenoAnimated','spinWheel','dropPlinko','startHiLo','guessHiLo','startTower'];
+    gameFns.forEach(function(fn) {
+      if (typeof window[fn] !== 'function' && typeof eval('typeof ' + fn) === 'undefined') {
+        issues.push('BROKEN GAME: ' + fn + ' function missing!');
+      }
+    });
+
+    // 16c. CHECK GUARD FLAGS NOT STUCK
+    var guardChecks = [
+      ['coinFlipping', 'Coin Flip'],
+      ['diceRolling', 'Dice'],
+      ['limboPlaying', 'Limbo'],
+      ['kenoPlaying', 'Keno'],
+      ['wheelSpinning', 'Wheel'],
+      ['plinkoDropping', 'Plinko'],
+      ['minesStarting', 'Mines'],
+      ['crashStarting', 'Crash'],
+      ['towerStarting', 'Tower']
+    ];
+    guardChecks.forEach(function(g) {
+      try {
+        if (eval(g[0]) === true) {
+          eval(g[0] + ' = false');
+          fixes.push('FIX: Reset stuck ' + g[1] + ' guard flag');
+        }
+      } catch(e) {}
+    });
+
+    // 16d. CHECK PROVABLY FAIR STATE IS VALID
+    if (pfState && (!pfState.serverSeed || !pfState.clientSeed || typeof pfState.nonce !== 'number')) {
+      pfState.serverSeed = pfState.serverSeed || generateRandomHex(32);
+      pfState.clientSeed = pfState.clientSeed || generateRandomHex(16);
+      pfState.nonce = typeof pfState.nonce === 'number' ? pfState.nonce : 0;
+      savePFState();
+      fixes.push('FIX: Repaired corrupted provably fair state');
+    }
 
     // 16. CHECK ONLINE COUNT IS RUNNING
     const onlineEl = document.getElementById('online-count');
