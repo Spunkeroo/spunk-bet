@@ -4489,7 +4489,7 @@ function startPlinkoAnimLoop() {
       });
     }
     drawPlinkoBoard(rows);
-    if (plinkoBalls.some(b => !b.done) || plinkoBalls.length > 0) {
+    if (plinkoBalls.some(b => !b.done) && plinkoBalls.length > 0) {
       requestAnimationFrame(tick);
     } else {
       plinkoAnimRunning = false;
@@ -4498,8 +4498,10 @@ function startPlinkoAnimLoop() {
   requestAnimationFrame(tick);
 }
 async function dropPlinko() {
+  if (plinkoDropping) return;
   const bet = getBet('plinko-bet');
   if (bet <= 0 || bet > balance) return;
+  plinkoDropping = true;
   try {
   SFX.play('bet');
   balance -= bet; updateBalance();
@@ -4537,7 +4539,8 @@ async function dropPlinko() {
 
   plinkoBalls.push({ path, step: 0, finalSlot, bet, multi: multis[finalSlot], seedAfter, done: false });
   startPlinkoAnimLoop();
-  } catch(e) { console.error('Plinko error:', e); balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
+  setTimeout(() => { plinkoDropping = false; }, 300);
+  } catch(e) { console.error('Plinko error:', e); plinkoDropping = false; balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
 }
 
 // ===== HILO =====
@@ -5541,6 +5544,13 @@ async function playKenoAnimated() {
     addHistory('Keno', bet, 'lose', -bet, seedAfter);
   }
   updateBalance(); saveState();
+  // Unlock cells for re-picking after game ends
+  document.querySelectorAll('.keno-cell').forEach((cell, idx) => {
+    const num = idx + 1;
+    cell.classList.remove('drawn', 'miss', 'keno-hit', 'keno-flash');
+    if (kenoSelected.has(num)) { cell.classList.add('selected'); cell.textContent = num; }
+    else { cell.classList.remove('selected', 'hit'); cell.textContent = num; }
+  });
   kenoPlaying = false;
   } catch(e) { console.error('Keno error:', e); kenoPlaying = false; balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
 }
