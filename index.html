@@ -3591,7 +3591,7 @@ async function flipCoin() {
 
   const cfDelay = isTurbo('coinflip') ? 30 : 400;
   if (isTurbo('coinflip')) { coin.className = 'coin'; }
-  setTimeout(() => {
+  setTimeout(() => { try {
     const result = rand < 0.5 ? 'heads' : 'tails';
     const win = result === cfSide;
     coin.className = 'coin ' + result;
@@ -3612,7 +3612,7 @@ async function flipCoin() {
     }
     updateBalance();
     saveState();
-    coinFlipping = false;
+  } catch(e2) { console.error('Coin flip callback error:', e2); } finally { coinFlipping = false; }
   }, cfDelay);
   } catch(e) { console.error('Coin flip error:', e); coinFlipping = false; balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
 }
@@ -3682,7 +3682,7 @@ async function rollDice() {
   if (!isTurbo('dice')) { die.className = 'die rolling'; }
   die.textContent = '?';
 
-  setTimeout(() => {
+  setTimeout(() => { try {
     const roll = Math.floor(rand * 100) + 1;
     const win = diceMode === 'under' ? roll < target : roll > target;
     die.className = 'die ' + (win ? 'hit' : 'miss');
@@ -3706,7 +3706,7 @@ async function rollDice() {
     }
     updateBalance();
     saveState();
-    diceRolling = false;
+  } catch(e2) { console.error('Dice callback error:', e2); } finally { diceRolling = false; }
   }, isTurbo('dice') ? 30 : 300);
   } catch(e) { console.error('Dice error:', e); diceRolling = false; balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
 }
@@ -3977,7 +3977,7 @@ async function playLimbo() {
   const display = document.getElementById('limbo-display');
   if (!isTurbo('limbo')) { display.className = 'limbo-display spinning'; display.textContent = '...'; }
 
-  setTimeout(() => {
+  setTimeout(() => { try {
     const win = result >= target;
     display.className = 'limbo-display ' + (win ? 'win' : 'lose');
     display.textContent = result.toFixed(2) + 'x';
@@ -3995,7 +3995,7 @@ async function playLimbo() {
       addHistory('Limbo', bet, 'lose', -bet, seedAfter);
     }
     updateBalance(); saveState();
-    limboPlaying = false;
+  } catch(e2) { console.error('Limbo callback error:', e2); } finally { limboPlaying = false; }
   }, isTurbo('limbo') ? 30 : 250);
   } catch(e) { console.error('Limbo error:', e); limboPlaying = false; balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
 }
@@ -4298,7 +4298,7 @@ async function spinWheel() {
 
     if (progress < 1) {
       requestAnimationFrame(animateSpin);
-    } else {
+    } else { try {
       const val = segs[winIndex];
       center.style.transform = 'scale(1)';
       showGameSeed('wheel-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
@@ -4329,8 +4329,7 @@ async function spinWheel() {
         addHistory('Wheel', bet, 'lose', -bet, seedAfter);
       }
       updateBalance(); saveState();
-      wheelSpinning = false;
-      document.getElementById('wheel-spin-btn').disabled = false;
+    } catch(e2) { console.error('Wheel callback error:', e2); } finally { wheelSpinning = false; document.getElementById('wheel-spin-btn').disabled = false; }
     }
   }
   requestAnimationFrame(animateSpin);
@@ -4671,7 +4670,7 @@ async function guessHiLo(guess) {
 
   const correct = (guess === 'hi' && newVal >= oldVal) || (guess === 'lo' && newVal <= oldVal);
 
-  setTimeout(() => {
+  setTimeout(() => { try {
     SFX.play('card');
     renderCard('hilo-next', newRank, newSuit, correct ? 'win' : 'lose');
     if (correct) {
@@ -4707,6 +4706,7 @@ async function guessHiLo(guess) {
       document.getElementById('hilo-start-btn').style.display = '';
       rotateServerSeed().then(() => savePFState());
     }
+  } catch(e2) { console.error('HiLo callback error:', e2); }
   }, 300);
   } catch(e) { console.error('HiLo guess error:', e); document.getElementById('hilo-hi-btn').disabled = false; document.getElementById('hilo-lo-btn').disabled = false; showToast('Game error — try again'); }
 }
@@ -5704,7 +5704,7 @@ function spawnConfetti() {
     p.style.animationDelay = (Math.random() * 1) + 's';
     p.style.animationDuration = (2 + Math.random() * 2) + 's';
     document.body.appendChild(p);
-    setTimeout(() => p.remove(), 5000);
+    setTimeout(() => { if (p.parentNode) p.parentNode.removeChild(p); }, 5000);
   }
 }
 
@@ -5724,7 +5724,7 @@ function updateLiveTicker(game, bet, result, amount) {
   // Keep duplicated for infinite scroll
   const items = inner.querySelectorAll('.ticker-item');
   if (items.length > 20) {
-    for (let i = 20; i < items.length; i++) items[i].remove();
+    for (let i = 20; i < items.length; i++) { if (items[i].parentNode) items[i].parentNode.removeChild(items[i]); }
   }
   // Duplicate content for seamless loop
   const uniqueHTML = inner.innerHTML;
