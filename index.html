@@ -3506,6 +3506,7 @@ async function flipCoin() {
   const bet = getBet('cf-bet');
   if (bet <= 0 || bet > balance) return;
   coinFlipping = true;
+  try {
   SFX.play('bet');
   balance -= bet;
   updateBalance();
@@ -3550,6 +3551,7 @@ async function flipCoin() {
     saveState();
     coinFlipping = false;
   }, cfDelay);
+  } catch(e) { console.error('Coin flip error:', e); coinFlipping = false; balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
 }
 
 // ===== DICE =====
@@ -3602,6 +3604,7 @@ async function rollDice() {
   const chance = diceMode === 'under' ? target - 1 : 100 - target;
   if (chance <= 0) { showToast('Adjust target — 0% win chance!'); return; }
   diceRolling = true;
+  try {
   SFX.play('bet');
   balance -= bet;
   updateBalance();
@@ -3642,6 +3645,7 @@ async function rollDice() {
     saveState();
     diceRolling = false;
   }, isTurbo('dice') ? 30 : 300);
+  } catch(e) { console.error('Dice error:', e); diceRolling = false; balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
 }
 
 // ===== MINES =====
@@ -3694,6 +3698,7 @@ async function startMines() {
   const bet = getBet('mines-bet');
   if (bet > balance || bet <= 0) return;
   minesStarting = true;
+  try {
   SFX.play('bet');
   const mineCount = parseInt(document.getElementById('mines-count').value);
   balance -= bet;
@@ -3726,6 +3731,7 @@ async function startMines() {
   document.querySelectorAll('.mine-cell').forEach(cell => {
     cell.onclick = () => revealMine(parseInt(cell.dataset.index));
   });
+  } catch(e) { console.error('Mines error:', e); minesStarting = false; balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
 }
 
 function revealMine(index) {
@@ -3788,6 +3794,7 @@ async function startCrash() {
   const bet = getBet('crash-bet');
   if (bet > balance || bet <= 0) return;
   crashStarting = true;
+  try {
   SFX.play('bet');
   balance -= bet;
   updateBalance();
@@ -3815,6 +3822,7 @@ async function startCrash() {
   canvas.height = canvas.offsetHeight * 2;
   ctx.scale(2, 2);
   animateCrash(ctx, canvas);
+  } catch(e) { console.error('Crash error:', e); crashStarting = false; balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
 }
 
 function animateCrash(ctx, canvas) {
@@ -3890,6 +3898,7 @@ async function playLimbo() {
   const bet = getBet('limbo-bet');
   if (bet <= 0 || bet > balance) return;
   limboPlaying = true;
+  try {
   SFX.play('bet');
   const target = parseFloat(document.getElementById('limbo-target').value) || 2;
   if (target < 1.01) { showToast('Target must be at least 1.01x'); limboPlaying = false; return; }
@@ -3925,6 +3934,7 @@ async function playLimbo() {
     updateBalance(); saveState();
     limboPlaying = false;
   }, isTurbo('limbo') ? 30 : 250);
+  } catch(e) { console.error('Limbo error:', e); limboPlaying = false; balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
 }
 
 // ===== KENO =====
@@ -4032,6 +4042,7 @@ async function playKeno() {
   if (kenoSelected.size === 0) { showToast('Pick at least 1 number'); return; }
   const bet = getBet('keno-bet');
   if (bet <= 0 || bet > balance) return;
+  try {
   SFX.play('bet');
   balance -= bet;
   updateBalance();
@@ -4082,6 +4093,7 @@ async function playKeno() {
     addHistory('Keno', bet, 'lose', -bet, seedAfter);
   }
   updateBalance(); saveState();
+  } catch(e) { console.error('Keno error:', e); balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
 }
 
 // ===== WHEEL =====
@@ -4180,6 +4192,7 @@ async function spinWheel() {
   SFX.play('bet');
   balance -= bet; updateBalance();
   wheelSpinning = true;
+  try {
   document.getElementById('wheel-spin-btn').disabled = true;
   document.getElementById('wheel-result-text').textContent = '';
 
@@ -4258,6 +4271,7 @@ async function spinWheel() {
     }
   }
   requestAnimationFrame(animateSpin);
+  } catch(e) { console.error('Wheel error:', e); wheelSpinning = false; document.getElementById('wheel-spin-btn').disabled = false; balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
 }
 
 // ===== PLINKO =====
@@ -4486,6 +4500,7 @@ function startPlinkoAnimLoop() {
 async function dropPlinko() {
   const bet = getBet('plinko-bet');
   if (bet <= 0 || bet > balance) return;
+  try {
   SFX.play('bet');
   balance -= bet; updateBalance();
 
@@ -4522,6 +4537,7 @@ async function dropPlinko() {
 
   plinkoBalls.push({ path, step: 0, finalSlot, bet, multi: multis[finalSlot], seedAfter, done: false });
   startPlinkoAnimLoop();
+  } catch(e) { console.error('Plinko error:', e); balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
 }
 
 // ===== HILO =====
@@ -4539,6 +4555,7 @@ function renderCard(elId, rank, suit, extraClass) {
 async function startHiLo() {
   const bet = getBet('hilo-bet');
   if (bet <= 0 || bet > balance) return;
+  try {
   SFX.play('bet');
   balance -= bet; updateBalance(); saveState();
 
@@ -4571,9 +4588,11 @@ async function startHiLo() {
   const loChance = val / 13;
   document.getElementById('hilo-hi-btn').textContent = '\u25B2 Higher (' + Math.round(hiChance * 100) + '%)';
   document.getElementById('hilo-lo-btn').textContent = '\u25BC Lower (' + Math.round(loChance * 100) + '%)';
+  } catch(e) { console.error('HiLo start error:', e); balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
 }
 async function guessHiLo(guess) {
   if (!hiloState || !hiloState.active) return;
+  try {
   document.getElementById('hilo-hi-btn').disabled = true;
   document.getElementById('hilo-lo-btn').disabled = true;
 
@@ -4623,6 +4642,7 @@ async function guessHiLo(guess) {
       rotateServerSeed().then(() => savePFState());
     }
   }, 300);
+  } catch(e) { console.error('HiLo guess error:', e); document.getElementById('hilo-hi-btn').disabled = false; document.getElementById('hilo-lo-btn').disabled = false; showToast('Game error — try again'); }
 }
 function cashoutHiLo() {
   if (!hiloState || !hiloState.active) return;
@@ -4695,6 +4715,7 @@ async function startTower() {
   const bet = getBet('tower-bet');
   if (bet <= 0 || bet > balance) return;
   towerStarting = true;
+  try {
   SFX.play('bet');
   balance -= bet; updateBalance(); saveState();
 
@@ -4728,6 +4749,7 @@ async function startTower() {
   document.getElementById('tower-start-btn').style.display = 'none';
   document.getElementById('tower-cashout-btn').style.display = '';
   showGameSeed('tower-seed', seedAfter.serverSeed, seedAfter.serverSeedHash);
+  } catch(e) { console.error('Tower error:', e); towerStarting = false; balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
 }
 function climbTower(floor, col) {
   if (!towerState || !towerState.active || floor !== towerState.currentFloor) return;
@@ -5405,6 +5427,7 @@ async function playKenoAnimated() {
   const bet = getBet('keno-bet');
   if (bet <= 0 || bet > balance) return;
   kenoPlaying = true;
+  try {
   SFX.play('bet');
   balance -= bet;
   updateBalance();
@@ -5519,6 +5542,7 @@ async function playKenoAnimated() {
   }
   updateBalance(); saveState();
   kenoPlaying = false;
+  } catch(e) { console.error('Keno error:', e); kenoPlaying = false; balance += bet; updateBalance(); showToast('Game error — bet refunded'); }
 }
 
 // ===== SHARE-TO-EARN BONUS SYSTEM =====
